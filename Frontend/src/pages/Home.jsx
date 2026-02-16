@@ -66,15 +66,14 @@ export default function Home() {
 
   return (
     <>
- <div className="min-h-screen bg-white font-sans text-gray-900 overflow-x-hidden relative top-[8vh]">
+ <div className="min-h-screen bg-white font-sans text-gray-900 overflow-x-hidden relative top-[4vw]">
       
-
       {/* Hero Section */}
       <div className="relative w-full overflow-visible bg-black bg-cover bg-center" >
 
         {/* Curved Background Shape with Parallax Image */}
         <div 
-          className="absolute top-0 left-0 w-full h-[650px] z-10 overflow-hidden"
+          className="absolute top-0 left-0 w-full h-[40vw] z-10 overflow-hidden"
         >
              {/* The Shape Container (Mask) */}
              <div className="w-[120%] h-[100%] absolute top-0 -left-[10%] rounded-b-[0%] overflow-hidden transform origin-top scale-x-120">
@@ -87,25 +86,25 @@ export default function Home() {
              </div>
         </div>
 
-        <div className="max-w-7xl mx-auto py-16 flex items-center relative z-10">
+        <div className="max-w-[85vw] mx-auto py-[4vw] flex items-center relative z-10">
             {/* Left Content */}
             <div className="w-full md:w-2/3 lg:w-2/3 text-white z-20">
-                <h1 className="text-4xl md:text-4xl font-semibold leading-tight mb-4">
+                <h1 className="text-[2.5vw] font-semibold leading-tight mb-[1vw]">
                     Create Interactive Flipbooks In Seconds
                 </h1>
-                <p className="text-base md:text-lg text-gray-300 mb-8 max-w-lg leading-relaxed font-light">
+                <p className="text-[1.125vw] text-gray-300 mb-[2vw] max-w-[32vw] leading-relaxed font-light">
                     Upload any PDF and instantly convert it into a smooth, interactive flipbook. Zoom, search, full screen, and share everything your viewers need in one place.
                 </p>
-                <div className="flex flex-wrap gap-4">
+                <div className="flex flex-wrap gap-[1vw]">
                     <button 
                         onClick={handleCreateFlipbook}
-                        className="px-6 py-3 bg-white text-[#4c5add] rounded-lg font-bold shadow hover:bg-gray-50 transition-all flex items-center gap-2"
+                        className="px-[1.5vw] py-[0.75vw] bg-white text-[#4c5add] rounded-[0.5vw] font-bold shadow hover:bg-gray-50 transition-all flex items-center gap-[0.5vw] text-[1vw]"
                     >
-                        <BookOpen size={20} />
+                        <BookOpen size="1.25vw" />
                         Create Flipbook
                     </button>
-                    <button className="px-6 py-3 bg-[#4c5add] text-white rounded-lg font-bold shadow hover:bg-[#3f4bc0] transition-all flex items-center gap-2">
-                        <Video size={20} />
+                    <button className="px-[1.5vw] py-[0.75vw] bg-[#4c5add] text-white rounded-[0.5vw] font-bold shadow hover:bg-[#3f4bc0] transition-all flex items-center gap-[0.5vw] text-[1vw]">
+                        <Video size="1.25vw" />
                         Demo video
                     </button>
                 </div>
@@ -113,12 +112,12 @@ export default function Home() {
 
             {/* Right Content - Bookshelf */}
             {/* Using absolute positioning to hang off the right side as per design */}
-            <div className="hidden lg:block absolute -right-20 top-10 w-[350px] z-20">
+            <div className="hidden lg:block absolute -right-[5vw] top-[2.5vw] w-[22vw] z-20">
                  {/* Pointer Text */}
-                 <div className="absolute -top-5 -left-10 text-right animate-pulse">
-                     <p className="text-white font-medium mb-1 text-sm">Use Demo Book <br/> For Reference</p>
+                 <div className="absolute -top-[1.25vw] -left-[2.5vw] text-right animate-pulse">
+                     <p className="text-white font-medium mb-[0.25vw] text-[0.875vw]">Use Demo Book <br/> For Reference</p>
                      <div className="flex justify-end">
-                        <svg width="60" height="30" viewBox="0 0 100 50" fill="none" stroke="white" strokeWidth="1.5" strokeDasharray="4 4">
+                        <svg width="3.75vw" height="1.875vw" viewBox="0 0 100 50" fill="none" stroke="white" strokeWidth="1.5" strokeDasharray="4 4">
                             <path d="M10 40 Q 60 10 90 20" />
                             <path d="M85 15 L 90 20 L 80 25" fill="none" strokeDasharray="0"/>
                         </svg>
@@ -126,14 +125,14 @@ export default function Home() {
                  </div>
 
                  {/* Bookshelf Image Placeholder */}
-                 <div className="relative w-full h-[500px] transition-transform duration-200 ease-out">
+                 <div className="relative w-full h-[31.25vw] transition-transform duration-200 ease-out">
                      <div className="w-full h-full bg-contain bg-no-repeat bg-top drop-shadow-2xl"
                           style={{ backgroundImage: `url(${BookSelf})` }}
                      >
                         {/* Click to Edit Button on shelf */}
-                        <div className="absolute top-[55%] -left-10 bg-transparent text-white font-medium flex items-center gap-2 cursor-pointer">
-                             <div className="w-8 h-8 rounded-full border border-white/50 flex items-center justify-center">
-                                 <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                        <div className="absolute top-[55%] -left-[2.5vw] bg-transparent text-white font-medium flex items-center gap-[0.5vw] cursor-pointer text-[1vw]">
+                             <div className="w-[2vw] h-[2vw] rounded-full border border-white/50 flex items-center justify-center">
+                                 <div className="w-[0.375vw] h-[0.375vw] bg-white rounded-full"></div>
                              </div>
                              Click to Edit
                         </div>
@@ -144,34 +143,34 @@ export default function Home() {
       </div>
 
       {/* Search & Filter Section */}
-      <div className="max-w-7xl mx-auto px-8 mt-4 relative z-10">
-          <div className="flex flex-col md:flex-row gap-4 mb-8">
+      <div className="max-w-[85vw] mx-auto px-[2vw] mt-[1vw] relative z-10">
+          <div className="flex flex-col md:flex-row gap-[1vw] mb-[2vw]">
                 {/* Search Bar */}
-                <div className="relative w-full md:w-80 group">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <div className="relative w-full md:w-[20vw] group">
+                    <Search className="absolute left-[1vw] top-1/2 -translate-y-1/2 text-gray-400" size="1.125vw" />
                     <input 
                         type="text" 
                         placeholder="Search..." 
-                        className="w-full pl-10 pr-4 py-2.5 rounded-full border border-gray-300 text-sm focus:outline-none focus:border-[#4c5add] transition-all bg-white"
+                        className="w-full pl-[2.5vw] pr-[1vw] py-[0.625vw] rounded-full border border-gray-300 text-[0.875vw] focus:outline-none focus:border-[#4c5add] transition-all bg-white"
                     />
                 </div>
                 {/* Filter Button */}
-                <button className="flex items-center gap-2 px-6 py-2.5 rounded-full border border-gray-300 text-[#4c5add] text-sm font-semibold bg-white hover:bg-gray-50 transition-all">
-                    <SlidersHorizontal size={18} />
+                <button className="flex items-center gap-[0.5vw] px-[1.5vw] py-[0.625vw] rounded-full border border-gray-300 text-[#4c5add] text-[0.875vw] font-semibold bg-white hover:bg-gray-50 transition-all">
+                    <SlidersHorizontal size="1.125vw" />
                     Filter
                 </button>
           </div>
 
           {/* Categories */}
-          <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide mb-8 pb-2">
-                <span className="font-bold text-black text-sm whitespace-nowrap mr-2">Categories :</span>
-                <button className="px-5 py-2 rounded-full bg-black text-white text-xs font-bold shadow-md whitespace-nowrap">
+          <div className="flex items-center gap-[0.75vw] overflow-x-auto scrollbar-hide mb-[2vw] pb-[0.5vw]">
+                <span className="font-bold text-black text-[0.875vw] whitespace-nowrap mr-[0.5vw]">Categories :</span>
+                <button className="px-[1.25vw] py-[0.5vw] rounded-full bg-black text-white text-[0.75vw] font-bold shadow-md whitespace-nowrap">
                     Most Popular Books
                 </button>
                 {categories.slice(1).map((cat, idx) => (
                     <button 
                         key={idx}
-                        className="px-5 py-2 rounded-full bg-white border border-gray-100 text-gray-600 text-xs font-medium hover:bg-gray-50 shadow-sm whitespace-nowrap transition-colors"
+                        className="px-[1.25vw] py-[0.5vw] rounded-full bg-white border border-gray-100 text-gray-600 text-[0.75vw] font-medium hover:bg-gray-50 shadow-sm whitespace-nowrap transition-colors"
                     >
                         {cat.name}
                     </button>
@@ -179,61 +178,81 @@ export default function Home() {
           </div>
 
           {/* Section Title */}
-          <h2 className="text-2xl font-bold text-black mb-6">Most Popular Books</h2>
+          <h2 className="text-[1.5vw] font-bold text-black mb-[1.5vw]">Most Popular Books</h2>
       </div>
 
-      {/* Light Blue Card Container area for Grid */}
-      <div className="mx-16 bg-[#373d8a4d] py-12 rounded-[40px] px-8 my-4 min-h-screen relative z-10 overflow-hidden">
+      {/* Light Blue Card Container area for Grid - REFACTORED DESIGN */}
+      <div className="mx-[4vw] bg-gray-50/50 py-[2vw] rounded-[2vw] px-[1.5vw] my-[1vw] min-h-screen relative z-10 overflow-hidden border border-gray-100">
          {/* Decorative Background Elements */}
-         <div className="absolute top-10 right-32 w-12 h-12 bg-blue-200/40 rounded-full blur-sm"></div>
-         <div className="absolute top-20 right-10 w-20 h-20 bg-blue-100/50 rounded-full blur-md"></div>
-         <div className="absolute -left-10 bottom-20 w-64 h-64 bg-white/30 rounded-full blur-3xl"></div>
+         <div className="absolute top-0 right-0 w-[30vw] h-[30vw] bg-purple-100/30 rounded-full blur-3xl -z-10"></div>
+         <div className="absolute bottom-0 left-0 w-[30vw] h-[30vw] bg-blue-100/30 rounded-full blur-3xl -z-10"></div>
 
-         <div className="max-w-7xl mx-auto relative z-10">
+         <div className="max-w-[85vw] mx-auto relative z-10">
              {/* Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-[1.25vw] mb-[2vw]">
                 {books.map((book) => (
-                    <div key={book.id} className="bg-white rounded-2xl p-3 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col items-center">
-                        {/* Image Container */}
-                        <div className="relative w-full aspect-[4/5] mb-3 bg-transparent flex items-end justify-center">
-                             {/* Book Cover */}
-                             <img 
-                                src={book.image} 
-                                alt={book.title} 
-                                className="w-auto h-[90%] object-contain drop-shadow-md transform group-hover:scale-105 transition-transform duration-300"
-                            />
-                             
-                             {/* Rating Badge - Bottom Left */}
-                             <div className={`absolute bottom-0 left-0 px-1.5 py-0.5 rounded-[4px] text-[10px] font-bold text-white flex items-center gap-0.5
-                                ${book.color === 'green' ? 'bg-[#22c55e]' : book.color === 'red' ? 'bg-[#ef4444]' : 'bg-[#eab308]'}
-                             `}>
-                                 {book.rating} <Star size={8} fill="currentColor" />
-                             </div>
+                    <div key={book.id} className="relative group perspective-1000">
+                        <div className="relative bg-white rounded-[1vw] p-[0.75vw] shadow-md hover:shadow-xl transition-all duration-500 ease-out transform group-hover:-translate-y-[0.35vw] border border-gray-100">
+                            
+                            {/* Image Container */}
+                            <div className="relative w-full aspect-[4/5] mb-[0.75vw] rounded-[0.75vw] overflow-hidden bg-gray-50">
+                                 {/* Book Cover */}
+                                 <img 
+                                    src={book.image} 
+                                    alt={book.title} 
+                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                />
+                                 
+                                 {/* Overlay on hover */}
+                                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300"></div>
 
-                             {/* Pages Text - Bottom Right */}
-                             <span className="absolute bottom-0 right-0 text-[10px] text-gray-400 font-medium">
-                                {book.pages} Pages
-                             </span>
-                        </div>
-                        
-                        {/* Title */}
-                        <div className="w-full text-center border-t border-gray-100 pt-2 mt-1">
-                             <h3 className="text-sm font-medium text-gray-800 line-clamp-1 group-hover:text-[#4c5add] transition-colors" title={book.title}>
-                                {book.title || 'Name of the FlipBook'}
-                             </h3>
+                                 {/* Rating Badge - Absolute Top Right */}
+                                 <div className="absolute top-[0.5vw] right-[0.5vw] bg-white/90 backdrop-blur-sm px-[0.45vw] py-[0.15vw] rounded-full text-[0.6vw] font-bold text-gray-800 flex items-center gap-[0.2vw] shadow-sm">
+                                     {book.rating} <Star size="0.6vw" className="text-yellow-400 fill-yellow-400" />
+                                 </div>
+                            </div>
+                            
+                            {/* Content */}
+                            <div className="space-y-[0.35vw]">
+                                <h3 className="text-[0.85vw] font-semibold text-gray-900 line-clamp-1 group-hover:text-[#4c5add] transition-colors" title={book.title}>
+                                    {book.title || 'Untitled Flipbook'}
+                                </h3>
+                                
+                                <div className="flex items-center justify-between text-[0.65vw] text-gray-500 font-medium">
+                                    <span className="flex items-center gap-[0.2vw]">
+                                        <BookOpen size="0.75vw" />
+                                        {book.pages} Pages
+                                    </span>
+                                    <span className={`px-[0.4vw] py-[0.1vw] rounded-full text-[0.55vw] font-bold bg-green-100 text-green-700`}>
+                                        FREE
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Hover Action Button */}
+                            <div className="absolute bottom-[1vw] right-[1vw] opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-[0.35vw] group-hover:translate-y-0">
+                                <button className="w-[1.85vw] h-[1.85vw] bg-[#4c5add] text-white rounded-full flex items-center justify-center shadow-lg hover:bg-[#3f4bc0] transition-colors">
+                                    <BookOpen size="0.9vw" />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* View More Button */}
-            <div className="flex justify-end mt-4">
-                 <button className="flex items-center gap-2 pl-6 pr-2 py-2 bg-[#343868] text-white rounded-full font-bold shadow-lg hover:bg-[#2b2f5a] transition-all group">
-                     View More 
-                     <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-white/30 transition-colors">
-                        <ChevronDown size={18} />
-                     </div>
-                 </button>
+            {/* View More Button - Centered and Modern */}
+            <div className="flex justify-center mt-[1.5vw] relative">
+                 <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                    <div className="w-full border-t border-gray-200"></div>
+                 </div>
+                 <div className="relative">
+                     <button className="flex items-center gap-[0.5vw] pl-[1.5vw] pr-[0.5vw] py-[0.5vw] bg-white text-[#4c5add] border border-[#4c5add]/20 rounded-full font-bold shadow-sm hover:shadow-md hover:border-[#4c5add] transition-all group text-[0.85vw]">
+                         View All Books
+                         <div className="w-[1.85vw] h-[1.85vw] bg-[#4c5add]/10 rounded-full flex items-center justify-center group-hover:bg-[#4c5add] group-hover:text-white transition-all duration-300">
+                            <ChevronDown size="1vw" />
+                         </div>
+                     </button>
+                 </div>
             </div>
          </div>
       </div>
