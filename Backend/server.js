@@ -28,7 +28,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Middleware
 // Middleware
 app.use(cors({
-    origin: [process.env.FRONTEND_URL, 'http://localhost:5173', 'http://localhost:5174'].filter(Boolean),
+    // origin: [process.env.FRONTEND_URL, 'http://localhost:5173', 'http://localhost:5174', 'https://bf221rfk-5173.inc1.devtunnels.ms','*'].filter(Boolean),
+    origin: true, // Allow all origins dynamically
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     credentials: true,

@@ -437,8 +437,8 @@ const VideoEditor = ({
   // Early return if no element is selected
   if (!selectedElement) {
     return (
-      <div className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm p-4 text-center text-gray-400 text-sm">
-        <VideoIcon className="mx-auto mb-2" size={16} />
+      <div className="border border-gray-200 rounded-[0.5vw] overflow-hidden bg-white shadow-sm p-[1vw] text-center text-gray-400 text-[0.75vw]">
+        <VideoIcon className="mx-auto mb-[0.5vw]" size="0.9vw" />
         <p>Click on a video to edit</p>
       </div>
     );
@@ -446,19 +446,21 @@ const VideoEditor = ({
 
   return (
     <>
-      <div className="border border-gray-200 rounded-[15px] overflow-hidden  bg-white shadow-sm mb-4">
+      <div className="border border-gray-200 rounded-[0.75vw] bg-white shadow-sm mb-[1vw]">
         {/* SECTION HEADER WITH TOGGLE */}
         <div
-          className="flex items-center justify-between px-4 py-4 border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition-colors"
+          className={`flex items-center justify-between px-[1vw] py-[1vw] border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition-colors ${
+            isMainPanelOpen ? "rounded-t-[0.75vw]" : "rounded-[0.75vw]"
+          }`}
           onClick={toggleMainPanel}
         >
-          <div className="flex items-center gap-2">
-            <Video size={16} className="text-gray-600" />
-            <span className="font-medium text-gray-800 text-[15px]">Video</span>
+          <div className="flex items-center gap-[0.5vw]">
+            <Video size="1vw" className="text-gray-600" />
+            <span className="font-semibold text-gray-900 text-[0.85vw]">Video</span>
           </div>
 
           <ChevronUp
-            size={16}
+            size="1vw"
             className={`text-gray-500 transition-transform duration-200 ${
               isMainPanelOpen ? "" : "rotate-180"
             }`}
@@ -467,13 +469,13 @@ const VideoEditor = ({
 
         {/* COLLAPSIBLE CONTENT */}
         {isMainPanelOpen && (
-               <div className="space-y-5 pr-5 pl-5 mb-15 pt-4 ">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-gray-900 whitespace-nowrap">
+               <div className="space-y-[1.2vw] px-[1vw] mb-[1.5vw] pt-[1vw] ">
+            <div className="space-y-[1vw]">
+              <div className="flex items-center gap-2.5">
+                <span className="font-semibold text-[0.85vw] text-gray-900 whitespace-nowrap">
                   Upload your Video 
                 </span>
-                <div className="h-[2px] w-full bg-gray-200" />
+                <div className="h-px flex-grow bg-gradient-to-r from-gray-200 via-gray-100 to-transparent" />
               </div>
               <input
                 ref={fileInputRef}
@@ -491,8 +493,8 @@ const VideoEditor = ({
               />
 
               {/* SELECT VIDEO TYPE DROPDOWN */}
-              <div className="flex items-center justify-between relative z-20 mb-4">
-                <span className="text-[12px] font-bold text-gray-700">
+              <div className="flex items-center justify-between relative z-20 mb-[1vw]">
+                <span className="text-[0.75vw] font-bold text-gray-700">
                   Select the Video type :
                 </span>
                 <div className="relative">
@@ -503,16 +505,16 @@ const VideoEditor = ({
                     onBlur={() =>
                       setTimeout(() => setShowVideoTypeDropdown(false), 200)
                     }
-                    className="flex items-center justify-between w-24 px-3 py-2 bg-white border border-gray-200 rounded-xl shadow-sm hover:bg-gray-50 transition-colors"
+                    className="flex items-center justify-between w-[7vw] px-[0.75vw] py-[0.5vw] bg-white border border-gray-200 rounded-[0.6vw] shadow-sm hover:bg-gray-50 transition-colors"
                   >
-                    <span className="text-[13px] font-bold text-gray-700 capitalize">
+                    <span className="text-[0.75vw] font-bold text-gray-700 capitalize">
                       {videoType}
                     </span>
-                    <ChevronDown size={14} className="text-gray-400" />
+                    <ChevronDown size="0.75vw" className="text-gray-400" />
                   </button>
 
                   {showVideoTypeDropdown && (
-                    <div className="absolute right-0 top-full mt-2 w-24 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden z-50 flex flex-col py-1 animate-in fade-in zoom-in-95 duration-100">
+                    <div className="absolute right-0 top-full mt-[0.5vw] w-[7vw] bg-white border border-gray-100 rounded-[0.6vw] shadow-xl overflow-hidden z-50 flex flex-col py-[0.25vw] animate-in fade-in zoom-in-95 duration-100">
                       {["Fit", "Fill"].map((type) => (
                         <button
                           key={type}
@@ -520,7 +522,7 @@ const VideoEditor = ({
                             handleVideoTypeChange(type.toLowerCase());
                             setShowVideoTypeDropdown(false);
                           }}
-                          className="px-4 py-2 text-[13px] font-medium text-gray-600 hover:bg-gray-50 hover:text-indigo-600 transition-colors text-center"
+                          className="px-[1vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-600 hover:bg-gray-50 hover:text-indigo-600 transition-colors text-center"
                         >
                           {type}
                         </button>
@@ -531,9 +533,9 @@ const VideoEditor = ({
               </div>
 
               {/* Upload Area */}
-              <div className="flex gap-3 items-center">
+              <div className="flex gap-[0.75vw] items-center">
                 {/* Video Preview Thumbnail */}
-                <div className="relative w-20 h-16 border-2 border-gray-200 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center shrink-0">
+                <div className="relative w-[5vw] h-[4vw] border-[0.1vw] border-gray-200 rounded-[0.5vw] overflow-hidden bg-gray-50 flex items-center justify-center shrink-0">
                   {previewSrc ? (
                     <>
                       <video
@@ -543,55 +545,55 @@ const VideoEditor = ({
                         preload="metadata"
                       />
                       <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                        <div className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center">
-                          <Play size={14} className="text-gray-800 ml-0.5" />
+                        <div className="w-[2vw] h-[2vw] bg-white/90 rounded-full flex items-center justify-center">
+                          <Play size="0.8vw" className="text-gray-800 ml-[0.1vw]" />
                         </div>
                       </div>
                     </>
                   ) : (
-                    <div className="text-xs text-gray-400">No Video</div>
+                    <div className="text-[0.7vw] text-gray-400">No Video</div>
                   )}
                 </div>
 
                 {/* Replace Icon */}
                 <div className="text-gray-300">
-                  <Replace size={18} />
+                  <Replace size="1vw" />
                 </div>
 
                 {/* Upload Drop Zone */}
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex-1 h-16 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer flex flex-col items-center justify-center text-gray-400 hover:border-indigo-400 hover:text-indigo-500 transition bg-white"
+                  className="flex-1 h-[4vw] border-[0.1vw] border-dashed border-gray-300 rounded-[0.5vw] cursor-pointer flex flex-col items-center justify-center text-gray-400 hover:border-indigo-400 hover:text-indigo-500 transition bg-white"
                 >
-                  <Upload size={16} className="mb-0.5" />
-                  <p className="text-xs">
+                  <Upload size="0.9vw" className="mb-[0.1vw]" />
+                  <p className="text-[0.7vw]">
                     Drag &{" "}
                     <span className="text-indigo-600 font-medium">Upload</span>
                   </p>
                 </div>
               </div>
 
-              <p className="text-[11px] text-gray-400 text-right">
+              <p className="text-[0.7vw] text-gray-400 text-right">
                 Supported File Format : MP4
               </p>
             </div>
 
             {/* OR Divider */}
-            <div className="flex items-center gap-3 py-1">
+            <div className="flex items-center gap-[0.75vw] py-[0.25vw]">
               <div className="flex-1 h-px bg-gray-200" />
-              <span className="text-xs text-gray-400 font-medium">OR</span>
+              <span className="text-[0.7vw] text-gray-400 font-medium">OR</span>
               <div className="flex-1 h-px bg-gray-200" />
             </div>
 
             {/* URL Input */}
-            <div className="flex items-center gap-2">
-              <label className="text-xs text-gray-700 font-medium whitespace-nowrap">
+            <div className="flex items-center gap-[0.5vw]">
+              <label className="text-[0.75vw] text-gray-700 font-medium whitespace-nowrap">
                 URL :
               </label>
               <input
                 type="text"
                 placeholder="https://"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="flex-1 px-[0.75vw] py-[0.5vw] border border-gray-300 rounded-[0.5vw] text-[0.75vw] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 onBlur={(e) => replaceTemplateWithUrl(e.target.value)}
               />
             </div>
@@ -599,19 +601,19 @@ const VideoEditor = ({
             {/* GALLERY PREVIEW BOX */}
             <div
               onClick={() => setOpenGallery(true)}
-              className="relative w-full h-28 border border-gray-200 rounded-lg cursor-pointer overflow-hidden bg-gray-100 mt-2"
+              className="relative w-full h-[7vw] border border-gray-200 rounded-[0.5vw] cursor-pointer overflow-hidden bg-gray-100 mt-[0.5vw]"
             >
               {/* Preview thumbnails */}
-              <div className="absolute inset-0 grid grid-cols-3 gap-0.5 p-1">
+              <div className="absolute inset-0 grid grid-cols-3 gap-[0.1vw] p-[0.25vw]">
                 {galleryPreviews.slice(0, 3).map((src, i) => (
-                  <div key={i} className="relative overflow-hidden rounded-md">
+                  <div key={i} className="relative overflow-hidden rounded-[0.3vw]">
                     <img
                       src={src}
                       alt=""
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-black/40" />
-                    <div className="absolute bottom-1 left-1 right-1 text-[8px] text-white text-center truncate">
+                    <div className="absolute bottom-[0.25vw] left-[0.25vw] right-[0.25vw] text-[0.5vw] text-white text-center truncate">
                       {i === 0
                         ? "Gaming Monster"
                         : i === 1
@@ -624,52 +626,55 @@ const VideoEditor = ({
 
               {/* Overlay content */}
               <div className="relative z-10 flex flex-col items-center justify-center h-full bg-gradient-to-t from-black/70 to-black/30">
-                <div className="flex items-center gap-2 text-white bg-black/40 px-4 py-2 rounded-lg backdrop-blur-sm">
-                  <VideoIcon size={18} />
-                  <p className="text-sm font-semibold">Video Gallery</p>
+                <div className="flex items-center gap-[0.5vw] text-white bg-black/40 px-[1vw] py-[0.5vw] rounded-[0.5vw] backdrop-blur-sm">
+                  <VideoIcon size="0.9vw" />
+                  <p className="text-[0.8vw] font-semibold">Video Gallery</p>
                 </div>
               </div>
             </div>
 
             {/* Video Playback Settings */}
-            <div className="pt-4 space-y-3">
-              <h3 className="text-sm font-semibold text-gray-900">
-                Video Playback Settings
-              </h3>
+            <div className="pt-[1vw] space-y-[0.75vw]">
+              <div className="flex items-center gap-2.5">
+                <span className="font-semibold text-[0.85vw] text-gray-900 whitespace-nowrap">
+                  Video Playback Settings
+                </span>
+                <div className="h-px flex-grow bg-gradient-to-r from-gray-200 via-gray-100 to-transparent" />
+              </div>
 
-              <div className="space-y-3">
+              <div className="space-y-[0.75vw]">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs text-gray-700">
+                  <p className="text-[0.75vw] text-gray-700">
                     AutoPlay (Play video automatically)
                   </p>
                   <button
                     onClick={toggleAutoplay}
-                    className={`w-10 h-5 flex items-center rounded-full p-1 transition ${
+                    className={`w-[2.5vw] h-[1.25vw] flex items-center rounded-full p-[0.25vw] transition ${
                       autoplay ? "bg-indigo-600" : "bg-gray-300"
                     }`}
                   >
                     <div
-                      className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${
-                        autoplay ? "translate-x-4" : "translate-x-0"
+                      className={`w-[1vw] h-[1vw] bg-white rounded-full shadow-sm transition-transform ${
+                        autoplay ? "translate-x-[1vw]" : "translate-x-0"
                       }`}
                     />
                   </button>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <p className="text-xs text-gray-700">
+                  <p className="text-[0.75vw] text-gray-700">
                     Loop (Repeat video continuously)
                   </p>
                   <button
                     onClick={toggleLoop}
                     disabled={!autoplay}
-                    className={`w-10 h-5 flex items-center rounded-full p-1 transition ${
+                    className={`w-[2.5vw] h-[1.25vw] flex items-center rounded-full p-[0.25vw] transition ${
                       loop ? "bg-indigo-600" : "bg-gray-300"
                     } ${!autoplay && "opacity-50 cursor-not-allowed"}`}
                   >
                     <div
-                      className={`w-4 h-4 bg-white rounded-full transition-transform ${
-                        loop ? "translate-x-4" : "translate-x-0"
+                      className={`w-[1vw] h-[1vw] bg-white rounded-full transition-transform ${
+                        loop ? "translate-x-[1vw]" : "translate-x-0"
                       }`}
                     />
                   </button>
@@ -678,35 +683,38 @@ const VideoEditor = ({
             </div>
 
             {/* Cover Image Upload Options */}
-            <div className="pt-4 space-y-3">
-              <h3 className="text-sm font-semibold text-gray-900">
-                Cover Image Upload Options
-              </h3>
+            <div className="pt-[1vw] space-y-[0.75vw]">
+              <div className="flex items-center gap-2.5">
+                <span className="font-semibold text-[0.85vw] text-gray-900 whitespace-nowrap">
+                  Cover Image Upload Options
+                </span>
+                <div className="h-px flex-grow bg-gradient-to-r from-gray-200 via-gray-100 to-transparent" />
+              </div>
 
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start justify-between gap-[1vw]">
                 {/* Radio Options */}
-                <div className="space-y-3 flex-1">
-                  <label className="flex items-center gap-2 cursor-pointer group">
+                <div className="space-y-[0.75vw] flex-1">
+                  <label className="flex items-center gap-[0.5vw] cursor-pointer group">
                     <input
                       type="radio"
                       name="cover"
                       onChange={() => coverInputRef.current?.click()}
-                      className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                      className="w-[1vw] h-[1vw] text-indigo-600 border-gray-300 focus:ring-indigo-500"
                     />
-                    <span className="text-xs text-gray-700 group-hover:text-gray-900">
+                    <span className="text-[0.75vw] text-gray-700 group-hover:text-gray-900">
                       Upload from your File
                     </span>
                   </label>
 
-                  <label className="flex items-center gap-2 cursor-pointer group">
+                  <label className="flex items-center gap-[0.5vw] cursor-pointer group">
                     <input
                       type="radio"
                       name="cover"
                       defaultChecked
                       onChange={handleAutoPickThumbnail}
-                      className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                      className="w-[1vw] h-[1vw] text-indigo-600 border-gray-300 focus:ring-indigo-500"
                     />
-                    <span className="text-xs text-gray-700 group-hover:text-gray-900">
+                    <span className="text-[0.75vw] text-gray-700 group-hover:text-gray-900">
                       Auto Pick from video
                     </span>
                   </label>
@@ -715,7 +723,7 @@ const VideoEditor = ({
                 {/* Upload Box */}
                 <div
                   onClick={() => coverInputRef.current?.click()}
-                  className="w-28 h-20 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 transition overflow-hidden bg-white"
+                  className="w-[7vw] h-[5vw] border-[0.1vw] border-dashed border-gray-300 rounded-[0.5vw] flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 transition overflow-hidden bg-white"
                 >
                   {posterSrc ? (
                     <img
@@ -725,8 +733,8 @@ const VideoEditor = ({
                     />
                   ) : (
                     <div className="flex flex-col items-center text-gray-400 hover:text-indigo-500">
-                      <Upload size={16} className="mb-1" />
-                      <p className="text-[10px] text-center px-2">
+                      <Upload size="0.8vw" className="mb-[0.25vw]" />
+                      <p className="text-[0.6vw] text-center px-[0.5vw]">
                         File Format : JPG, PNG
                       </p>
                     </div>

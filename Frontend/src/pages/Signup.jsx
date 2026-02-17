@@ -103,14 +103,6 @@ export default function Signup() {
           <div className="mb-auto">
              <img src={FistoLogo} alt="FIST_O" className="w-[9vw] object-contain brightness-0 invert" />
           </div>
-          
-          {/* Main Image Placeholder (User will place image here) */}
-          <div className="flex-1 flex items-center justify-center">
-             {/* Placeholder for the 3D computer image */}
-             <div className="w-[28vw] h-[22vw] border-[0.125vw] border-dashed border-white/50 flex items-center justify-center text-white/70 rounded-[0.75vw] text-[1vw]">
-                [3D IMAGE HERE]
-             </div>
-          </div>
         </div>
 
         {/* Right Section: Signup Form */}

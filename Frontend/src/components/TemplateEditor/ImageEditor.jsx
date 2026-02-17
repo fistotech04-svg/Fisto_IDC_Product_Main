@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import {
   Image as ImageIcon,
@@ -477,6 +477,19 @@ const ImageEditor = ({
   const [isSlideshow, setIsSlideshow] = useState(false);
   const [showTransitionDropdown, setShowTransitionDropdown] = useState(false);
   const [openContextMenu, setOpenContextMenu] = useState(null);
+
+  // Memoize static gallery previews
+  const galleryPreviews = useMemo(
+    () => [
+      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
+      "https://images.unsplash.com/photo-1519046904884-53103b34b206",
+      "https://images.unsplash.com/photo-1473116763249-2faaef81ccda",
+      "https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3",
+      "https://images.unsplash.com/photo-1533827432537-70133748f5c8",
+      "https://images.unsplash.com/photo-1558981806-ec527fa84f3d",
+    ],
+    [],
+  );
   
   // Ref to prevent persistence for one cycle during hydration
   const shouldSkipPersistence = useRef(false);
@@ -1013,24 +1026,37 @@ const ImageEditor = ({
             )}
 
             {!isSlideshow && (
-               <div onClick={() => setShowGallery(true)} className="relative h-[10vw] rounded-[0.75vw] overflow-hidden cursor-pointer group border border-gray-200 select-none shadow-sm shadow-indigo-100/20 mb-[1vw]">
-                 <div className="absolute inset-0 bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 p-[1vw]">
-                    <div className="flex items-end justify-center gap-[0.75vw] h-full pb-[2.5vw] opacity-90 grayscale group-hover:grayscale-0 transition-all duration-200 transform group-hover:scale-105">
-                      {[
-                        'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',
-                        'https://images.unsplash.com/photo-1519046904884-53103b34b206',
-                        'https://images.unsplash.com/photo-1473116763249-2faaef81ccda'
-                      ].map((url, i) => (
-                        <div key={i} className={`rounded-[0.5vw] shadow-lg overflow-hidden bg-white border-[0.15vw] border-gray-300 ${i === 1 ? 'w-[6vw] h-[6vw] -mb-[0.5vw] z-10' : 'w-[5vw] h-[5vw]'}`}>
-                          <img src={url} alt="Gallery" className="w-full h-full object-cover" />
-                        </div>
-                      ))}
-                    </div>
+               /* GALLERY PREVIEW BOX */
+               <div
+                 onClick={() => setShowGallery(true)}
+                 className="relative w-full h-[7vw] border border-gray-200 rounded-[0.5vw] cursor-pointer overflow-hidden bg-gray-100 mt-[0.5vw] mb-[1vw]"
+               >
+                 {/* Preview thumbnails */}
+                 <div className="absolute inset-0 grid grid-cols-3 gap-[0.1vw] p-[0.25vw]">
+                   {galleryPreviews.slice(0, 3).map((src, i) => (
+                     <div key={i} className="relative overflow-hidden rounded-[0.3vw]">
+                       <img
+                         src={src}
+                         alt=""
+                         className="w-full h-full object-cover"
+                       />
+                       <div className="absolute inset-0 bg-black/40" />
+                       <div className="absolute bottom-[0.25vw] left-[0.25vw] right-[0.25vw] text-[0.5vw] text-white text-center truncate">
+                         {i === 0
+                           ? "Nature"
+                           : i === 1
+                             ? "Ocean"
+                             : "Camping"}
+                       </div>
+                     </div>
+                   ))}
                  </div>
-                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex items-end justify-center pb-[1.25vw]">
-                   <div className="flex items-center gap-[0.5vw] text-white font-bold text-[0.85vw] tracking-wide">
-                     <ImageIcon size="1.25vw" />
-                     Image Gallery
+
+                 {/* Overlay content */}
+                 <div className="relative z-10 flex flex-col items-center justify-center h-full bg-gradient-to-t from-black/70 to-black/30">
+                   <div className="flex items-center gap-[0.5vw] text-white bg-black/40 px-[1vw] py-[0.5vw] rounded-[0.5vw] backdrop-blur-sm">
+                     <ImageIcon size="0.9vw" />
+                     <p className="text-[0.8vw] font-semibold">Image Gallery</p>
                    </div>
                  </div>
                </div>

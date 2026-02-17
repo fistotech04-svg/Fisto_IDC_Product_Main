@@ -185,25 +185,25 @@ const Stepper = React.memo(({ label, value, onChange, unit = '' }) => {
 
   return (
   <div className="flex items-center justify-between">
-    <span className="text-xs font-medium text-gray-500 whitespace-nowrap">{label} :</span>
-    <div className="flex items-center gap-1">
+    <span className="text-[0.65vw] font-medium text-gray-500 whitespace-nowrap">{label} :</span>
+    <div className="flex items-center gap-[0.25vw]">
       <button 
         onClick={() => onChange(Math.max(0, parseFloat((value - 0.1).toFixed(1))))}
-        className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
+        className="p-[0.25vw] text-gray-400 hover:text-indigo-600 transition-colors"
       >
-        <ChevronLeft size={16} />
+        <ChevronLeft size="0.85vw" />
       </button>
       <div 
         onMouseDown={onMouseDown}
-        className="w-16 h-8 border border-gray-300 rounded-lg flex items-center justify-center text-[13px] font-medium text-gray-800 bg-white shadow-sm cursor-ew-resize select-none active:border-indigo-500 transition-colors"
+        className="w-[4vw] h-[2vw] border border-gray-300 rounded-[0.4vw] flex items-center justify-center text-[0.7vw] font-medium text-gray-800 bg-white shadow-sm cursor-ew-resize select-none active:border-indigo-500 transition-colors"
       >
         {value}{unit}
       </div>
       <button 
         onClick={() => onChange(parseFloat((value + 0.1).toFixed(1)))}
-        className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
+        className="p-[0.25vw] text-gray-400 hover:text-indigo-600 transition-colors"
       >
-        <ChevronRight size={16} />
+        <ChevronRight size="0.85vw" />
       </button>
     </div>
   </div>
@@ -223,22 +223,22 @@ const AnimationSection = React.memo(({
   const galleryItem = ANIMATION_GALLERY_ITEMS.find(a => a.id === settings.type);
   
   return (
-    <div className="space-y-4 transition-all duration-300">
+    <div className="space-y-[1vw] transition-all duration-300">
       {/* Top Dropdowns (for On Page mode) */}
       {showTopDropdowns && (
-        <div className="flex gap-3 mb-4">
+        <div className="flex gap-[0.75vw] my-[1vw]">
           <div className="flex-1 relative">
             <button 
               onClick={(e) => { e.stopPropagation(); setShowMainTypeSelector(showMainTypeSelector === 'context' ? null : 'context'); }}
-              className="w-full h-10 flex items-center justify-between px-3 bg-gray-50/50 border border-gray-100 rounded-xl hover:bg-gray-100 transition-colors group"
+              className="w-full h-[2.5vw] flex items-center justify-between px-[0.75vw] bg-gray-50/50 border border-gray-100 rounded-[0.75vw] hover:bg-gray-100 transition-colors group"
             >
-               <span className="text-xs font-medium text-gray-600">{mainType}</span>
-               <ArrowRightLeft size={12} className="text-gray-400 group-hover:rotate-180 transition-transform duration-500" />
+               <span className="text-[0.75vw] font-medium text-gray-600">{mainType}</span>
+               <ArrowRightLeft size="0.75vw" className="text-gray-400 group-hover:rotate-180 transition-transform duration-500" />
             </button>
             {showMainTypeSelector === 'context' && (
-              <div onClick={(e) => e.stopPropagation()} className="absolute top-full left-0 w-31 mt-2 bg-white border border-gray-100 rounded-xl shadow-xl z-30 py-1 overflow-hidden animate-in zoom-in-95 duration-200">
+              <div onClick={(e) => e.stopPropagation()} className="absolute top-full left-0 w-[7.75vw] mt-[0.5vw] bg-white border border-gray-100 rounded-[0.75vw] shadow-xl z-30 py-[0.25vw] overflow-hidden animate-in zoom-in-95 duration-200">
                 {['While Opening', 'On Page'].map(type => (
-                  <button key={type} onClick={(e) => onMainTypeChange(e, type)} className="w-31 text-center px-4 py-2.5 text-xs font-medium text-gray-500 hover:bg-gray-50 hover:text-indigo-600 transition-colors">
+                  <button key={type} onClick={(e) => onMainTypeChange(e, type)} className="w-[7.75vw] text-center px-[1vw] py-[0.65vw] text-[0.75vw] font-medium text-gray-500 hover:bg-gray-50 hover:text-indigo-600 transition-colors">
                     {type}
                   </button>
                 ))}
@@ -249,15 +249,15 @@ const AnimationSection = React.memo(({
           <div className="flex-1 relative">
             <button 
               onClick={(e) => { e.stopPropagation(); setShowMainTypeSelector(showMainTypeSelector === 'action' ? null : 'action'); }}
-              className="w-full h-10 flex items-center justify-between px-3 bg-gray-50/50 border border-gray-100 rounded-xl hover:bg-gray-100 transition-colors group"
+              className="w-full h-[2.5vw] flex items-center justify-between px-[0.75vw] bg-gray-50/50 border border-gray-100 rounded-[0.75vw] hover:bg-gray-100 transition-colors group"
             >
-               <span className="text-xs font-medium text-gray-600">{actionType}</span>
-               <ArrowRightLeft size={12} className="text-gray-400 group-hover:rotate-180 transition-transform duration-500" />
+               <span className="text-[0.75vw] font-medium text-gray-600">{actionType}</span>
+               <ArrowRightLeft size="0.75vw" className="text-gray-400 group-hover:rotate-180 transition-transform duration-500" />
             </button>
             {showMainTypeSelector === 'action' && (
-              <div onClick={(e) => e.stopPropagation()} className="absolute top-full left-0 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-xl z-30 py-1 overflow-hidden animate-in zoom-in-95 duration-200">
+              <div onClick={(e) => e.stopPropagation()} className="absolute top-full left-0 w-full mt-[0.5vw] bg-white border border-gray-100 rounded-[0.75vw] shadow-xl z-30 py-[0.25vw] overflow-hidden animate-in zoom-in-95 duration-200">
                 {['Click', 'Hover', 'Always'].map(type => (
-                  <button key={type} onClick={(e) => onActionTypeChange(e, type)} className="w-full text-center px-4 py-2.5 text-xs font-medium text-gray-500 hover:bg-gray-50 hover:text-indigo-600 transition-colors">
+                  <button key={type} onClick={(e) => onActionTypeChange(e, type)} className="w-full text-center px-[1vw] py-[0.65vw] text-[0.75vw] font-medium text-gray-500 hover:bg-gray-50 hover:text-indigo-600 transition-colors">
                     {type}
                   </button>
                 ))}
@@ -267,26 +267,26 @@ const AnimationSection = React.memo(({
 
           <button
             onClick={(e) => onPreview(e, settings.type, settings)}
-             className="w-10 h-10 flex items-center justify-center bg-white border border-indigo-600 rounded-xl text-indigo-600 shadow-sm hover:bg-indigo-50 transition-colors flex-shrink-0"
+             className="w-[2.5vw] h-[2.5vw] flex items-center justify-center bg-white border border-indigo-600 rounded-[0.75vw] text-indigo-600 shadow-sm hover:bg-indigo-50 transition-colors flex-shrink-0"
              title="Preview"
           >
-            <ScanEye size={20} />
+            <ScanEye size="1vw" />
           </button>
         </div>
       )}
 
       {title && (
-        <div className="flex items-center gap-3">
-          <span className="text-[14px] font-bold text-gray-900 whitespace-nowrap">{title}</span>
-          <div className="h-[1px] w-full bg-gray-100" />
+        <div className="flex items-center gap-[0.75vw]">
+          <span className="text-[0.75vw] font-bold text-gray-900 whitespace-nowrap">{title}</span>
+          <div className="h-[0.05vw] w-full bg-gray-100" />
         </div>
       )}
       
-      <div className="flex gap-4 items-start">
+      <div className="flex gap-[1vw] items-start">
         {/* Style Preview Card */}
         <div 
           onClick={(e) => onPreview(e, settings.type, settings)}
-          className="anim-panel-preview-card w-[100px] h-[130px] relative group rounded-2xl overflow-hidden border border-gray-200 bg-white shadow-[0_1px_8px_rgba(0,0,0,0.04)] hover:shadow-xs transition-all duration-300 flex-shrink-0 flex flex-col cursor-pointer"
+          className="anim-panel-preview-card w-[5vw] h-[6.5vw] relative group rounded-[0.8vw] overflow-hidden border border-gray-200 bg-white shadow-[0_0.05vw_0.4vw_rgba(0,0,0,0.04)] hover:shadow-xs transition-all duration-300 flex-shrink-0 flex flex-col cursor-pointer"
         >
           {/* Top Section: Graphic & Replace Button */}
           <div className="flex-1 relative w-full flex items-center justify-center">
@@ -294,26 +294,26 @@ const AnimationSection = React.memo(({
              {/* Replace Button - Z-Index 20 to sit above overlay */}
              <div 
                onClick={(e) => { e.stopPropagation(); onOpenGallery(settings.type); }}
-               className="anim-panel-replace-btn absolute top-2 right-2 w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-all duration-200 z-20 group-hover:bg-white group-hover:shadow-sm"
+               className="anim-panel-replace-btn absolute top-[0.5vw] right-[0.5vw] w-[1.75vw] h-[1.75vw] rounded-[0.4vw] flex items-center justify-center cursor-pointer transition-all duration-200 z-20 group-hover:bg-white group-hover:shadow-sm"
                title="Replace Animation"
              >
-               <Icon icon="ph:arrows-left-right" width="16" height="16" className="text-gray-400 group-hover:text-gray-900 transition-colors overlay:hidden" />
+               <Icon icon="ph:arrows-left-right" width="0.85vw" height="0.85vw" className="text-gray-400 group-hover:text-gray-900 transition-colors overlay:hidden" />
              </div>
 
              {/* Graphic */}
-             <div className="anim-panel-bars pt-8 flex items-end gap-1.5  group-hover:opacity-40 transition-opacity duration-100 relative z-0">
-               <div className="anim-panel-bar w-2.5 h-7 bg-gray-200 rounded-[1px]" />
-               <div className="anim-panel-bar w-2.5 h-7 bg-gray-400 rounded-[1px]" />
-               <div className="anim-panel-bar w-2.5 h-7 bg-gray-600 rounded-[1px]" />
+             <div className="anim-panel-bars pt-[2vw] flex items-end gap-[0.375vw]  group-hover:opacity-40 transition-opacity duration-100 relative z-0">
+               <div className="anim-panel-bar w-[0.625vw] h-[1.75vw] bg-gray-200 rounded-[0.05vw]" />
+               <div className="anim-panel-bar w-[0.625vw] h-[1.75vw] bg-gray-400 rounded-[0.05vw]" />
+               <div className="anim-panel-bar w-[0.625vw] h-[1.75vw] bg-gray-600 rounded-[0.05vw]" />
              </div>
           </div>
 
           {/* Divider */}
-          <div className="h-[1px] w-full bg-gray-100 relative z-0" />
+          <div className="h-[0.05vw] w-full bg-gray-100 relative z-0" />
 
           {/* Bottom Section: Label */}
-          <div className="h-9 w-full flex items-center justify-center bg-white relative z-0">
-             <span className="text-[12px] font-medium text-gray-500 truncate px-2">{galleryItem?.label || 'None'}</span>
+          <div className="h-[2.25vw] w-full flex items-center justify-center bg-white relative z-0">
+             <span className="text-[0.6vw] font-medium text-gray-500 truncate px-[0.5vw]">{galleryItem?.label || 'None'}</span>
           </div>
 
           {/* Dark Overlay on Hover - Z-Index 10 */}
@@ -323,7 +323,7 @@ const AnimationSection = React.memo(({
         </div>
 
         {/* Steppers */}
-        <div className="flex-1 space-y-2.5">
+        <div className="flex-1 space-y-[0.625vw]">
           <Stepper label="Fix Delay" value={settings.delay} onChange={(v) => onUpdateSetting('delay', v)} unit="s" />
           <Stepper label="Fix Duration" value={settings.duration} onChange={(v) => onUpdateSetting('duration', v)} unit="s" />
           <Stepper label="Fix Speed" value={settings.speed} onChange={(v) => onUpdateSetting('speed', v)} />
@@ -331,23 +331,23 @@ const AnimationSection = React.memo(({
       </div>
 
       {/* Easing Dropdown */}
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-medium text-gray-800 leading-none">Select the Easing Effects :</span>
+      <div className="flex items-center justify-between gap-[0.5vw]">
+        <span className="text-[0.75vw] font-medium text-gray-800 leading-none">Select the Easing Effects :</span>
         <div className="relative">
           <button 
             onClick={(e) => { e.stopPropagation(); setShowEasingSelector(showEasingSelector === sectionKey ? null : sectionKey); }}
-            className="flex items-center justify-between px-3 py-3 bg-gray-50/50 border border-gray-100 rounded-xl hover:bg-gray-100 transition-colors group min-w-[124px]"
+            className="flex items-center justify-between px-[0.75vw] py-[0.75vw] bg-gray-50/50 border border-gray-100 rounded-[0.75vw] hover:bg-gray-100 transition-colors group min-w-[6.2vw]"
           >
-             <span className="text-xs font-medium text-gray-600">{settings.easing}</span>
-             <ChevronDown size={14} className={`text-gray-400 transition-transform duration-300 ${showEasingSelector === sectionKey ? 'rotate-180' : ''}`} />
+             <span className="text-[0.75vw] font-medium text-gray-600">{settings.easing}</span>
+             <ChevronDown size="0.85vw" className={`text-gray-400 transition-transform duration-300 ${showEasingSelector === sectionKey ? 'rotate-180' : ''}`} />
           </button>
           {showEasingSelector === sectionKey && (
-            <div onClick={(e) => e.stopPropagation()} className="absolute bottom-full left-0 w-full mb-2 bg-white border border-gray-100 rounded-xl shadow-xl z-30 py-1 overflow-visible animate-in zoom-in-95 duration-200">
+            <div onClick={(e) => e.stopPropagation()} className="absolute bottom-full left-0 w-full mb-[0.5vw] bg-white border border-gray-100 rounded-[0.75vw] shadow-xl z-30 py-[0.25vw] overflow-visible animate-in zoom-in-95 duration-200">
               {EASING_OPTIONS.map(opt => (
                 <button
                   key={opt}
                   onClick={() => { onUpdateSetting('easing', opt); setShowEasingSelector(null); }}
-                  className="w-full text-center overflow-visible px-4 py-2.5 text-xs font-medium text-gray-500 hover:bg-gray-50 hover:text-indigo-600 transition-colors"
+                  className="w-full text-center overflow-visible px-[1vw] py-[0.65vw] text-[0.75vw] font-medium text-gray-500 hover:bg-gray-50 hover:text-indigo-600 transition-colors"
                 >
                   {opt}
                 </button>
@@ -359,15 +359,14 @@ const AnimationSection = React.memo(({
 
       {/* Options - Only show for "While Open & Close" mode */}
       {!showTopDropdowns && (
-        <div className="space-y-3 pt-1">
-          <button onClick={() => onUpdateSetting('everyVisit', !settings.everyVisit)} className="flex items-center gap-3 w-full overflow-visible text-left group">
-            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${settings.everyVisit ? 'border-indigo-600 bg-white ring-4 ring-indigo-50' : 'border-gray-300'}`}>
-              <div className={`w-2.5 h-2.5 rounded-full transition-all ${settings.everyVisit ? 'bg-indigo-600' : 'bg-transparent'}`} />
+        <div className="space-y-[0.75vw] pt-[0.25vw]">
+          <button onClick={() => onUpdateSetting('everyVisit', !settings.everyVisit)} className="flex items-center gap-[0.75vw] w-full overflow-visible text-left group">
+            <div className={`w-[1.25vw] h-[1.25vw] rounded-full border-2 flex items-center justify-center transition-all ${settings.everyVisit ? 'border-indigo-600 bg-white ring-4 ring-indigo-50' : 'border-gray-300'}`}>
+              <div className={`w-[0.65vw] h-[0.65vw] rounded-full transition-all ${settings.everyVisit ? 'bg-indigo-600' : 'bg-transparent'}`} />
             </div>
-            <span className="text-[13px] font-medium text-gray-500 group-hover:text-gray-800 transition-colors">Animate in Every Visit</span>
+            <span className="text-[0.7vw] font-medium text-gray-500 group-hover:text-gray-800 transition-colors">Animate in Every Visit</span>
           </button>
           
-
         </div>
       )}
     </div>
@@ -637,55 +636,55 @@ const AnimationPanel = ({ selectedElement, onUpdate, isOpen: externalIsOpen, onT
   return (
     <div className="relative flex flex-col gap-2 w-full max-w-sm">
       <style>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 0.25vw; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 0.5vw; }
         input[type='range'] { -webkit-appearance: none; width: 100%; background: transparent; }
-        input[type='range']::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; }
-        input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: #6366f1; border: 2px solid #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.2); margin-top: -5px; cursor: pointer; }
+        input[type='range']::-webkit-slider-runnable-track { height: 0.25vw; border-radius: 0.125vw; }
+        input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; height: 0.75vw; width: 0.75vw; border-radius: 50%; background: #6366f1; border: 0.1vw solid #ffffff; box-shadow: 0 0.05vw 0.15vw rgba(0,0,0,0.2); margin-top: -0.25vw; cursor: pointer; }
       `}</style>
-      <div className="bg-white border border-gray-200 rounded-[15px] shadow-sm overflow-visible">
+      <div className="bg-white border border-gray-200 rounded-[0.8vw] shadow-sm overflow-visible">
         {/* Panel Header */}
         <div 
-          className={`flex items-center justify-between px-4 py-4 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-50 ${isOpen ? 'rounded-t-[15px]' : 'rounded-[15px]'}`}
+          className={`flex items-center justify-between px-[1vw] py-[1vw] cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-50 ${isOpen ? 'rounded-t-[0.8vw]' : 'rounded-[0.8vw]'}`}
           onClick={onToggle || (() => setInternalIsOpen(!internalIsOpen))}
         >
-          <div className="flex items-center gap-2">
-            <Sparkles size={16} className="text-gray-600" />
-            <span className="font-medium text-gray-700 text-sm">Animation</span>
+          <div className="flex items-center gap-[0.5vw]">
+            <Sparkles size="1vw" className="text-gray-600" />
+            <span className="font-medium text-gray-700 text-[0.85vw]">Animation</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-[0.5vw]">
             <button 
               onClick={handleReset}
-              className=" rounded-lg text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 transition-all duration-200"
+              className=" rounded-[0.4vw] text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 transition-all duration-200"
               title="Reset All Animations"
             >
-              <RotateCcw size={16} strokeWidth={2} />
+              <RotateCcw size="0.85vw" strokeWidth={2} />
             </button>
             <ChevronUp 
-              size={16} 
+              size="1vw" 
               className={`text-gray-500 transition-transform duration-200 ${isOpen ? '' : 'rotate-180'}`} 
             />
           </div>
         </div>
 
         {isOpen && (
-          <div className="p-4 pt-0 space-y-4">
+          <div className="p-[1vw] pt-0 space-y-[1vw]">
             {mainType === 'While Opening' && (
               <>
                 {/* Mode Dropdown */}
-                <div className="flex gap-3 mb-4">
+                <div className="flex gap-[0.75vw] mb-[1vw]">
                   <div className="flex-1 relative">
                     <button 
                       onClick={(e) => { e.stopPropagation(); setShowMainTypeSelector(showMainTypeSelector === 'context' ? null : 'context'); }}
-                      className="w-31 h-10 flex items-center justify-between px-3 bg-gray-50/50 border border-gray-100 rounded-xl hover:bg-gray-100 transition-colors group"
+                      className="w-[7.75vw] h-[2.5vw] flex items-center justify-between px-[0.75vw] bg-gray-50/50 border border-gray-100 rounded-[0.75vw] hover:bg-gray-100 transition-colors group"
                     >
-                       <span className="text-xs font-medium text-gray-600">{mainType}</span>
-                       <ArrowRightLeft size={12} className="text-gray-400 group-hover:rotate-180 transition-transform duration-500" />
+                       <span className="text-[0.75vw] font-medium text-gray-600">{mainType}</span>
+                       <ArrowRightLeft size="0.75vw" className="text-gray-400 group-hover:rotate-180 transition-transform duration-500" />
                     </button>
                     {showMainTypeSelector === 'context' && (
-                      <div onClick={(e) => e.stopPropagation()} className="absolute top-full left-0 w-31 mt-2 bg-white border border-gray-100 rounded-xl shadow-xl z-30 py-1 overflow-hidden animate-in zoom-in-95 duration-200">
+                      <div onClick={(e) => e.stopPropagation()} className="absolute top-full left-0 w-[7.75vw] mt-[0.5vw] bg-white border border-gray-100 rounded-[0.75vw] shadow-xl z-30 py-[0.25vw] overflow-hidden animate-in zoom-in-95 duration-200">
                         {['While Opening', 'On Page'].map(type => (
-                          <button key={type} onClick={(e) => handleMainTypeChange(e, type)} className="w-31 text-center px-4 py-2.5 text-xs font-medium text-gray-500 hover:bg-gray-50 hover:text-indigo-600 transition-colors">
+                          <button key={type} onClick={(e) => handleMainTypeChange(e, type)} className="w-[7.75vw] text-center px-[1vw] py-[0.65vw] text-[0.75vw] font-medium text-gray-500 hover:bg-gray-50 hover:text-indigo-600 transition-colors">
                             {type}
                           </button>
                         ))}
@@ -695,10 +694,10 @@ const AnimationPanel = ({ selectedElement, onUpdate, isOpen: externalIsOpen, onT
                   
                   <button
                     onClick={(e) => previewAnimation(e, openSettings.type, openSettings)}
-                     className="w-10 h-10 flex items-center justify-center bg-indigo-50 border border-indigo-600 rounded-xl text-indigo-600 shadow-sm hover:bg-indigo-200 transition-colors flex-shrink-0"
+                     className="w-[2.5vw] h-[2.5vw] flex items-center justify-center bg-indigo-50 border border-indigo-600 rounded-[0.75vw] text-indigo-600 shadow-sm hover:bg-indigo-200 transition-colors flex-shrink-0"
                      title="Preview Animation"
                   >
-                    <ScanEye size={20} />
+                    <ScanEye size="1vw" />
                   </button>
                 </div>
 
@@ -733,17 +732,17 @@ const AnimationPanel = ({ selectedElement, onUpdate, isOpen: externalIsOpen, onT
 
       {/* Animation Gallery Modal */}
       {showGallery && (
-        <div className="anim-panel-gallery-modal fixed z-[50] bg-white  rounded-[12px] shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200" style={{ width: '320px', height: '540px', top: '55%', left: '80%', transform: 'translate(-50%, -50%)' }}>
-          <div className="anim-panel-gallery-header flex items-center justify-between px-4 py-4 border-b border-gray-100">
-            <h2 className="text-mg font-bold text-gray-900">Animation Gallery</h2>
-            <button onClick={() => setShowGallery(false)} className="anim-panel-close-btn w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
-              <X size={18} className="text-gray-400" />
+        <div className="anim-panel-gallery-modal fixed z-[50] bg-white  rounded-[0.6vw] shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200" style={{ width: '20vw', height: '34vw', top: '55%', left: '80%', transform: 'translate(-50%, -50%)' }}>
+          <div className="anim-panel-gallery-header flex items-center justify-between px-[1vw] py-[1vw] border-b border-gray-100">
+            <h2 className="text-[0.9vw] font-semibold text-gray-900">Animation Gallery</h2>
+            <button onClick={() => setShowGallery(false)} className="anim-panel-close-btn w-[2vw] h-[2vw] flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
+              <X size="0.9vw" className="text-gray-400" />
             </button>
           </div>
 
-          <div className="anim-panel-gallery-content flex-1 px-4 py-4 overflow-y-auto custom-scrollbar">
-            <h3 className="text-[13px] font-bold text-gray-900 mb-4">Choose Animation</h3>
-            <div className="anim-panel-gallery-grid grid grid-cols-3 gap-x-4 gap-y-6">
+          <div className="anim-panel-gallery-content flex-1 px-[1vw] py-[1vw] overflow-y-auto custom-scrollbar">
+            <h3 className="text-[0.7vw] font-semibold text-gray-900 mb-[1vw]">Choose Animation</h3>
+            <div className="anim-panel-gallery-grid grid grid-cols-3 gap-x-[1vw] gap-y-[1.5vw]">
               {ANIMATION_GALLERY_ITEMS.map((anim, idx) => (
                 <div key={idx} className="anim-panel-gallery-item group cursor-pointer flex flex-col items-center" onClick={(e) => {
                   setTempSelectedAnim(anim.id);
@@ -754,47 +753,47 @@ const AnimationPanel = ({ selectedElement, onUpdate, isOpen: externalIsOpen, onT
                   
                   previewAnimation(e, anim.id, targetSettings);
                 }}>
-                  <div className={`anim-panel-item-card aspect-square w-full rounded-[8px] border-2 flex flex-col items-center justify-center transition-all bg-gray-50/30 overflow-hidden ${
+                  <div className={`anim-panel-item-card aspect-square w-full rounded-[0.4vw] border-2 flex flex-col items-center justify-center transition-all bg-gray-50/30 overflow-hidden ${
                     tempSelectedAnim === anim.id ? 'border-gray-400 ring-2 ring-gray-100 bg-white' : 'border-transparent hover:bg-white hover:shadow-sm'
                   }`}>
-                    <div className="anim-panel-item-icon flex-1 flex items-center justify-center p-1">
+                    <div className="anim-panel-item-icon flex-1 flex items-center justify-center p-[0.25vw]">
                       {anim.icon === 'None' ? (
-                        <div className="anim-panel-none-icon w-8 h-8 rounded-full border-[1.5px] border-gray-400 flex items-center justify-center -rotate-45"><div className="w-[1.5px] h-full bg-gray-400" /></div>
+                        <div className="anim-panel-none-icon w-[2vw] h-[2vw] rounded-full border-[0.1vw] border-gray-400 flex items-center justify-center -rotate-45"><div className="w-[0.1vw] h-full bg-gray-400" /></div>
                       ) : anim.icon === 'Circle' ? (
                         <motion.div 
                           variants={ANIMATION_VARIANTS[anim.id]} initial="initial" animate="animate"
                           transition={ANIMATION_VARIANTS[anim.id]?.transition || { repeat: Infinity, duration: 2 }}
-                          className="anim-panel-circle-icon w-8 h-8 rounded-full border-[1.5px] border-gray-400 flex items-center justify-center"
+                          className="anim-panel-circle-icon w-[2vw] h-[2vw] rounded-full border-[0.1vw] border-gray-400 flex items-center justify-center"
                         >
-                          <div className="w-5 h-5 rounded-full border-[1.5px] border-dashed border-gray-400" />
+                          <div className="w-[1.25vw] h-[1.25vw] rounded-full border-[0.1vw] border-dashed border-gray-400" />
                         </motion.div>
                       ) : (
-                        <div className="anim-panel-bars-icon flex items-end gap-1 h-6">
+                        <div className="anim-panel-bars-icon flex items-end gap-[0.25vw] h-[1.5vw]">
                           <motion.div 
                             variants={ANIMATION_VARIANTS[anim.id]} initial="initial" animate="animate"
-                            transition={ANIMATION_VARIANTS[anim.id]?.transition || { repeat: Infinity, duration: 1.5 }} className="anim-panel-bar-1 w-2 h-6 bg-gray-200 rounded-[1px]" 
+                            transition={ANIMATION_VARIANTS[anim.id]?.transition || { repeat: Infinity, duration: 1.5 }} className="anim-panel-bar-1 w-[0.5vw] h-[1.5vw] bg-gray-200 rounded-[0.05vw]" 
                           />
                           <motion.div 
                             variants={ANIMATION_VARIANTS[anim.id]} initial="initial" animate="animate"
-                            transition={ANIMATION_VARIANTS[anim.id]?.transition || { repeat: Infinity, duration: 1.5, delay: 0.1 }} className="anim-panel-bar-2 w-2 h-6 bg-gray-400 rounded-[1px]" 
+                            transition={ANIMATION_VARIANTS[anim.id]?.transition || { repeat: Infinity, duration: 1.5, delay: 0.1 }} className="anim-panel-bar-2 w-[0.5vw] h-[1.5vw] bg-gray-400 rounded-[0.05vw]" 
                           />
                           <motion.div 
                             variants={ANIMATION_VARIANTS[anim.id]} initial="initial" animate="animate"
-                            transition={ANIMATION_VARIANTS[anim.id]?.transition || { repeat: Infinity, duration: 1.5, delay: 0.2 }} className="anim-panel-bar-3 w-2 h-6 bg-gray-600 rounded-[1px]" 
+                            transition={ANIMATION_VARIANTS[anim.id]?.transition || { repeat: Infinity, duration: 1.5, delay: 0.2 }} className="anim-panel-bar-3 w-[0.5vw] h-[1.5vw] bg-gray-600 rounded-[0.05vw]" 
                           />
                         </div>
                       )}
                     </div>
                   </div>
-                  <span className={`anim-panel-item-label text-[11px] mt-2 font-medium text-center leading-tight transition-colors ${tempSelectedAnim === anim.id ? 'text-indigo-600 font-bold' : 'text-gray-400'}`}>{anim.label}</span>
+                  <span className={`anim-panel-item-label text-[0.6vw] mt-[0.5vw] font-medium text-center leading-tight transition-colors ${tempSelectedAnim === anim.id ? 'text-indigo-600 font-bold' : 'text-gray-400'}`}>{anim.label}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="anim-panel-gallery-footer p-3 border-t flex justify-end gap-2 bg-white">
-            <button onClick={() => setShowGallery(false)} className="anim-panel-gallery-close flex-1 h-8 border border-gray-300 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1 hover:bg-gray-50 transition-colors">
-              <X size={12} /> Close
+          <div className="anim-panel-gallery-footer p-[0.75vw] border-t flex justify-end gap-[0.5vw] bg-white">
+            <button onClick={() => setShowGallery(false)} className="anim-panel-gallery-close cursor-pointer flex-1 h-[2vw] border border-gray-300 rounded-[0.4vw] text-[0.7vw] font-semibold flex items-center justify-center gap-[0.25vw] hover:bg-gray-50 transition-colors">
+              <X size="0.8vw" /> Close
             </button>
             <button 
               disabled={!tempSelectedAnim}
@@ -804,9 +803,9 @@ const AnimationPanel = ({ selectedElement, onUpdate, isOpen: externalIsOpen, onT
                   setShowGallery(false);
                 }
               }}
-              className="anim-panel-gallery-replace flex-1 h-8 bg-black text-white rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1 hover:bg-zinc-800 disabled:opacity-50 transition-all"
+              className="anim-panel-gallery-replace flex-1 cursor-pointer h-[2vw] bg-black text-white rounded-[0.4vw] text-[0.7vw] font-semibold flex items-center justify-center gap-[0.25vw] hover:bg-zinc-800 disabled:opacity-50 transition-all"
             >
-              <Replace size={12} /> Replace
+              <Replace size="0.7vw" /> Replace
             </button>
           </div>
         </div>

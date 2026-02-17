@@ -91,7 +91,7 @@ export default function Signin() {
         <div className="hidden lg:flex w-[50%] flex-col p-[3vw] relative">
           {/* Logo */}
           <div className="mb-auto">
-             <img src={FistoLogo} alt="FIST_O" className="w-[10vw] object-contain" />
+             <img src={FistoLogo} alt="FIST_O" className="w-[9vw] object-contain" />
           </div>
           
           {/* Main Image Placeholder (User will place image here) */}
@@ -161,7 +161,7 @@ export default function Signin() {
                    <button 
                     type="button"
                     onClick={handleForgotPasswordClick}
-                    className={`text-[0.875vw] underline decoration-1 underline-offset-[0.25vw] transition-colors ${!formData.emailId ? 'text-gray-500 cursor-not-allowed opacity-60' : 'text-gray-300 hover:text-white cursor-pointer'}`}
+                    className={`text-[0.875vw] underline decoration-1 underline-offset-[0.25vw] transition-colors font-semibold ${!formData.emailId ? 'text-gray-500 cursor-not-allowed opacity-60' : 'text-gray-300 hover:text-white cursor-pointer'}`}
                     disabled={!formData.emailId}
                    >
                       Forget Password ?
@@ -198,7 +198,7 @@ export default function Signin() {
               {/* Divider */}
               <div className="flex items-center my-[2vw]">
                 <div className="flex-1 border-t border-1 border-white"></div>
-                <span className="px-[0.75vw] text-gray-300 text-[0.875vw]">or</span>
+                <span className="px-[0.75vw] text-gray-300 text-[0.875vw] font-semibold">or</span>
                 <div className="flex-1 border-t border-1 border-white"></div>
               </div>
 

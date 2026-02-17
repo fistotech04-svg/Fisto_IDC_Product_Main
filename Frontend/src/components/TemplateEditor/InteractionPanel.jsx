@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import {
   MousePointerClick,
+  Sparkles,
   ChevronUp,
   ChevronDown,
   Trash2,
@@ -34,8 +35,10 @@ import {
   Layers
 } from 'lucide-react';
 import { Icon } from '@iconify/react';
+import { createPortal } from 'react-dom';
 import PopupTemplateSelection from './PopupTemplateSelection';
 import PopupPreview from './PopupPreview';
+import ColorPicker from '../ThreedEditor/ColorPicker';
 
 // Helper: Hex to RGB
 const hexToRgb = (hex) => {
@@ -96,213 +99,6 @@ const hsvToRgb = (h, s, v) => {
   return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
 };
 
-const ColorPicker = ({ color, onChange, onClose, onReset }) => {
-  const initialHsv = rgbToHsv(hexToRgb(color).r, hexToRgb(color).g, hexToRgb(color).b);
-  const [hsv, setHsv] = useState(initialHsv);
-  const [rgb, setRgb] = useState(hexToRgb(color));
-  const [viewMode, setViewMode] = useState('presets'); // 'presets' or 'advanced'
-  const containerRef = React.useRef(null);
-  const isDragging = React.useRef(false);
-
-  const presets = [
-    '#FFFFFF', '#000000', '#FF0000', '#FF8C00', '#B22222', '#FFFF00',
-    '#98FB98', '#228B22', '#008080', '#40E0D0', '#00BFFF', '#008B8B',
-    '#ADD8E6', '#87CEEB', '#0000FF', '#00008B', '#E6E6FA', '#FF00FF',
-    '#808080', '#A9A9A9', '#C0C0C0', '#D3D3D3', '#F5F5F5', '#2D2D2D'
-  ];
-
-  const updateColor = (newHsv) => {
-    setHsv(newHsv);
-    const newRgb = hsvToRgb(newHsv.h, newHsv.s, newHsv.v);
-    setRgb(newRgb);
-    onChange(rgbToHex(newRgb.r, newRgb.g, newRgb.b));
-  };
-
-  const handleMouseDown = (e) => {
-    isDragging.current = true;
-    handleMouseMove(e);
-  };
-
-  const handleMouseMove = React.useCallback((e) => {
-    if (!isDragging.current || !containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    const y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
-    updateColor({ ...hsv, s: x * 100, v: (1 - y) * 100 });
-  }, [hsv]);
-
-  const handleMouseUp = React.useCallback(() => {
-    isDragging.current = false;
-  }, []);
-
-  React.useEffect(() => {
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [handleMouseMove, handleMouseUp]);
-
-  const handleEyeDropper = async () => {
-    if (!window.EyeDropper) return;
-    try {
-      const eyeDropper = new window.EyeDropper();
-      const result = await eyeDropper.open();
-      onChange(result.sRGBHex);
-      const newRgb = hexToRgb(result.sRGBHex);
-      setRgb(newRgb);
-      setHsv(rgbToHsv(newRgb.r, newRgb.g, newRgb.b));
-    } catch (e) {
-      console.warn('EyeDropper failed:', e);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-[100001] flex justify-end items-start pt-[8vh] pr-[2vw] pointer-events-none">
-      <div className="fixed inset-0 pointer-events-auto" onClick={onClose} />
-
-      <div className={`bg-white rounded-[2vw] shadow-[0_2vw_6vw_rgba(0,0,0,0.3)] w-[20vw] overflow-hidden flex flex-col transition-all duration-500 ease-in-out transform scale-100 animate-in zoom-in-95 pointer-events-auto relative z-10 ${viewMode === 'advanced' ? 'max-h-[85vh]' : 'max-h-[32vw]'}`}>
-        {/* Top Header */}
-        <div className="flex items-center justify-between px-[1.5vw] pt-[1.5vw] pb-[0.5vw] bg-white sticky top-0 z-20">
-          <div className="flex items-center gap-[2.8vw] ml-[1vw]">
-            <span className="text-[0.6vw] font-bold text-gray-400 uppercase tracking-[0.2em]">R</span>
-            <span className="text-[0.6vw] font-bold text-gray-400 uppercase tracking-[0.2em]">G</span>
-            <span className="text-[0.6vw] font-bold text-gray-400 uppercase tracking-[0.2em]">B</span>
-          </div>
-          <div className="flex items-center gap-[1vw]">
-            <RotateCcw size="1vw" className="text-gray-400 cursor-pointer hover:text-indigo-600 transition-colors" onClick={onReset} />
-            <X size="1.2vw" className="text-gray-400 cursor-pointer hover:text-red-500 transition-colors" onClick={onClose} />
-          </div>
-        </div>
-
-        <div className="px-[1.5vw] pb-[2vw] pt-[0.5vw] overflow-y-auto custom-scrollbar flex flex-col">
-          {/* Transitioning Advanced Section (Now on top of presets) */}
-          <div className={`overflow-hidden transition-all duration-500 ease-in-out ${viewMode === 'advanced' ? 'max-h-[30vw] opacity-100 mb-[2vw] mt-[0.5vw]' : 'max-h-0 opacity-0 mb-0 mt-0'}`}>
-            <div className="space-y-[1.5vw]">
-              {/* Saturation/Value Area */}
-              <div
-                ref={containerRef}
-                onMouseDown={handleMouseDown}
-                className="relative w-full h-[11vw] rounded-[1.2vw] cursor-crosshair overflow-hidden shadow-inner border border-gray-100"
-                style={{ backgroundColor: `hsl(${hsv.h}, 100%, 50%)` }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-white to-transparent" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
-                <div
-                  className="absolute w-[1.2vw] h-[1.2vw] border-[0.2vw] border-white rounded-full shadow-[0_0.2vw_0.4vw_rgba(0,0,0,0.4)] -translate-x-1/2 translate-y-1/2 pointer-events-none"
-                  style={{ left: `${hsv.s}%`, bottom: `${hsv.v}%` }}
-                />
-              </div>
-
-              {/* Hue Slider and Eyedropper */}
-              <div className="flex items-center gap-[1.2vw]">
-                <div
-                  onClick={handleEyeDropper}
-                  className="w-[2.5vw] h-[2.5vw] rounded-[0.8vw] bg-gray-50 flex items-center justify-center text-gray-500 cursor-pointer hover:bg-indigo-50 hover:text-indigo-600 transition-all shadow-sm active:scale-95"
-                >
-                  <Pipette size="1.2vw" />
-                </div>
-                <div className="w-[2vw] h-[2vw] rounded-full border border-gray-200 shrink-0 shadow-sm" style={{ backgroundColor: color }} />
-                <div className="flex-1 h-[1vw] relative flex items-center">
-                  <input
-                    type="range"
-                    min="0" max="360"
-                    value={hsv.h}
-                    onChange={(e) => updateColor({ ...hsv, h: parseInt(e.target.value) })}
-                    className="w-full h-full appearance-none cursor-pointer rounded-full hue-slider-alt"
-                  />
-                </div>
-              </div>
-
-              {/* RGB Inputs */}
-              <div className="grid grid-cols-3 gap-[1vw]">
-                {['r', 'g', 'b'].map((key) => (
-                  <div key={key} className="flex flex-col items-center gap-[0.5vw]">
-                    <div className="w-full h-[2.8vw] border border-gray-200 rounded-[0.8vw] flex items-center justify-center bg-gray-50/50 focus-within:bg-white focus-within:border-indigo-300 focus-within:ring-4 focus-within:ring-indigo-50 transition-all">
-                      <input
-                        type="number"
-                        min="0" max="255"
-                        value={rgb[key]}
-                        onChange={(e) => {
-                          const val = Math.max(0, Math.min(255, parseInt(e.target.value) || 0));
-                          const newRgb = { ...rgb, [key]: val };
-                          setRgb(newRgb);
-                          const newHex = rgbToHex(newRgb.r, newRgb.g, newRgb.b);
-                          onChange(newHex);
-                          setHsv(rgbToHsv(newRgb.r, newRgb.g, newRgb.b));
-                        }}
-                        className="w-full text-center text-[1vw] font-bold text-gray-800 outline-none bg-transparent"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Presets Grid */}
-          <div className="grid grid-cols-6 gap-[0.8vw] mb-[2vw]">
-            <button
-              onClick={() => {
-                onChange('none');
-              }}
-              className={`w-[2vw] h-[2vw] rounded-[0.6vw] border border-gray-100 transition-all active:scale-90 hover:scale-110 shadow-sm relative bg-white overflow-hidden ${color === 'none' ? 'ring-[0.1vw] ring-indigo-500 ring-offset-[0.15vw]' : ''}`}
-            >
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[0.1vw] bg-red-400 rotate-45"></div>
-            </button>
-            {presets.map((p) => (
-              <button
-                key={p}
-                onClick={() => {
-                  onChange(p);
-                  const newRgb = hexToRgb(p);
-                  setRgb(newRgb);
-                  setHsv(rgbToHsv(newRgb.r, newRgb.g, newRgb.b));
-                }}
-                className={`w-[2vw] h-[2vw] rounded-[0.6vw] border border-gray-100 transition-all active:scale-90 hover:scale-110 shadow-sm ${color.toUpperCase() === p.toUpperCase() ? 'ring-[0.1vw] ring-indigo-500 ring-offset-[0.15vw]' : ''}`}
-                style={{ backgroundColor: p }}
-              />
-            ))}
-          </div>
-
-          {/* Customize Colors Footer */}
-          <div
-            onClick={() => setViewMode(viewMode === 'presets' ? 'advanced' : 'presets')}
-            className="flex items-center gap-[1.2vw] group cursor-pointer hover:bg-gray-50/50 p-[0.5vw] -mx-[0.5vw] rounded-[1vw] transition-colors mb-[1.5vw]"
-          >
-            <div className={`w-[2.8vw] h-[2.8vw] rounded-full rainbow-wheel-icon shadow-lg transform transition-all duration-500 ${viewMode === 'advanced' ? 'rotate-180 scale-90' : 'group-hover:rotate-12 hover:scale-110'}`} />
-            <span className="text-[1vw] font-bold text-gray-700 group-hover:text-black transition-colors">
-              {viewMode === 'advanced' ? 'Simple View' : 'Customize Colors'}
-            </span>
-          </div>
-
-
-        </div>
-
-        <style>{`
-          .hue-slider-alt {
-            background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
-          }
-          .hue-slider-alt::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
-            background: white;
-            border: 3px solid white;
-            border-radius: 50%;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            cursor: pointer;
-          }
-          .rainbow-wheel-icon {
-            background: conic-gradient(#ff0000, #ff8000, #ffff00, #80ff00, #00ff00, #00ff80, #00ffff, #0080ff, #0000ff, #8000ff, #ff00ff, #ff0080, #ff0000);
-          }
-        `}</style>
-      </div>
-    </div>
-  );
-};
-
 
 const InteractionPanel = ({
   selectedElement,
@@ -338,6 +134,7 @@ const InteractionPanel = ({
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   const [showTriggerDropdown, setShowTriggerDropdown] = useState(false);
   const [showFitDropdown, setShowFitDropdown] = useState(false);
+  const [dropdownRect, setDropdownRect] = useState(null);
   const dropdownRef = React.useRef(null);
 
   // Values for inputs
@@ -377,7 +174,28 @@ const InteractionPanel = ({
   const strokePositionRef = React.useRef(null);
   const typeTriggerRef = React.useRef(null);
   const triggerTriggerRef = React.useRef(null);
-  const [dropdownRect, setDropdownRect] = useState(null);
+  // New States for Redesigned Fill/Stroke Pickers
+  const [showDetailedFillControls, setShowDetailedFillControls] = useState(false);
+  const [showDetailedStrokeControls, setShowDetailedStrokeControls] = useState(false);
+  const fillPickerRef = React.useRef(null);
+  const strokePickerRef = React.useRef(null);
+
+  // Helper to get colors used on the current page
+  const colorsOnPage = React.useMemo(() => {
+    if (!selectedElement || !selectedElement.ownerDocument) return [];
+    const elements = selectedElement.ownerDocument.querySelectorAll('[data-fill-color], [data-stroke-color], [data-popup-fill], [data-popup-stroke]');
+    const colors = new Set();
+    elements.forEach(el => {
+      const fill = el.getAttribute('data-fill-color') || el.getAttribute('data-popup-fill');
+      const stroke = el.getAttribute('data-stroke-color') || el.getAttribute('data-popup-stroke');
+      if (fill && fill !== 'none') colors.add(fill.toUpperCase());
+      if (stroke && stroke !== 'none') colors.add(stroke.toUpperCase());
+    });
+    // Add default white and black if not present
+    colors.add('#FFFFFF');
+    colors.add('#000000');
+    return Array.from(colors).slice(0, 12);
+  }, [selectedElement, pages]);
 
   const handleToggleTypeDropdown = (e) => {
     e.stopPropagation();
@@ -551,6 +369,9 @@ const InteractionPanel = ({
       if (strokePositionRef.current && !strokePositionRef.current.contains(event.target)) {
         setShowStrokePositionDropdown(false);
       }
+      // Close new pickers
+      if (fillPickerRef.current && !fillPickerRef.current.contains(event.target) && !event.target.closest('.fill-picker-trigger') && !event.target.closest('.color-picker-container')) setShowFillPicker(false);
+      if (strokePickerRef.current && !strokePickerRef.current.contains(event.target) && !event.target.closest('.stroke-picker-trigger') && !event.target.closest('.color-picker-container')) setShowStrokePicker(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
@@ -1727,16 +1548,16 @@ const InteractionPanel = ({
 
   const getIconForType = (type) => {
     switch (type) {
-      case 'link': return <ExternalLink size={16} className="text-gray-600" />;
-      case 'navigation': return <Zap size={16} className="text-gray-600" />;
-      case 'call': return <Phone size={16} className="text-gray-600" />;
-      case 'zoom': return <ZoomIn size={16} className="text-gray-600" />;
-      case 'popup': return <MessageSquare size={16} className="text-gray-600" />;
-      case 'tooltip': return <Info size={16} className="text-gray-600" />;
-      case 'download': return <Download size={16} className="text-gray-600" />;
-      case '3dviewer': return <Box size={16} className="text-gray-600" />;
-      case 'slideshow': return <Layers size={16} className="text-gray-600" />;
-      default: return <MousePointerClick size={16} className="text-gray-600" />;
+      case 'link': return <ExternalLink size="1vw" className="text-gray-600" />;
+      case 'navigation': return <Zap size="1vw" className="text-gray-600" />;
+      case 'call': return <Phone size="1vw" className="text-gray-600" />;
+      case 'zoom': return <ZoomIn size="1vw" className="text-gray-600" />;
+      case 'popup': return <MessageSquare size="1vw" className="text-gray-600" />;
+      case 'tooltip': return <Info size="1vw" className="text-gray-600" />;
+      case 'download': return <Download size="1vw" className="text-gray-600" />;
+      case '3dviewer': return <Box size="1vw" className="text-gray-600" />;
+      case 'slideshow': return <Layers size="1vw" className="text-gray-600" />;
+      default: return <MousePointerClick size="1vw" className="text-gray-600" />;
     }
   }
 
@@ -1749,41 +1570,138 @@ const InteractionPanel = ({
 
 
   return (
-    <div className={`bg-white border ${isFrame ? 'border-gray-100 shadow-md' : 'border-gray-200 shadow-sm'} ${isFrame ? 'rounded-2xl' : 'rounded-[15px]'} relative transition-all duration-300`}>
+    <div className={`bg-white border ${isFrame ? 'border-gray-100 shadow-md' : 'border-gray-200 shadow-sm'} ${isFrame ? 'rounded-[0.8vw]' : 'rounded-[0.8vw]'} relative transition-all duration-300 overflow-hidden`}>
 
       {/* ================= HEADER ================= */}
       <div
-        className={`flex items-center justify-between px-4 py-4 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-50 group/header ${isInteractionsOpen ? (isFrame ? 'rounded-t-2xl' : 'rounded-t-[15px]') : (isFrame ? 'rounded-2xl' : 'rounded-[15px]')}`}
+        className={`flex items-center justify-between px-[1vw] py-[1vw] cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-50 group/header ${isInteractionsOpen ? (isFrame ? 'rounded-t-[0.8vw]' : 'rounded-t-[0.8vw]') : (isFrame ? 'rounded-[0.8vw]' : 'rounded-[0.8vw]')}`}
         onClick={() => {
           if (onToggle) onToggle();
           else setInternalIsOpen(!internalIsOpen);
         }}
       >
-        <div className="flex items-center gap-2">
-          {getIconForType(interactionType)}
+        <div className="flex items-center gap-[0.5vw]">
+          <Sparkles size="1vw" className="text-gray-600" />
+          <span className="text-[0.85vw] font-medium text-gray-700">Interaction</span>
+        </div>
 
-          {!isFrame ? (
-            <span className="text-sm font-semibold text-gray-700">Interaction</span>
-          ) : (
-            <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center gap-[0.5vw]">
+          {isFrame && (
+            <button
+              onClick={(e) => { e.stopPropagation(); handleReset(); }}
+              className="p-[0.35vw] text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-[0.4vw] transition-all"
+              title="Reset Interaction"
+            >
+              <RotateCcw size="0.85vw" />
+            </button>
+          )}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onToggle) onToggle();
+              else setInternalIsOpen(!internalIsOpen);
+            }}
+            className="rounded-[0.3vw] hover:bg-gray-100 transition-colors"
+            aria-label={isInteractionsOpen ? "Collapse" : "Expand"}
+          >
+            <ChevronUp
+              size="1vw"
+              className={`text-gray-500 transition-transform duration-200 ${isInteractionsOpen ? '' : 'rotate-180'}`}
+            />
+          </button>
+        </div>
+      </div>
+
+      {isInteractionsOpen && (
+        <div className="p-[1vw] pt-0 animate-fadeIn space-y-[1vw]">
+
+          {/* ================= TOP SELECTORS ================= */}
+          <div className="flex items-center justify-between gap-[0.8vw] mb-[0.25vw] pt-[1vw]">
+            {/* Type Selector (Inside Panel Body) */}
+            <div className="relative">
+              <button
+                ref={typeTriggerRef}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleToggleTypeDropdown(e);
+                }}
+                className="flex items-center gap-[0.4vw] px-[0.75vw] py-[0.4vw] bg-gray-100 hover:bg-gray-200 rounded-[0.5vw] transition-all group relative border border-gray-200"
+              >
+                <span className="text-[0.75vw] font-semibold text-gray-700">{getInteractionLabel()}</span>
+                <ChevronDown size="0.85vw" className={`text-gray-500 transition-transform duration-300 ${showTypeDropdown ? 'rotate-180' : ''}`} />
+              </button>
+
+              {showTypeDropdown && dropdownRect && ReactDOM.createPortal(
+                <>
+                  <div className="fixed inset-0 z-[100000] cursor-default" onClick={(e) => {
+                    e.stopPropagation();
+                    setShowTypeDropdown(false);
+                  }} />
+                  <div
+                    ref={dropdownRef}
+                    style={{
+                      position: 'fixed',
+                      left: Math.min(dropdownRect.left, window.innerWidth - 180),
+                      zIndex: 100001,
+                      ...(dropdownRect.bottom + 8 + 300 > window.innerHeight
+                        ? { bottom: window.innerHeight - dropdownRect.top + 8 }
+                        : { top: dropdownRect.bottom + 8 })
+                    }}
+                      className="w-[10vw] bg-white border border-gray-100 rounded-[0.6vw] shadow-2xl overflow-y-auto max-h-[20vw] flex flex-col py-[0.25vw] animate-in fade-in zoom-in-95 duration-150 pointer-events-auto"
+                    onClick={e => e.stopPropagation()}
+                  >
+                    {[
+                      { id: 'none', label: 'None', icon: X },
+                      { id: 'link', label: 'Open Link', icon: ExternalLink },
+                      { id: 'navigation', label: 'Navigate to', icon: Zap },
+                      { id: 'call', label: 'Call', icon: Phone },
+                      { id: 'zoom', label: 'Zoom', icon: ZoomIn },
+                      { id: 'popup', label: 'Popup', icon: MessageSquare },
+                      { id: 'tooltip', label: 'Tooltip', icon: Info },
+                      { id: 'download', label: 'Download', icon: Download }
+                    ].map((opt) => {
+                      const IconComp = opt.icon;
+                      return (
+                        <button
+                          key={opt.id}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTypeChange(opt.id);
+                            setShowTypeDropdown(false);
+                          }}
+                          className={`px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium transition-colors text-left w-full flex items-center gap-[0.6vw] ${interactionType === opt.id ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}
+                        >
+                          <IconComp size="0.85vw" className={interactionType === opt.id ? 'text-indigo-600' : 'text-gray-400'} />
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>,
+                document.body
+              )}
+            </div>
+
+            {/* Trigger Selector */}
+            {['tooltip'].includes(interactionType) && (
               <div className="relative">
                 <button
-                  ref={typeTriggerRef}
+                  ref={triggerTriggerRef}
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleToggleTypeDropdown(e);
+                    handleToggleTriggerDropdown(e);
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1 bg-gray-100/50 hover:bg-gray-200/50 rounded-lg transition-all group relative z-[100001]"
+                  className="flex items-center gap-[0.4vw] px-[0.75vw] py-[0.4vw] bg-gray-100 hover:bg-gray-200 rounded-[0.5vw] transition-all group relative border border-gray-200"
                 >
-                  <span className="text-[13px] font-bold text-gray-700">{getInteractionLabel()}</span>
-                  <ChevronDown size={16} className={`text-gray-500 transition-transform duration-300 ${showTypeDropdown ? 'rotate-180' : ''}`} />
+                  <span className="text-[0.75vw] font-semibold text-gray-700">{getTriggerLabel()}</span>
+                  <ChevronDown size="0.85vw" className={`text-gray-500 transition-transform duration-300 ${showTriggerDropdown ? 'rotate-180' : ''}`} />
                 </button>
 
-                {showTypeDropdown && dropdownRect && ReactDOM.createPortal(
+                {showTriggerDropdown && dropdownRect && ReactDOM.createPortal(
                   <>
                     <div className="fixed inset-0 z-[100000] cursor-default" onClick={(e) => {
                       e.stopPropagation();
-                      setShowTypeDropdown(false);
+                      setShowTriggerDropdown(false);
                     }} />
                     <div
                       ref={dropdownRef}
@@ -1795,18 +1713,12 @@ const InteractionPanel = ({
                           ? { bottom: window.innerHeight - dropdownRect.top + 8 }
                           : { top: dropdownRect.bottom + 8 })
                       }}
-                      className="w-44 bg-white border border-gray-100 rounded-xl shadow-2xl overflow-y-auto max-h-[400px] flex flex-col py-1 animate-in fade-in zoom-in-95 duration-150 pointer-events-auto"
+                      className="w-[10vw] bg-white border border-gray-100 rounded-[0.6vw] shadow-2xl overflow-y-auto max-h-[20vw] flex flex-col py-[0.25vw] animate-in fade-in zoom-in-95 duration-150 pointer-events-auto"
                       onClick={e => e.stopPropagation()}
                     >
                       {[
-                        { id: 'none', label: 'None', icon: X },
-                        { id: 'link', label: 'Open Link', icon: ExternalLink },
-                        { id: 'navigation', label: 'Navigate to', icon: Zap },
-                        { id: 'call', label: 'Call', icon: Phone },
-                        { id: 'zoom', label: 'Zoom', icon: ZoomIn },
-                        { id: 'popup', label: 'Popup', icon: MessageSquare },
-                        { id: 'tooltip', label: 'Tooltip', icon: Info },
-                        { id: 'download', label: 'Download', icon: Download }
+                        { id: 'click', label: 'On Click', icon: MousePointerClick },
+                        { id: 'hover', label: 'On Hover', icon: Eye }
                       ].map((opt) => {
                         const IconComp = opt.icon;
                         return (
@@ -1814,16 +1726,12 @@ const InteractionPanel = ({
                             key={opt.id}
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleTypeChange(opt.id);
-                              setShowTypeDropdown(false);
-                              if (!isInteractionsOpen) {
-                                if (onToggle) onToggle();
-                                else setInternalIsOpen(true);
-                              }
+                              handleTriggerChange(opt.id);
+                              setShowTriggerDropdown(false);
                             }}
-                            className={`px-4 py-2.5 text-[13px] font-medium transition-colors text-left w-full flex items-center gap-2.5 ${interactionType === opt.id ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}
+                            className={`px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium transition-colors text-left w-full flex items-center gap-[0.6vw] ${interactionTrigger === opt.id ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}
                           >
-                            <IconComp size={16} className={interactionType === opt.id ? 'text-indigo-600' : 'text-gray-400'} />
+                            <IconComp size="0.85vw" className={interactionTrigger === opt.id ? 'text-indigo-600' : 'text-gray-400'} />
                             {opt.label}
                           </button>
                         );
@@ -1833,49 +1741,9 @@ const InteractionPanel = ({
                   document.body
                 )}
               </div>
-              {interactionType !== 'none' && interactionType === 'download' && (
-                <ArrowRightLeft size={14} className="text-gray-400 rotate-90" />
-              )}
-            </div>
-          )}
-        </div>
+            )}
 
-        <div className="flex items-center gap-2">
-          {isFrame && (
-            <button
-              onClick={(e) => { e.stopPropagation(); handleReset(); }}
-              className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
-              title="Reset Interaction"
-            >
-              <RotateCcw size={16} />
-            </button>
-          )}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onToggle) onToggle();
-              else setInternalIsOpen(!internalIsOpen);
-            }}
-            className="rounded-md hover:bg-gray-100 transition-colors"
-            aria-label={isInteractionsOpen ? "Collapse" : "Expand"}
-          >
-            <ChevronUp
-              size={16}
-              className={`text-gray-500 transition-transform duration-200 ${isInteractionsOpen ? '' : 'rotate-180'}`}
-            />
-          </button>
-        </div>
-      </div>
-
-      {isInteractionsOpen && (
-        <div className="p-[1vw] pt-0 animate-fadeIn space-y-[1vw]">
-
-          {/* ================= TOP SELECTORS ================= */}
-          {!isFrame && (
-            <div className="flex items-center justify-between gap-[0.8vw] mb-[1.5vw]">
-              {/* Type Selector handled by Header now */}
-              
-              {/* Show Preview Button */}
+            {/* Show Preview Button */}
               {interactionType === 'popup' && popupText && (
                 <button
                   onClick={() => {
@@ -1930,13 +1798,13 @@ const InteractionPanel = ({
                 </button>
               )}
             </div>
-          )}
+
 
 
           {/* ================= SOURCE -> TARGET PREVIEW ================= */}
           <div className={`flex items-center justify-between gap-[1vw] ${isFrame ? 'py-[1vw] mb-[0.5vw] border-b border-gray-50 border-t border-gray-50' : 'py-[0.8vw] mb-[0.5vw]'}`}>
             {/* Source */}
-            <div className={`${isFrame ? 'bg-[#F2F4F7] text-[#667085] px-[0.8vw] py-[0.4vw] rounded-[0.5vw] text-[0.8vw] font-medium shadow-sm' : 'bg-gray-100 text-gray-600 px-[1vw] py-[0.4vw] rounded-[0.5vw] text-[0.6vw] font-bold uppercase tracking-widest border border-gray-200/50 shadow-sm'} flex-shrink-0`}>
+            <div className={`${isFrame ? 'bg-[#F2F4F7] text-[#667085] px-[0.8vw] py-[0.4vw] rounded-[0.5vw] text-[0.8vw] font-medium shadow-sm' : 'bg-gray-100 text-gray-600 px-[0.6vw] py-[0.3vw] rounded-[0.4vw] text-[0.6vw] font-bold uppercase tracking-widest border border-gray-200/50 shadow-sm'} flex-shrink-0`}>
               {isFrame ? (frameLabel || 'Frame') : formattedElementName}
             </div>
 
@@ -1968,13 +1836,13 @@ const InteractionPanel = ({
                 <div className="h-[0.05vw] flex-grow bg-gray-200"></div>
               </div>
 
-              {/* Fill Row */}
+              {/* Background Color - Fill Row */}
               <div className="flex items-center gap-[0.8vw] relative">
                 <span className="text-[0.75vw] font-medium text-gray-600 w-[2vw]">Fill</span>
                 <span className="text-[0.75vw] font-medium text-gray-600">:</span>
                 <div
                   onClick={() => { setShowFillPicker(!showFillPicker); setShowStrokePicker(false); }}
-                  className="w-[2.5vw] h-[2.5vw] rounded-[0.5vw] border border-gray-200 cursor-pointer shadow-sm relative color-picker-trigger"
+                  className="w-[2.5vw] h-[2.5vw] rounded-[0.5vw] border border-gray-200 cursor-pointer shadow-sm relative color-picker-trigger fill-picker-trigger"
                   style={{ backgroundColor: popupFillColor }}
                 >
                   {popupFillColor === 'none' && <div className="absolute inset-0 bg-white flex items-center justify-center overflow-hidden"><div className="w-[140%] h-[0.05vw] bg-red-500 rotate-45" /></div>}
@@ -1998,49 +1866,152 @@ const InteractionPanel = ({
                       e.preventDefault();
                       const startX = e.clientX;
                       const startVal = popupFillOpacity;
-
                       const handleMove = (moveEvent) => {
-                        const diff = Math.round((moveEvent.clientX - startX) / 2); 
+                        const diff = Math.round((moveEvent.clientX - startX) / 2);
                         const newVal = Math.min(100, Math.max(0, startVal + diff));
                         setPopupFillOpacity(newVal);
                         applyInteraction('popup', null, popupText, null, null, { fillOpacity: newVal });
                       };
-
                       const handleUp = () => {
                         window.removeEventListener('mousemove', handleMove);
                         window.removeEventListener('mouseup', handleUp);
                       };
-
                       window.addEventListener('mousemove', handleMove);
                       window.addEventListener('mouseup', handleUp);
                     }}
                   >{popupFillOpacity}%</span>
                 </div>
 
-                {showFillPicker && (
-                  <ColorPicker
-                    color={popupFillColor === 'none' ? '#ffffff' : popupFillColor}
-                    onChange={(val) => {
-                      setPopupFillColor(val);
-                      applyInteraction('popup', null, popupText, null, null, { fill: val });
-                    }}
-                    onClose={() => setShowFillPicker(false)}
-                    onReset={() => {
-                      setPopupFillColor('#ffffff');
-                      setPopupFillOpacity(100);
-                      applyInteraction('popup', null, popupText, null, null, { fill: '#ffffff', fillOpacity: 100 });
-                    }}
-                  />
-                )}
+                {/* Fill Picker Panel */}
+                <div ref={fillPickerRef} className={`fixed top-1/2 -translate-y-1/2 right-[22.2vw] w-[19.4vw] bg-white rounded-[1vw] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] transition-all duration-300 z-[300] overflow-hidden flex flex-col max-h-[90vh] ${showFillPicker ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`}>
+                  {/* Header */}
+                  <div className="flex items-center justify-between p-[1vw] border-b border-gray-50 bg-white">
+                    <span className="text-[0.8vw] font-bold text-gray-800">Fill Color</span>
+                    <button 
+                      onClick={() => {
+                        setShowFillPicker(false);
+                        setShowDetailedFillControls(false);
+                      }}
+                      className="p-[0.4vw] rounded-[0.5vw] text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-all"
+                    >
+                      <X size="1.1vw" />
+                    </button>
+                  </div>
+                  {/* Body */}
+                  <div className="flex-grow overflow-y-auto custom-scrollbar">
+                    {/* Popover for Customize Colors */}
+                    {showDetailedFillControls && createPortal(
+                      <>
+                        <div 
+                          className="fixed inset-0 z-[100002] bg-transparent" 
+                          onClick={() => setShowDetailedFillControls(false)}
+                        ></div>
+                        <ColorPicker 
+                          className="fixed z-[100003] w-[18vw] color-picker-container"
+                          style={{ 
+                            top: '50%',
+                            right: '6.5vw', 
+                            transform: 'translateY(-50%)'
+                          }}
+                          color={popupFillColor === 'none' ? '#000000' : popupFillColor}
+                          onChange={(val) => {
+                             setPopupFillColor(val);
+                             applyInteraction('popup', null, popupText, null, null, { fill: val });
+                          }}
+                          opacity={popupFillOpacity}
+                          onOpacityChange={(val) => {
+                             setPopupFillOpacity(val);
+                             applyInteraction('popup', null, popupText, null, null, { fillOpacity: val });
+                          }}
+                          onClose={() => setShowDetailedFillControls(false)}
+                        />
+                      </>,
+                      document.body
+                    )}
+
+                    <div className="p-[1vw] space-y-[1.5vw]">
+                      {/* Colors on this page */}
+                      <div className="space-y-[0.75vw]">
+                        <div className="flex items-center gap-[0.75vw]">
+                          <span className="text-[0.8vw] font-semibold text-gray-800 whitespace-nowrap">Colors on this page</span>
+                          <div className="h-[1px] flex-grow bg-gray-100"></div>
+                        </div>
+                        <div className="grid grid-cols-6 gap-[0.5vw]">
+                          {colorsOnPage.map((c, i) => (
+                            <div
+                              key={i}
+                              style={{ backgroundColor: c }}
+                              onClick={() => {
+                                setPopupFillColor(c);
+                                applyInteraction('popup', null, popupText, null, null, { fill: c });
+                              }}
+                              className="w-full aspect-square rounded-[0.5vw] border border-gray-100 cursor-pointer hover:scale-110 transition-transform shadow-sm active:scale-95"
+                            ></div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Solid Colors */}
+                      <div className="space-y-[0.75vw]">
+                        <div className="flex items-center gap-[0.75vw]">
+                          <span className="text-[0.8vw] font-semibold text-gray-800 whitespace-nowrap">Solid Colors</span>
+                          <div className="h-[1px] flex-grow bg-gray-100"></div>
+                        </div>
+                        <div className="grid grid-cols-6 gap-[0.5vw]">
+                          <div 
+                            onClick={() => {
+                              setPopupFillColor('#ffffff'); // Default to white for none? Or transparent? Usually none means remove.
+                              // But logic here expects color. Let's use none string.
+                              // Wait, popupFillColor is used in input. 
+                              // If 'none', input shows none.
+                              // Logic below handles 'none'.
+                              setPopupFillColor('#ffffff'); // Reset to white usually on click 'none' button in simple picker? No, simple picker had a 'none' button.
+                              // Let's add 'none' button explicitly.
+                            }}
+                            className="w-full aspect-square rounded-[0.5vw] border border-gray-200 cursor-pointer hover:scale-110 transition-transform shadow-sm active:scale-95 relative bg-white overflow-hidden hidden" 
+                          >
+                          </div>
+                          {[
+                            '#FFFFFF', '#000000', '#FF0000', '#FF9500', '#BF2121', '#FFFF00',
+                            '#ADFF2F', '#228B22', '#008080', '#40E0D0', '#00CED1', '#008B8B',
+                            '#ADD8E6', '#87CEEB', '#0000FF', '#000080', '#E6E6FA', '#FF00FF',
+                            '#A9A9A9', '#D3D3D3', '#F5F5F5', '#333333'
+                          ].map((c, i) => (
+                            <div
+                              key={i}
+                              style={{ backgroundColor: c }}
+                              onClick={() => {
+                                setPopupFillColor(c);
+                                applyInteraction('popup', null, popupText, null, null, { fill: c });
+                              }}
+                              className="w-full aspect-square rounded-[0.5vw] border border-gray-100 cursor-pointer hover:scale-110 transition-transform shadow-sm active:scale-95"
+                            ></div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer Toggle */}
+                    <div className="mt-auto p-[0.75vw] border-t border-gray-100">
+                      <button
+                        onClick={() => setShowDetailedFillControls(!showDetailedFillControls)}
+                        className="flex items-center gap-[0.75vw] px-[1vw] py-[0.6vw] hover:bg-gray-50 transition-all rounded-[0.75vw] w-full group"
+                      >
+                        <div className="w-[2vw] h-[2vw] rounded-full shadow-md group-hover:scale-110 transition-transform" style={{ background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}></div>
+                        <span className="text-[0.85vw] font-bold text-gray-600">Customize Colors</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              {/* Stroke Row */}
+              {/* Background Color - Stroke Row */}
               <div className="flex items-center gap-[0.8vw] relative">
                 <span className="text-[0.75vw] font-medium text-gray-600 w-[2vw]">Stroke</span>
                 <span className="text-[0.75vw] font-medium text-gray-600">:</span>
                 <div
                   onClick={() => { setShowStrokePicker(!showStrokePicker); setShowFillPicker(false); }}
-                  className="w-[2.5vw] h-[2.5vw] rounded-[0.5vw] border border-gray-300 cursor-pointer shadow-sm relative overflow-hidden flex items-center justify-center color-picker-trigger"
+                  className="w-[2.5vw] h-[2.5vw] rounded-[0.5vw] border border-gray-300 cursor-pointer shadow-sm relative overflow-hidden flex items-center justify-center color-picker-trigger stroke-picker-trigger"
                   style={{ backgroundColor: popupStrokeColor === 'none' ? 'transparent' : popupStrokeColor }}
                 >
                   {popupStrokeColor === 'none' && <div className="absolute inset-0 bg-white"><div className="w-[140%] h-[0.08vw] bg-red-500 rotate-[-45deg] opacity-80 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" /></div>}
@@ -2064,40 +2035,150 @@ const InteractionPanel = ({
                       e.preventDefault();
                       const startX = e.clientX;
                       const startVal = popupStrokeOpacity;
-
                       const handleMove = (moveEvent) => {
-                        const diff = Math.round((moveEvent.clientX - startX) / 2); 
+                        const diff = Math.round((moveEvent.clientX - startX) / 2);
                         const newVal = Math.min(100, Math.max(0, startVal + diff));
                         setPopupStrokeOpacity(newVal);
                         applyInteraction('popup', null, popupText, null, null, { strokeOpacity: newVal });
                       };
-
                       const handleUp = () => {
                         window.removeEventListener('mousemove', handleMove);
                         window.removeEventListener('mouseup', handleUp);
                       };
-
                       window.addEventListener('mousemove', handleMove);
                       window.addEventListener('mouseup', handleUp);
                     }}
                   >{popupStrokeOpacity}%</span>
                 </div>
 
-                {showStrokePicker && (
-                  <ColorPicker
-                    color={popupStrokeColor === 'none' ? '#000000' : popupStrokeColor}
-                    onChange={(val) => {
-                      setPopupStrokeColor(val);
-                      applyInteraction('popup', null, popupText, null, null, { stroke: val });
-                    }}
-                    onClose={() => setShowStrokePicker(false)}
-                    onReset={() => {
-                      setPopupStrokeColor('none');
-                      setPopupStrokeOpacity(100);
-                      applyInteraction('popup', null, popupText, null, null, { stroke: 'none', strokeOpacity: 100 });
-                    }}
-                  />
-                )}
+                {/* Stroke Picker Panel */}
+                <div ref={strokePickerRef} className={`fixed top-1/2 -translate-y-1/2 right-[22.2vw] w-[19.4vw] bg-white rounded-[1vw] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] transition-all duration-300 z-[300] overflow-hidden flex flex-col max-h-[90vh] ${showStrokePicker ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`}>
+                  {/* Header */}
+                  <div className="flex items-center justify-between p-[1vw] border-b border-gray-50 bg-white">
+                    <span className="text-[0.8vw] font-bold text-gray-800">Stroke Color</span>
+                    <button 
+                      onClick={() => {
+                         setPopupStrokeColor('none');
+                         applyInteraction('popup', null, popupText, null, null, { stroke: 'none' });
+                      }}
+                      className="p-[0.4vw] rounded-[0.5vw] text-gray-400 hover:bg-gray-50 hover:text-indigo-600 transition-all"
+                      title="Reset / None"
+                    >
+                      <RotateCcw size="1vw" />
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setShowStrokePicker(false);
+                        setShowDetailedStrokeControls(false);
+                      }}
+                      className="p-[0.4vw] rounded-[0.5vw] text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-all"
+                    >
+                      <X size="1.1vw" />
+                    </button>
+                  </div>
+                  {/* Body */}
+                  <div className="flex-grow overflow-y-auto custom-scrollbar">
+                    {/* Popover for Customize Colors */}
+                    {showDetailedStrokeControls && createPortal(
+                      <>
+                        <div 
+                          className="fixed inset-0 z-[100002] bg-transparent" 
+                          onClick={() => setShowDetailedStrokeControls(false)}
+                        ></div>
+                        <ColorPicker 
+                          className="fixed z-[100003] w-[18vw] color-picker-container"
+                          style={{ 
+                            top: '50%',
+                            right: '6.5vw', 
+                            transform: 'translateY(-50%)'
+                          }}
+                          color={popupStrokeColor === 'none' ? '#000000' : popupStrokeColor}
+                          onChange={(val) => {
+                             setPopupStrokeColor(val);
+                             applyInteraction('popup', null, popupText, null, null, { stroke: val });
+                          }}
+                          opacity={popupStrokeOpacity}
+                          onOpacityChange={(val) => {
+                             setPopupStrokeOpacity(val);
+                             applyInteraction('popup', null, popupText, null, null, { strokeOpacity: val });
+                          }}
+                          onClose={() => setShowDetailedStrokeControls(false)}
+                        />
+                      </>,
+                      document.body
+                    )}
+
+                    <div className="p-[1vw] space-y-[1.5vw]">
+                      {/* Colors on this page */}
+                      <div className="space-y-[0.75vw]">
+                        <div className="flex items-center gap-[0.75vw]">
+                          <span className="text-[0.8vw] font-semibold text-gray-800 whitespace-nowrap">Colors on this page</span>
+                          <div className="h-[1px] flex-grow bg-gray-100"></div>
+                        </div>
+                        <div className="grid grid-cols-6 gap-[0.5vw]">
+                          {colorsOnPage.map((c, i) => (
+                            <div
+                              key={i}
+                              style={{ backgroundColor: c }}
+                              onClick={() => {
+                                setPopupStrokeColor(c);
+                                applyInteraction('popup', null, popupText, null, null, { stroke: c });
+                              }}
+                              className="w-full aspect-square rounded-[0.5vw] border border-gray-100 cursor-pointer hover:scale-110 transition-transform shadow-sm active:scale-95"
+                            ></div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Solid Colors */}
+                      <div className="space-y-[0.75vw]">
+                        <div className="flex items-center gap-[0.75vw]">
+                          <span className="text-[0.8vw] font-semibold text-gray-800 whitespace-nowrap">Solid Colors</span>
+                          <div className="h-[1px] flex-grow bg-gray-100"></div>
+                        </div>
+                        <div className="grid grid-cols-6 gap-[0.5vw]">
+                           <div 
+                            onClick={() => {
+                              setPopupStrokeColor('none');
+                              applyInteraction('popup', null, popupText, null, null, { stroke: 'none' });
+                            }}
+                            className="w-full aspect-square rounded-[0.5vw] border border-gray-200 cursor-pointer hover:scale-110 transition-transform shadow-sm active:scale-95 relative bg-white overflow-hidden"
+                            title="None"
+                          >
+                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[1.5px] bg-red-500 rotate-45"></div>
+                          </div>
+                          {[
+                            '#FFFFFF', '#000000', '#FF0000', '#FF9500', '#BF2121', '#FFFF00',
+                            '#ADFF2F', '#228B22', '#008080', '#40E0D0', '#00CED1', '#008B8B',
+                            '#ADD8E6', '#87CEEB', '#0000FF', '#000080', '#E6E6FA', '#FF00FF',
+                            '#A9A9A9', '#D3D3D3', '#F5F5F5', '#333333'
+                          ].map((c, i) => (
+                            <div
+                              key={i}
+                              style={{ backgroundColor: c }}
+                              onClick={() => {
+                                setPopupStrokeColor(c);
+                                applyInteraction('popup', null, popupText, null, null, { stroke: c });
+                              }}
+                              className="w-full aspect-square rounded-[0.5vw] border border-gray-100 cursor-pointer hover:scale-110 transition-transform shadow-sm active:scale-95"
+                            ></div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer Toggle */}
+                    <div className="mt-auto p-[0.75vw] border-t border-gray-100">
+                      <button
+                        onClick={() => setShowDetailedStrokeControls(!showDetailedStrokeControls)}
+                        className="flex items-center gap-[0.75vw] px-[1vw] py-[0.6vw] hover:bg-gray-50 transition-all rounded-[0.75vw] w-full group"
+                      >
+                        <div className="w-[2vw] h-[2vw] rounded-full shadow-md group-hover:scale-110 transition-transform" style={{ background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}></div>
+                        <span className="text-[0.85vw] font-bold text-gray-600">Customize Colors</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Stroke Options */}

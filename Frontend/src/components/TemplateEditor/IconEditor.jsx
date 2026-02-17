@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import * as LucideIcons from 'lucide-react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Upload, Replace, ChevronUp, ChevronDown, Edit3, X, Grid, ArrowLeft, ZoomIn, ZoomOut, Mail, Phone, Globe, Trash2, Save, Image, Folder, Move, Check, CheckCheck, Battery, Calendar, File, Settings, Search, Home, User, Users, Star, Heart, Share2, Download, Cloud, Clock, MapPin, Lock, Unlock, Menu, Play, Pause, AlertCircle, Info, HelpCircle, Facebook, Twitter, Instagram, Linkedin, Github, Youtube, Pipette } from 'lucide-react';
+import { Upload, Replace, ChevronUp, ChevronDown, Edit3, X, Grid, ArrowLeft, ZoomIn, ZoomOut, Mail, Phone, Globe, Trash2, Save, Image, Folder, Move, Check, CheckCheck, Battery, Calendar, File, Settings, Search, Home, User, Users, Star, Heart, Share2, Download, Cloud, Clock, MapPin, Lock, Unlock, Menu, Play, Pause, AlertCircle, Info, HelpCircle, Facebook, Twitter, Instagram, Linkedin, Github, Youtube, Pipette, RotateCcw, Minus } from 'lucide-react';
 import InteractionPanel from './InteractionPanel';
 import AnimationPanel from './AnimationPanel';
 import { Icon } from '@iconify/react';
@@ -33,6 +33,17 @@ const IconEditor = ({
   const [pickerTarget, setPickerTarget] = useState(null); // 'fill' or 'stroke'
   const [pickerPos, setPickerPos] = useState({ x: 0, y: 0 });
   const panelRef = useRef(null);
+
+  const [showFillPicker, setShowFillPicker] = useState(false);
+  const [showStrokePicker, setShowStrokePicker] = useState(false);
+  const [showDetailedControls, setShowDetailedControls] = useState(false);
+  const [showDetailedStrokeControls, setShowDetailedStrokeControls] = useState(false);
+  const [colorMode, setColorMode] = useState('fill'); // 'fill' or 'stroke'
+
+  const fillPickerRef = useRef(null);
+  const strokePickerRef = useRef(null);
+  const fillTypeRef = useRef(null);
+  const strokeFillTypeRef = useRef(null);
   
   const rgbToHex = (rgb) => {
     if (!rgb || rgb === 'none' || rgb === 'transparent') return 'none';
@@ -91,6 +102,26 @@ const IconEditor = ({
     { name: 'GitHub', Component: Github }
   ]);
 
+  // Helper to get colors used on the current page
+  const colorsOnPage = useMemo(() => {
+    if (!selectedElement || !selectedElement.ownerDocument) return [];
+    // Search for elements with fill or stroke attributes in the whole document
+    // This is similar to TextEditor's logic but adapted for SVG elements
+    const elements = selectedElement.ownerDocument.querySelectorAll('[fill], [stroke], [data-fill-color], [data-stroke-color]');
+    const colors = new Set();
+    elements.forEach(el => {
+      const fill = el.getAttribute('fill') || el.getAttribute('data-fill-color');
+      const stroke = el.getAttribute('stroke') || el.getAttribute('data-stroke-color');
+      
+      if (fill && fill !== 'none' && fill.startsWith('#')) colors.add(fill.toUpperCase());
+      if (stroke && stroke !== 'none' && stroke.startsWith('#')) colors.add(stroke.toUpperCase());
+    });
+    // Add default white and black if not present
+    colors.add('#FFFFFF');
+    colors.add('#000000');
+    return Array.from(colors).slice(0, 12);
+  }, [selectedElement, pages]);
+
   useEffect(() => {
     if (!selectedElement) return;
 
@@ -122,6 +153,15 @@ const IconEditor = ({
 
     return () => observer.disconnect();
   }, [selectedElement]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (fillPickerRef.current && !fillPickerRef.current.contains(event.target) && !event.target.closest('.fill-picker-trigger') && !event.target.closest('.color-picker-container')) setShowFillPicker(false);
+      if (strokePickerRef.current && !strokePickerRef.current.contains(event.target) && !event.target.closest('.stroke-picker-trigger') && !event.target.closest('.color-picker-container')) setShowStrokePicker(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const updateIconColor = (color) => {
     setIconColor(color);
@@ -310,56 +350,56 @@ const IconEditor = ({
   if (!selectedElement) return null;
 
   return (
-    <div className="relative flex flex-col gap-4 w-full max-w-sm">
+    <div className="relative flex flex-col gap-[1vw] w-full">
        <style>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 0.25vw; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 0.5vw; }
         input[type='range'] {
           -webkit-appearance: none;
           width: 100%;
           background: transparent;
         }
         input[type='range']::-webkit-slider-runnable-track {
-          height: 4px;
-          border-radius: 2px;
+          height: 0.25vw;
+          border-radius: 0.125vw;
         }
         input[type='range']::-webkit-slider-thumb {
           -webkit-appearance: none;
-          height: 14px;
-          width: 14px;
+          height: 0.8vw;
+          width: 0.8vw;
           border-radius: 50%;
           background: #6366f1;
-          border: 2px solid #ffffff;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-          margin-top: -5px;
+          border: 0.125vw solid #ffffff;
+          box-shadow: 0 0.06vw 0.2vw rgba(0,0,0,0.2);
+          margin-top: -0.3vw;
           cursor: pointer;
         }
       `}</style>
 
-      <div className="bg-white border space-y-4 border-gray-200 rounded-[15px] shadow-sm overflow-hidden relative font-sans">
+      <div className="bg-white border space-y-[1vw] border-gray-200 rounded-[0.9vw] shadow-sm overflow-hidden relative font-sans">
         
         <div 
-          className="flex items-center justify-between px-4 py-4 border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition-colors"
+          className="flex items-center justify-between px-[1vw] py-[1vw] border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition-colors"
           onClick={() => setActiveSection(activeSection === 'main' ? null : 'main')}
         >
-          <div className="flex items-center gap-2">
-            <Icon icon="uil:icons"  className="text-gray-600" width="16" height="16" />
-            <span className="font-medium text-gray-700 text-sm">Icon</span>
+          <div className="flex items-center gap-[0.5vw]">
+            <Icon icon="uil:icons"  className="text-gray-600" width="1vw" height="1vw" />
+            <span className="font-medium text-gray-700 text-[0.85vw]">Icon</span>
           </div>
-          <ChevronUp size={16} className={`text-gray-500 transition-transform duration-200 ${isMainPanelOpen ? '' : 'rotate-180'}`} />
+          <ChevronUp size="1vw" className={`text-gray-500 transition-transform duration-200 ${isMainPanelOpen ? '' : 'rotate-180'}`} />
         </div>
 
         {isMainPanelOpen && (
-          <div className="space-y-5 pr-5 pl-5 mb-15">
+          <div className="space-y-[1.25vw] px-[1.25vw] mb-[1.5vw] pt-[0.5vw]">
             
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-gray-900 whitespace-nowrap">Replace Icon</span>
-                <div className="h-[2px] w-full bg-gray-200" />
+            <div className="space-y-[1vw]">
+              <div className="flex items-center gap-[0.5vw]">
+                <span className="text-[0.85vw] font-bold text-gray-900 whitespace-nowrap">Replace Icon</span>
+                <div className="h-[0.125vw] w-full bg-gray-200" />
               </div>
 
-              <div className="flex items-center gap-3">
-                <div className="w-18 h-18 rounded-xl overflow-hidden border-2 border-dashed bg-gray-50 p-2 flex items-center justify-center">
+              <div className="flex items-center gap-[0.75vw]">
+                <div className="w-[4.5vw] h-[4.5vw] rounded-[0.75vw] overflow-hidden border-2 border-dashed bg-gray-50 p-[0.5vw] flex items-center justify-center">
                     <svg 
                         viewBox={previewData.viewBox}
                         className="w-full h-full"
@@ -374,11 +414,11 @@ const IconEditor = ({
                 </div>
            
                 
-                <Replace size={18} className="text-gray-300 shrink-0" />
+                <Replace size="1.1vw" className="text-gray-300 shrink-0" />
                 
-                <div onClick={() => fileInputRef.current?.click()} className="flex-1 h-18 border-2 border-dashed bg-gray-50 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors">
-                  <Upload size={18} className="text-500 mb-1" />
-                  <p className="text-[10px] text-gray-400 font-medium text-center">Drag & Drop or <span className="font-bold text-indigo-600">Upload SVG</span></p>
+                <div onClick={() => fileInputRef.current?.click()} className="flex-1 h-[4.5vw] border-2 border-dashed bg-gray-50 rounded-[0.75vw] flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors">
+                  <Upload size="1.1vw" className="text-500 mb-[0.25vw]" />
+                  <p className="text-[0.6vw] text-gray-400 font-medium text-center">Drag & Drop or <span className="font-bold text-indigo-600">Upload SVG</span></p>
                 </div>
                 <input
                     type="file"
@@ -391,17 +431,17 @@ const IconEditor = ({
 
               <div 
                 onClick={() => setShowGallery(true)}
-                className="relative h-40 rounded-xl overflow-hidden cursor-pointer group border border-gray-200 select-none" 
+                className="relative h-[7vw] rounded-[0.5vw] overflow-hidden cursor-pointer group border border-gray-200 select-none bg-gray-100 shadow-sm hover:shadow-md transition-all duration-300"
               >
                 {/* Background with icon previews */}
-                <div className="absolute inset-0 bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 p-4">
-                  <div className="grid grid-cols-3 gap-3 h-10% pb-6 px-4 opacity-70 grayscale group-hover:grayscale-0 transition-all duration-300 transform group-hover:scale-105">
-                    {[...uploadedIcons, ...lucideList].slice(0, 6).map((icon, i) => (
-                      <div key={i} className="aspect-square rounded-lg shadow-lg overflow-hidden bg-white border-2 border-gray-300 p-3 flex items-center justify-center h-50%">
+                <div className="absolute inset-0 p-[0.5vw]">
+                  <div className="grid grid-cols-6 gap-[0.5vw] opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-60 transition-all duration-500">
+                    {[...uploadedIcons, ...lucideList].slice(0, 12).map((icon, i) => (
+                      <div key={i} className="aspect-square rounded-[0.25vw] bg-white border border-gray-100 flex items-center justify-center overflow-hidden">
                         {icon.Component ? (
-                          <icon.Component className="w-full h-full text-gray-700" strokeWidth={1.5} />
+                          <icon.Component className="w-[60%] h-[60%] text-gray-800" strokeWidth={1.5} />
                         ) : (
-                          <svg viewBox={icon.viewBox} className="w-full h-full fill-gray-700">
+                          <svg viewBox={icon.viewBox} className="w-[60%] h-[60%] fill-gray-800">
                             {icon.html ? (
                               <g dangerouslySetInnerHTML={{ __html: icon.html }} />
                             ) : (
@@ -415,34 +455,34 @@ const IconEditor = ({
                 </div>
                  
                 {/* Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex items-end justify-center pb-5">
-                  <div className="flex items-center gap-2 text-white font-bold text-sm tracking-wide">
-                    <Grid size={20} />
-                    Icon Gallery
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gradient-to-t from-black/60 via-black/10 to-transparent transition-all duration-300 group-hover:bg-black/20">
+                  <div className="flex items-center gap-[0.5vw] text-white bg-black/40 px-[1vw] py-[0.5vw] rounded-[0.5vw] backdrop-blur-sm border border-white/10 shadow-sm group-hover:bg-black/60 group-hover:scale-105 transition-all duration-300 transform">
+                    <Grid size="0.9vw" className="text-white" />
+                    <span className="text-[0.8vw] font-semibold tracking-wide">Icon Gallery</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-gray-800">Opacity</span>
-                <div className="h-[2px] w-full bg-gray-200" />
+            <div className="space-y-[1vw]">
+              <div className="flex items-center gap-[0.5vw]">
+                <span className="text-[0.85vw] font-bold text-gray-800">Opacity</span>
+                <div className="h-[0.125vw] w-full bg-gray-200" />
               </div>
 
-              <div className="flex items-center gap-4 px-1">
+              <div className="flex items-center gap-[1vw] px-[0.25vw]">
                 <input
                   type="range"
                   min="0"
                   max="100"
                   value={opacity}
                   onChange={(e) => updateOpacity(Number(e.target.value))}
-                  className="flex-1 h-1 appearance-none cursor-pointer"
+                  className="flex-1 h-[0.25vw] appearance-none cursor-pointer"
                   style={{
                     background: `linear-gradient(to right, #6366f1 0%, #6366f1 ${opacity}%, #f3f4f6 ${opacity}%, #f3f4f6 100%)`,
                   }}
                 />
-                <span className="text-[14px] font-medium text-gray-600 w-14 text-right whitespace-nowrap">
+                <span className="text-[0.85vw] font-medium text-gray-600 w-[3.5vw] text-right whitespace-nowrap">
                   {opacity} %
                 </span>
               </div>
@@ -450,170 +490,133 @@ const IconEditor = ({
 
 
 
-            <div className="border border-gray-200 rounded-[15px] overflow-hidden bg-white shadow-sm font-sans">
-              <button 
-                onClick={() => setOpenSubSection(openSubSection === 'color' ? null : 'color')} 
-                className="w-full flex items-center justify-between px-4 py-4 text-sm font-bold text-gray-900 border-b border-gray-50"
+            <div className="border border-gray-200 rounded-[0.9vw] overflow-hidden bg-white shadow-sm font-sans mb-3">
+              <div 
+                className="w-full flex items-center justify-between px-[1vw] py-[1vw] cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-50" 
+                onClick={() => setOpenSubSection(openSubSection === 'color' ? null : 'color')}
               >
-                <span className="text-sm font-bold text-gray-900">Color</span>
-                <ChevronUp size={20} className={`text-gray-900 transition-transform duration-200 ${openSubSection === 'color' ? '' : 'rotate-180'}`} strokeWidth={2.5} />
-              </button>
-              
-               {openSubSection === 'color' && (
-                <div className="p-4 space-y-4">
-                  {/* Fill Row */}
-                  <div className="flex items-center gap-3">
-                    <span className="text-[14px] font-medium text-gray-800 w-10">Fill</span>
-                    <span className="text-[14px] font-medium text-gray-800 w-4 text-center">:</span>
-                    <div 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setPickerTarget('fill');
-                        const parentRect = e.currentTarget.closest('.space-y-4').getBoundingClientRect();
-                        setPickerPos({ x: parentRect.left, y: parentRect.top });
-                      }}
-                      className="color-picker-trigger relative w-10 h-10 rounded-[10px] border border-gray-300 shadow-sm shrink-0 overflow-hidden cursor-pointer hover:border-indigo-400 transition-colors bg-white"
-                    >
-                      <div 
-                        className="w-full h-full" 
-                        style={{ 
-                          backgroundColor: iconFill === 'none' ? 'transparent' : iconFill,
-                        }} 
-                      />
-                      { (iconFill === 'none' || iconFill === '#' || !iconFill) && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <div className="w-[140%] h-[1.5px] bg-red-500 rotate-45" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 flex items-center border border-gray-400 rounded-[12px] px-3 py-2 bg-white h-10 ml-1">
-                      <input 
-                        type="text"
-                        value={iconFill === 'none' ? '#' : (iconFill.startsWith('#') ? iconFill : '#' + iconFill)}
-                        onChange={(e) => {
-                            const val = e.target.value.trim();
-                            if (val === '#' || val === '') updateIconFill('none');
-                            else updateIconFill(val.startsWith('#') ? val : '#' + val);
-                        }}
-                        className="text-[14px] font-medium text-gray-600 uppercase w-full outline-none bg-transparent"
-                      />
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={opacity}
-                        onChange={(e) => updateOpacity(Number(e.target.value))}
-                        className="text-[14px] font-medium text-gray-500 ml-2 w-12 text-right outline-none bg-transparent"
-                      />
-                    </div>
-                  </div>
+                <span className="text-[0.85vw] font-semibold text-gray-900">Color</span>
+                <ChevronUp size="1vw" className={`text-gray-500 transition-transform duration-200 ${openSubSection === 'color' ? '' : 'rotate-180'}`} />
+              </div>
 
-                  {/* Stroke Row */}
-                  <div className="flex items-center gap-3">
-                    <span className="text-[14px] font-medium text-gray-800 w-10">Stroke</span>
-                    <span className="text-[14px] font-medium text-gray-800 w-4 text-center">:</span>
-                    <div 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setPickerTarget('stroke');
-                        const parentRect = e.currentTarget.closest('.space-y-4').getBoundingClientRect();
-                        setPickerPos({ x: parentRect.left, y: parentRect.top });
-                      }}
-                      className="color-picker-trigger relative w-10 h-10 rounded-[10px] border border-gray-300 shadow-sm shrink-0 overflow-hidden cursor-pointer hover:border-indigo-400 transition-colors bg-white"
-                    >
-                      <div 
-                        className="w-full h-full" 
-                        style={{ 
-                          backgroundColor: iconColor === 'none' ? 'transparent' : iconColor,
-                        }} 
-                      />
-                      { (iconColor === 'none' || iconColor === '#' || !iconColor) && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <div className="w-[140%] h-[1.5px] bg-red-500 rotate-45" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 flex items-center border border-gray-400 rounded-[12px] px-3 py-2 bg-white h-10 ml-1">
-                      <input 
-                        type="text"
-                        value={iconColor === 'none' ? '#' : (iconColor.startsWith('#') ? iconColor : '#' + iconColor)}
-                        onChange={(e) => {
-                            const val = e.target.value.trim();
-                            if (val === '#' || val === '') updateIconColor('none');
-                            else updateIconColor(val.startsWith('#') ? val : '#' + val);
-                        }}
-                        className="text-[14px] font-medium text-gray-600 uppercase w-full outline-none bg-transparent"
-                      />
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={opacity}
-                        onChange={(e) => updateOpacity(Number(e.target.value))}
-                        className="text-[14px] font-medium text-gray-500 ml-2 w-12 text-right outline-none bg-transparent"
-                      />
-                    </div>
-                  </div>
+              {openSubSection === 'color' && (
+                <div className="p-[1vw] space-y-[1vw] bg-white">
+                   {/* Fill */}
+                   <div className="flex items-center gap-[0.75vw]">
+                     <span className="text-[0.85vw] font-semibold text-gray-700 min-w-[3vw]">Fill :</span>
+                     <div 
+                       onClick={() => { setShowFillPicker(!showFillPicker); setShowStrokePicker(false); setColorMode('fill'); }} 
+                       className="w-[2.5vw] h-[2.5vw] rounded-[0.5vw] border border-gray-200 cursor-pointer flex-shrink-0 shadow-sm relative overflow-hidden fill-picker-trigger" 
+                       style={{ background: (iconFill === 'none' || iconFill === '#' || !iconFill) ? 'transparent' : iconFill }}
+                     >
+                       <div className="w-full h-full" style={{ backgroundColor: iconFill === 'none' ? 'transparent' : iconFill }} />
+                       {(iconFill === 'none' || iconFill === '#' || !iconFill) && (
+                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                           <div className="w-[140%] h-[1.5px] bg-red-500 rotate-45" />
+                         </div>
+                       )}
+                     </div>
+                     
+                     <div className="flex-grow flex items-center border-[0.1vw] border-gray-400 rounded-[0.75vw] overflow-hidden h-[2.5vw] bg-white hover:border-indigo-400 transition-colors px-[0.75vw]">
+                       <input
+                         type="text"
+                         value={iconFill === 'none' ? '#' : (iconFill.startsWith('#') ? iconFill.toUpperCase() : '#' + iconFill.toUpperCase())}
+                         onChange={(e) => {
+                             const val = e.target.value.trim();
+                             if (val === '#' || val === '') updateIconFill('none');
+                             else updateIconFill(val.startsWith('#') ? val : '#' + val);
+                         }}
+                         className="flex-grow text-[0.75vw] font-medium text-gray-700 outline-none bg-transparent min-w-[3vw]"
+                         maxLength={7}
+                         placeholder="#"
+                       />
+                       <div className="flex items-center gap-[0.1vw] ml-[0.5vw]">
+                         <input
+                             type="number"
+                             min="0"
+                             max="100"
+                             value={opacity}
+                             onChange={(e) => updateOpacity(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
+                             className="w-[1.5vw] text-right text-[0.75vw] font-medium text-gray-700 outline-none bg-transparent appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                         />
+                         <span className="text-[0.75vw] font-medium text-gray-500">%</span>
+                       </div>
+                     </div>
+                   </div>
 
-                  {/* Stroke Width Box */}
-                  <div className="flex justify-end pt-1">
+                  {/* Stroke */}
+                  <div className="flex items-center gap-[0.75vw]">
+                    <span className="text-[0.85vw] font-semibold text-gray-700 min-w-[3vw]">Stroke :</span>
                     <div
-                      className="h-10 min-w-[50px] border border-gray-400 rounded-[12px] flex items-center px-3 gap-2 bg-white hover:border-blue-500 transition-colors cursor-ew-resize select-none shadow-sm"
-                      onClick={(e) => {
-                        e.stopPropagation(); // Prevent click from bubbling
+                      onClick={() => {
+                        setShowStrokePicker(!showStrokePicker);
+                        setShowFillPicker(false);
+                        setColorMode('stroke');
                       }}
+                      className="w-[2.5vw] h-[2.5vw] rounded-[0.5vw] border border-gray-200 cursor-pointer flex-shrink-0 shadow-sm relative overflow-hidden bg-white stroke-picker-trigger"
+                      style={{ background: (iconColor === 'none' || iconColor === '#' || !iconColor) ? 'white' : iconColor }}
+                    >
+                      <div className="w-full h-full" style={{ backgroundColor: iconColor === 'none' ? 'transparent' : iconColor }} />
+                      {(iconColor === 'none' || iconColor === '#' || !iconColor) && (
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[1.5px] bg-red-500 rotate-45"></div>
+                      )}
+                    </div>
+                    
+                     <div className="flex-grow flex items-center border-[0.1vw] border-gray-400 rounded-[0.75vw] overflow-hidden h-[2.5vw] bg-white hover:border-indigo-400 transition-colors px-[0.75vw]">
+                       <input
+                         type="text"
+                         value={iconColor === 'none' ? '#' : (iconColor.startsWith('#') ? iconColor.toUpperCase() : '#' + iconColor.toUpperCase())}
+                         onChange={(e) => {
+                             const val = e.target.value.trim();
+                             if (val === '#' || val === '') updateIconColor('none');
+                             else updateIconColor(val.startsWith('#') ? val : '#' + val);
+                         }}
+                         className="flex-grow text-[0.75vw] font-medium text-gray-700 outline-none bg-transparent min-w-[3vw]"
+                         maxLength={7}
+                         placeholder="#"
+                       />
+                       <div className="flex items-center gap-[0.1vw] ml-[0.5vw]">
+                         <input
+                             type="number"
+                             min="0"
+                             max="100"
+                             value={opacity}
+                             onChange={(e) => updateOpacity(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
+                             className="w-[1.5vw] text-right text-[0.75vw] font-medium text-gray-700 outline-none bg-transparent appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                         />
+                         <span className="text-[0.75vw] font-medium text-gray-500">%</span>
+                       </div>
+                     </div>
+                  </div>
+
+                  {/* Width Row */}
+                  <div className="flex justify-end pt-[0.25vw]">
+                    <div
+                      className="h-[2vw] min-w-[4vw] border-[0.1vw] border-gray-400 rounded-[0.5vw] flex items-center px-[0.5vw] gap-[0.5vw] bg-white hover:border-indigo-400 transition-colors cursor-ew-resize select-none shadow-sm"
                       onMouseDown={(e) => {
                         e.preventDefault();
-                        e.stopPropagation(); // Prevent event bubbling
                         const startX = e.clientX;
                         const startVal = strokeWidth || 0;
-
                         const handleMove = (moveEvent) => {
                           const diff = Math.round((moveEvent.clientX - startX) / 2);
                           const newVal = Math.max(0, Math.min(20, startVal + diff));
-                          
-                          // Update stroke width WITHOUT calling onUpdate during drag
-                          if (!selectedElement || isNaN(newVal)) return;
-                          const widthVal = Math.max(0, newVal);
-                          
-                          selectedElement.setAttribute('stroke-width', widthVal.toString());
-                          selectedElement.style.setProperty('stroke-width', widthVal.toString(), 'important');
-                          
-                          const paths = selectedElement.querySelectorAll('path, circle, rect, polyline, polygon, line');
-                          paths.forEach(p => {
-                            p.setAttribute('stroke-width', widthVal.toString());
-                            p.style.setProperty('stroke-width', widthVal.toString(), 'important');
-                          });
-                          
-                          setStrokeWidth(widthVal);
-                          setPreviewData(prev => ({ ...prev, html: selectedElement.innerHTML }));
-                          // DO NOT call onUpdate here during drag
+                          updateStrokeWidth(newVal);
                         };
-
                         const handleUp = () => {
                           window.removeEventListener('mousemove', handleMove);
                           window.removeEventListener('mouseup', handleUp);
-                          // NOW call onUpdate after dragging is done
-                          if (onUpdate) onUpdate();
                         };
-
                         window.addEventListener('mousemove', handleMove);
                         window.addEventListener('mouseup', handleUp);
                       }}
                     >
-                      <div className="flex flex-col gap-[2px] w-4 flex-shrink-0">
-                        <div className="h-[1px] w-full bg-gray-600" />
-                        <div className="h-[2px] w-full bg-gray-600" />
-                        <div className="h-[2.5px] w-full bg-gray-600" />
-                        <div className="h-[3px] w-full bg-gray-600" />
-                      </div>
-                      <div className="w-[1px] h-5 bg-gray-300"></div>
-                      <input
-                        type="number"
-                        readOnly
-                        value={strokeWidth}
-                        className="w-[40px] text-[14px] font-medium text-gray-600 outline-none text-center bg-transparent cursor-ew-resize pointer-events-none"
-                      />
+                       <Icon icon="material-symbols:line-weight" width="0.9vw" height="0.9vw" className="text-gray-500 flex-shrink-0" />
+                        <input
+                          type="number"
+                          readOnly
+                          value={strokeWidth}
+                          className="w-[2.5vw] text-[0.75vw] font-medium outline-none text-right bg-transparent text-gray-700 pointer-events-none"
+                        />
                     </div>
                   </div>
                 </div>
@@ -628,47 +631,47 @@ const IconEditor = ({
 
       {showGallery && (
         <div
-          className="fixed z-[10000] bg-white border border-gray-100 rounded-[12px] shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+          className="fixed z-[10000] bg-white border border-gray-100 rounded-[0.75vw] shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
           style={{
-            width: '320px',
-            height: '540px',
+            width: '20vw',
+            height: '34vw',
             top: '55%',
             left: '80%',
             transform: 'translate(-50%, -50%)'
           }}
         >
-           <div className="flex px-4 pt-3 border-b bg-white">
+           <div className="flex px-[1vw] pt-[0.75vw] border-b bg-white">
              <button
                onClick={() => setActiveTab("gallery")}
-               className={`flex-1 pb-2 text-[12px] font-bold transition-all ${activeTab === "gallery" ? "border-b-2 border-black text-black" : "border-transparent text-gray-400"}`}
+               className={`flex-1 pb-[0.5vw] text-[0.75vw] font-bold transition-all ${activeTab === "gallery" ? "border-b-2 border-black text-black" : "border-transparent text-gray-400"}`}
              >
                Icon Gallery
              </button>
              <button
                onClick={() => setActiveTab("uploaded")}
-               className={`flex-1 pb-2 text-[12px] font-bold transition-all ${activeTab === "uploaded" ? "border-b-2 border-black text-black" : "border-transparent text-gray-400"}`}
+               className={`flex-1 pb-[0.5vw] text-[0.75vw] font-bold transition-all ${activeTab === "uploaded" ? "border-b-2 border-black text-black" : "border-transparent text-gray-400"}`}
              >
                Uploaded Icons
              </button>
            </div>
            
            {activeTab === 'gallery' && (
-             <div className="px-6 py-4 border-b bg-white">
+             <div className="px-[1.5vw] py-[1vw] border-b bg-white">
                 <div className="relative">
-                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Search size="1vw" className="absolute left-[0.75vw] top-1/2 -translate-y-1/2 text-gray-400" />
                   <input 
                     type="text" 
                     placeholder="Search icons..." 
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full h-9 pl-9 pr-8 text-xs bg-gray-50 border border-gray-200 rounded-full outline-none focus:border-black  transition-colors"
+                    className="w-full h-[2.25vw] pl-[2.25vw] pr-[2vw] text-[0.75vw] bg-gray-50 border border-gray-200 rounded-full outline-none focus:border-black  transition-colors"
                   />
                   {searchQuery && (
                     <button 
                       onClick={() => setSearchQuery('')}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-[0.75vw] top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
-                      <X size={14} />
+                      <X size="0.9vw" />
                     </button>
                   )}
                 </div>
@@ -676,22 +679,22 @@ const IconEditor = ({
            )}
            
            <div 
-             className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar"
+             className="flex-1 overflow-y-auto px-[1.5vw] py-[1.5vw] custom-scrollbar"
              onScroll={handleScroll}
            >
              {activeTab === 'gallery' && (
                  <>
-                     <div className="grid grid-cols-5 gap-3">
+                     <div className="grid grid-cols-5 gap-[0.75vw]">
                          {filteredIcons.slice(0, visibleCount).map((icon, index) => (
                             <div 
                                 key={index} 
                                 onClick={() => setTempSelectedIcon(icon)}
-                                className={`aspect-square rounded-md flex items-center justify-center cursor-pointer transition-all hover:bg-gray-100 ${tempSelectedIcon === icon ? 'bg-gray-200 ring-2 ring-gray-300' : 'bg-transparent'}`}
+                                className={`aspect-square rounded-[0.4vw] flex items-center justify-center cursor-pointer transition-all hover:bg-gray-100 ${tempSelectedIcon === icon ? 'bg-gray-200 ring-2 ring-gray-300' : 'bg-transparent'}`}
                             >
                                 {icon.Component ? (
-                                    <icon.Component className="w-9 h-9 text-black" strokeWidth={1.5} />
+                                    <icon.Component className="w-[2.25vw] h-[2.25vw] text-black" strokeWidth={1.5} />
                                 ) : (
-                                    <svg viewBox={icon.viewBox} className="w-9 h-9 fill-black">
+                                    <svg viewBox={icon.viewBox} className="w-[2.25vw] h-[2.25vw] fill-black">
                                         {icon.html ? (
                                             <g dangerouslySetInnerHTML={{ __html: icon.html }} />
                                         ) : (
@@ -707,16 +710,16 @@ const IconEditor = ({
 
              {activeTab === 'uploaded' && (
                  <>
-                    <h3 className="text-[12px] font-bold text-black mb-4">Upload your Icon</h3>
+                    <h3 className="text-[0.75vw] font-bold text-black mb-[1vw]">Upload your Icon</h3>
                     <div
                       onClick={() => galleryInputRef.current?.click()}
-                      className="w-full h-28 border-[2px] border-dashed border-gray-300 rounded-[18px] flex flex-col items-center justify-center bg-white hover:bg-gray-50 transition-all cursor-pointer group mb-6"
+                      className="w-full h-[7vw] border-[0.125vw] border-dashed border-gray-300 rounded-[1.125vw] flex flex-col items-center justify-center bg-white hover:bg-gray-50 transition-all cursor-pointer group mb-[1.5vw]"
                     >
-                      <p className="text-[12px] text-gray-400 font-medium mb-2">
+                      <p className="text-[0.75vw] text-gray-400 font-medium mb-[0.5vw]">
                         Drag & Drop or <span className="text-[#5D38FF] font-bold">Upload</span>
                       </p>
-                      <Upload size={24} className="text-gray-300 mb-2" strokeWidth={1.5} />
-                      <p className="text-[10px] text-gray-400">
+                      <Upload size="1.5vw" className="text-gray-300 mb-[0.5vw]" strokeWidth={1.5} />
+                      <p className="text-[0.6vw] text-gray-400">
                         Supported File : <span className="uppercase">SVG</span>
                       </p>
                     </div>
@@ -728,18 +731,18 @@ const IconEditor = ({
                         onChange={handleModalFileUpload}
                     />
 
-                    <h3 className="text-[12px] font-bold text-black mb-4">Uploaded Icons</h3>
-                    <div className="grid grid-cols-5 gap-3">
+                    <h3 className="text-[0.75vw] font-bold text-black mb-[1vw]">Uploaded Icons</h3>
+                    <div className="grid grid-cols-5 gap-[0.75vw]">
                         {uploadedIcons.map((icon, index) => (
                             <div 
                                 key={index} 
                                 onClick={() => setTempSelectedIcon(icon)}
-                                className={`aspect-square rounded-md flex items-center justify-center cursor-pointer transition-all hover:bg-gray-100 ${tempSelectedIcon === icon ? 'bg-gray-200 ring-2 ring-gray-300' : 'bg-transparent'}`}
+                                className={`aspect-square rounded-[0.4vw] flex items-center justify-center cursor-pointer transition-all hover:bg-gray-100 ${tempSelectedIcon === icon ? 'bg-gray-200 ring-2 ring-gray-300' : 'bg-transparent'}`}
                             >
                                 {icon.Component ? (
-                                    <icon.Component className="w-6 h-6 text-black" strokeWidth={1.5} />
+                                    <icon.Component className="w-[1.5vw] h-[1.5vw] text-black" strokeWidth={1.5} />
                                 ) : (
-                                    <svg viewBox={icon.viewBox} className="w-6 h-6 fill-black">
+                                    <svg viewBox={icon.viewBox} className="w-[1.5vw] h-[1.5vw] fill-black">
                                         {icon.html ? (
                                             <g dangerouslySetInnerHTML={{ __html: icon.html }} />
                                         ) : (
@@ -749,25 +752,25 @@ const IconEditor = ({
                                 )}
                             </div>
                         ))}
-                         {uploadedIcons.length === 0 && <span className="text-[10px] text-gray-400 col-span-5 text-center py-4">No uploaded icons yet</span>}
+                         {uploadedIcons.length === 0 && <span className="text-[0.6vw] text-gray-400 col-span-5 text-center py-[1vw]">No uploaded icons yet</span>}
                     </div>
                  </>
              )}
            </div>
 
-           <div className="p-3 border-t flex justify-end gap-2 bg-white">
+           <div className="p-[0.75vw] border-t flex justify-end gap-[0.5vw] bg-white">
              <button
                onClick={() => setShowGallery(false)}
-               className="flex-1 h-8 border border-gray-300 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1 hover:bg-gray-50"
+               className="flex-1 h-[2vw] border border-gray-300 rounded-[0.5vw] text-[0.7vw] font-semibold flex items-center justify-center gap-[0.25vw] hover:bg-gray-50"
              >
-               <X size={12} /> Close
+               <X size="0.75vw" /> Close
              </button>
              <button
                disabled={!tempSelectedIcon}
                onClick={handleReplaceFromGallery}
-               className="flex-1 h-8 bg-black text-white rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1 hover:bg-zinc-800 disabled:opacity-50"
+               className="flex-1 h-[2vw] bg-black text-white rounded-[0.5vw] text-[0.7vw] font-semibold flex items-center justify-center gap-[0.25vw] hover:bg-zinc-800 disabled:opacity-50"
              >
-               <Replace size={12} /> Replace
+               <Replace size="0.75vw" /> Replace
              </button>
            </div>
         </div>
@@ -799,27 +802,249 @@ const IconEditor = ({
         onToggle={() => setActiveSection(activeSection === 'animation' ? null : 'animation')}
       />
 
-      {pickerTarget && createPortal(
-        <>
-          <div className="fixed inset-0 z-[10000] bg-transparent" onClick={() => setPickerTarget(null)}></div>
-          <ColorPicker
-            className="fixed z-[10001] w-[280px]"
-            style={{
-              top: Math.max(20, Math.min(pickerPos.y, window.innerHeight - 400)),
-              left: Math.max(20, Math.min(pickerPos.x - 290, window.innerWidth - 300))
-            }}
-            color={pickerTarget === 'fill' ? iconFill : iconColor}
-            onChange={(color) => {
-              if (pickerTarget === 'fill') updateIconFill(color);
-              else updateIconColor(color);
-            }}
-            opacity={opacity}
-            onOpacityChange={updateOpacity}
-            onClose={() => setPickerTarget(null)}
-          />
-        </>,
-        document.body
-      )}
+      {/* STROKE COLOR PICKER */}
+      <div ref={strokePickerRef} className={`fixed top-1/2 -translate-y-1/2 right-[22.2vw] w-[19.4vw] bg-white rounded-[1vw] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] transition-all duration-300 z-[10000] overflow-hidden flex flex-col max-h-[90vh] ${showStrokePicker ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`}>
+        
+        {/* Header */}
+        <div className="flex items-center justify-between p-[1vw] border-b border-gray-50 bg-white">
+          <div className="flex items-center gap-[0.5vw]">
+            <span className="text-[0.75vw] font-bold text-gray-700 uppercase">Stroke Color</span>
+          </div>
+
+          <div className="flex items-center gap-[0.5vw]">
+            <button 
+              onClick={() => updateIconColor('#000000')}
+              className="p-[0.4vw] rounded-[0.5vw] text-gray-400 hover:bg-gray-50 hover:text-indigo-600 transition-all"
+              title="Reset Color"
+            >
+              <RotateCcw size="1vw" />
+            </button>
+            <button 
+              onClick={() => {
+                setShowStrokePicker(false);
+                setShowDetailedStrokeControls(false);
+              }}
+              className="p-[0.4vw] rounded-[0.5vw] text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-all"
+            >
+              <X size="1.1vw" />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-grow overflow-y-auto custom-scrollbar">
+          <div className="flex flex-col h-full">
+            {/* Popover for Customize Colors */}
+            {showDetailedStrokeControls && createPortal(
+              <>
+                <div 
+                  className="fixed inset-0 z-[10001] bg-transparent" 
+                  onClick={() => setShowDetailedStrokeControls(false)}
+                ></div>
+                <ColorPicker 
+                  className="fixed z-[10002] w-[18vw] color-picker-container"
+                  style={{ 
+                    top: '50%',
+                    right: '6.5vw', 
+                    transform: 'translateY(-50%)'
+                  }}
+                  color={iconColor}
+                  onChange={(color) => updateIconColor(color)}
+                  opacity={opacity}
+                  onOpacityChange={updateOpacity}
+                  onClose={() => setShowDetailedStrokeControls(false)}
+                />
+              </>,
+              document.body
+            )}
+
+            <div className="p-[1vw] space-y-[1.5vw]">
+              {/* Colors on this page */}
+              <div className="space-y-[0.75vw]">
+                <div className="flex items-center gap-[0.75vw]">
+                  <span className="text-[0.8vw] font-semibold text-gray-800 whitespace-nowrap">Colors on this page</span>
+                  <div className="h-[1px] flex-grow bg-gray-100"></div>
+                </div>
+                <div className="grid grid-cols-6 gap-[0.5vw]">
+                  {colorsOnPage.map((c, i) => (
+                    <div
+                      key={i}
+                      style={{ backgroundColor: c }}
+                      onClick={() => updateIconColor(c)}
+                      className="w-full aspect-square rounded-[0.5vw] border border-gray-100 cursor-pointer hover:scale-110 transition-transform shadow-sm active:scale-95"
+                    ></div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Solid Colors */}
+              <div className="space-y-[0.75vw]">
+                <div className="flex items-center gap-[0.75vw]">
+                  <span className="text-[0.8vw] font-semibold text-gray-800 whitespace-nowrap">Solid Colors</span>
+                  <div className="h-[1px] flex-grow bg-gray-100"></div>
+                </div>
+                <div className="grid grid-cols-6 gap-[0.5vw]">
+                  <div 
+                    onClick={() => updateIconColor('none')}
+                    className="w-full aspect-square rounded-[0.5vw] border border-gray-200 cursor-pointer hover:scale-110 transition-transform shadow-sm active:scale-95 relative bg-white overflow-hidden"
+                    title="None"
+                  >
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[1.5px] bg-red-500 rotate-45"></div>
+                  </div>
+                  {[
+                    '#FFFFFF', '#000000', '#FF0000', '#FF9500', '#BF2121', '#FFFF00',
+                    '#ADFF2F', '#228B22', '#008080', '#40E0D0', '#00CED1', '#008B8B',
+                    '#ADD8E6', '#87CEEB', '#0000FF', '#000080', '#E6E6FA', '#FF00FF',
+                    '#A9A9A9', '#D3D3D3', '#F5F5F5', '#333333'
+                  ].map((c, i) => (
+                    <div
+                      key={i}
+                      style={{ backgroundColor: c }}
+                      onClick={() => {
+                        updateIconColor(c);
+                        updateOpacity(100);
+                      }}
+                      className="w-full aspect-square rounded-[0.5vw] border border-gray-100 cursor-pointer hover:scale-110 transition-transform shadow-sm active:scale-95"
+                    ></div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Toggle */}
+            <div className="mt-auto p-[0.75vw] border-t border-gray-100">
+              <button
+                onClick={() => setShowDetailedStrokeControls(!showDetailedStrokeControls)}
+                className="flex items-center gap-[0.75vw] px-[1vw] py-[0.6vw] hover:bg-gray-50 transition-all rounded-[0.75vw] w-full group"
+              >
+                <div className="w-[2vw] h-[2vw] rounded-full shadow-md group-hover:scale-110 transition-transform" style={{ background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}></div>
+                <span className="text-[0.85vw] font-bold text-gray-600">Customize Colors</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* FILL COLOR PICKER */}
+      <div ref={fillPickerRef} className={`fixed top-1/2 -translate-y-1/2 right-[22.2vw] w-[19.4vw] bg-white rounded-[1vw] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] transition-all duration-300 z-[10000] overflow-hidden flex flex-col max-h-[90vh] ${showFillPicker ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`}>
+
+        {/* Header */}
+        <div className="flex items-center justify-between p-[1vw] border-b border-gray-50 bg-white">
+          <div className="flex items-center gap-[0.5vw]">
+             <span className="text-[0.75vw] font-bold text-gray-700 uppercase">Fill Color</span>
+          </div>
+
+          <div className="flex items-center gap-[0.5vw]">
+            <button 
+              onClick={() => updateIconFill('none')}
+              className="p-[0.4vw] rounded-[0.5vw] text-gray-400 hover:bg-gray-50 hover:text-indigo-600 transition-all"
+              title="Reset Color"
+            >
+              <RotateCcw size="1vw" />
+            </button>
+            <button 
+              onClick={() => {
+                setShowFillPicker(false);
+                setShowDetailedControls(false);
+              }}
+              className="p-[0.4vw] rounded-[0.5vw] text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-all"
+            >
+              <X size="1.1vw" />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-grow overflow-y-auto custom-scrollbar">
+          <div className="flex flex-col h-full">
+            {/* Popover for Customize Colors */}
+            {showDetailedControls && createPortal(
+              <>
+                <div 
+                  className="fixed inset-0 z-[10001] bg-transparent" 
+                  onClick={() => setShowDetailedControls(false)}
+                ></div>
+                <ColorPicker 
+                  className="fixed z-[10002] w-[18vw] color-picker-container"
+                  style={{ 
+                    top: '50%',
+                    right: '6.5vw', 
+                    transform: 'translateY(-50%)'
+                  }}
+                  color={iconFill === 'none' ? '#000000' : iconFill}
+                  onChange={(color) => updateIconFill(color)}
+                  opacity={opacity}
+                  onOpacityChange={updateOpacity}
+                  onClose={() => setShowDetailedControls(false)}
+                />
+              </>,
+              document.body
+            )}
+
+            <div className="p-[1vw] space-y-[1.5vw]">
+              {/* Colors on this page */}
+              <div className="space-y-[0.75vw]">
+                <div className="flex items-center gap-[0.75vw]">
+                  <span className="text-[0.8vw] font-semibold text-gray-800 whitespace-nowrap">Colors on this page</span>
+                  <div className="h-[1px] flex-grow bg-gray-100"></div>
+                </div>
+                <div className="grid grid-cols-6 gap-[0.5vw]">
+                  {colorsOnPage.map((c, i) => (
+                    <div
+                      key={i}
+                      style={{ backgroundColor: c }}
+                      onClick={() => updateIconFill(c)}
+                      className="w-full aspect-square rounded-[0.5vw] border border-gray-100 cursor-pointer hover:scale-110 transition-transform shadow-sm active:scale-95"
+                    ></div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Solid Colors */}
+              <div className="space-y-[0.75vw]">
+                <div className="flex items-center gap-[0.75vw]">
+                  <span className="text-[0.8vw] font-semibold text-gray-800 whitespace-nowrap">Solid Colors</span>
+                  <div className="h-[1px] flex-grow bg-gray-100"></div>
+                </div>
+                <div className="grid grid-cols-6 gap-[0.5vw]">
+                  <div 
+                    onClick={() => updateIconFill('none')}
+                    className="w-full aspect-square rounded-[0.5vw] border border-gray-200 cursor-pointer hover:scale-110 transition-transform shadow-sm active:scale-95 relative bg-white overflow-hidden"
+                    title="None"
+                  >
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[1.5px] bg-red-500 rotate-45"></div>
+                  </div>
+                  {[
+                    '#FFFFFF', '#000000', '#FF0000', '#FF9500', '#BF2121', '#FFFF00',
+                    '#ADFF2F', '#228B22', '#008080', '#40E0D0', '#00CED1', '#008B8B',
+                    '#ADD8E6', '#87CEEB', '#0000FF', '#000080', '#E6E6FA', '#FF00FF',
+                    '#A9A9A9', '#D3D3D3', '#F5F5F5', '#333333'
+                  ].map((c, i) => (
+                    <div
+                      key={i}
+                      style={{ backgroundColor: c }}
+                      onClick={() => {
+                        updateIconFill(c);
+                        updateOpacity(100);
+                      }}
+                      className="w-full aspect-square rounded-[0.5vw] border border-gray-100 cursor-pointer hover:scale-110 transition-transform shadow-sm active:scale-95"
+                    ></div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Toggle */}
+            <div className="mt-auto p-[0.75vw] border-t border-gray-100">
+              <button
+                onClick={() => setShowDetailedControls(!showDetailedControls)}
+                className="flex items-center gap-[0.75vw] px-[1vw] py-[0.6vw] hover:bg-gray-50 transition-all rounded-[0.75vw] w-full group"
+              >
+                <div className="w-[2vw] h-[2vw] rounded-full shadow-md group-hover:scale-110 transition-transform" style={{ background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}></div>
+                <span className="text-[0.85vw] font-bold text-gray-600">Customize Colors</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

@@ -8,7 +8,7 @@ import {
     ChevronLeft,
     ChevronRight,
     Edit3,
-    ArrowRightLeft,
+    Replace,
     Link as LinkIcon,
     Link2Off,
     Plus,
@@ -16,7 +16,7 @@ import {
     X,
     Pencil,
     File,
-    Check
+    ImagePlay
 } from 'lucide-react';
 
 // Reused components from ImageEditor
@@ -85,11 +85,11 @@ const EffectControlRow = ({ label, value, onChange, min = -100, max = 100 }) => 
         <div className="flex items-center gap-[0.5vw]">
             <span className="text-[0.65vw] text-gray-800 w-[3vw] cursor-ew-resize select-none" onMouseDown={onMouseDown}>{label} :</span>
             <div className="flex items-center gap-[0.2vw]">
-                <button onClick={() => onChange(Math.max(min, value - 1))} className="w-[1vw] h-[2vw] flex items-center justify-center text-gray-500 hover:text-gray-600 transition-colors"><ChevronLeft size="1.1vw" strokeWidth={2} /></button>
-                <div onMouseDown={onMouseDown} className="w-[3vw] h-[2vw] flex items-center justify-center border border-gray-500 rounded-sm text-[0.8vw] text-gray-800 bg-white cursor-ew-resize select-none">
+                <button onClick={() => onChange(Math.max(min, value - 1))} className="w-[1vw] h-[2vw] flex items-center justify-center text-gray-500 hover:text-gray-600 transition-colors"><ChevronLeft size="1.1vw" strokeWidth={2.5} /></button>
+                <div onMouseDown={onMouseDown} className="w-[3vw] h-[2.2vw] flex items-center justify-center border border-gray-400 rounded-[0.25vw] text-[0.8vw] font-bold text-gray-800 bg-white cursor-ew-resize select-none">
                     {value}
                 </div>
-                <button onClick={() => onChange(Math.min(max, value + 1))} className="w-[1vw] h-[2vw] flex items-center justify-center text-gray-500 hover:text-gray-600 transition-colors"><ChevronRight size="1.1vw" strokeWidth={2} /></button>
+                <button onClick={() => onChange(Math.min(max, value + 1))} className="w-[1vw] h-[2vw] flex items-center justify-center text-gray-500 hover:text-gray-600 transition-colors"><ChevronRight size="1.1vw" strokeWidth={2.5} /></button>
             </div>
         </div>
     );
@@ -617,50 +617,52 @@ const FileInteractionEditor = ({
     }, [onUpdate, selectedElement]);
 
     return (
-        <div className="flex flex-col gap-2">
+        <div className="relative flex flex-col gap-[1vw] w-full">
             <style>{`
-                .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 10px; }
+                .custom-scrollbar::-webkit-scrollbar { width: 0.25vw; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 0.5vw; }
                 input[type='range'] { -webkit-appearance: none; width: 100%; background: transparent; }
-                input[type='range']::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; }
-                input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: #6366f1; border: 2px solid #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.2); margin-top: -5px; cursor: pointer; }
+                input[type='range']::-webkit-slider-runnable-track { height: 0.25vw; border-radius: 0.125vw; }
+                input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; height: 1vw; width: 1vw; border-radius: 50%; background: #6366f1; border: 0.125vw solid #ffffff; box-shadow: 0 0.06vw 0.2vw rgba(0,0,0,0.2); margin-top: -0.3vw; cursor: pointer; }
             `}</style>
 
             {/* Files Panel - ImageEditor Style */}
-            <div className="bg-white border border-gray-200 rounded-[15px] shadow-sm relative font-sans">
+            <div className="bg-white border border-gray-200 rounded-[0.8vw] shadow-sm overflow-hidden relative font-sans">
                 <div 
-                    className={`flex items-center justify-between px-4 py-4 border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition-colors ${activeSection === 'files' ? 'rounded-t-[15px]' : 'rounded-[15px]'}`}
+                    className="flex items-center justify-between px-[1vw] py-[1vw] border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition-colors"
                     onClick={() => setActiveSection(activeSection === 'files' ? null : 'files')}
                 >
-                    <div className="flex items-center gap-2.5">
-                        <File size={16} className="text-gray-800"/>
-                        <span className="font-medium text-gray-700 text-sm">Files</span>
+                    <div className="flex items-center gap-[0.5vw]">
+                        <File size="1vw" className="text-gray-600"/>
+                        <span className="font-semibold text-gray-900 text-[0.85vw]">Files</span>
                     </div>
-                    <ChevronUp size={16} className={`text-gray-500 transition-transform duration-200 ${activeSection === 'files' ? '' : 'rotate-180'}`} />
+                    <ChevronUp size="1vw" className={`text-gray-500 transition-transform duration-200 ${activeSection === 'files' ? '' : 'rotate-180'}`} strokeWidth={2.5} />
                 </div>
 
                 {activeSection === 'files' && (
-                    <div className="space-y-5 px-5 pb-5 pt-4">
+                    <div className="px-[1.25vw] mb-[1.5vw] pt-[1vw] space-y-[1.25vw]">
                         {/* Upload Section */}
-                        <div>
-                            <div className="flex items-center gap-3 mb-4">
-                                <span className="text-sm font-semibold text-gray-800 whitespace-nowrap">Upload your File</span>
-                                <div className="h-[1px] flex-grow bg-gray-200"></div>
+                        <div className="space-y-[1vw]">
+                            <div className="flex items-center gap-[0.5vw]">
+                                <span className="text-[0.85vw] font-semibold text-gray-900 whitespace-nowrap">Upload your File</span>
+                                <div className="h-[0.1vw] w-full bg-gray-200"></div>
                             </div>
 
-                            <div className="flex items-center justify-between mb-4">
-                                <span className="text-[13px] font-medium text-gray-700">Select the File type :</span>
+                            <div className="flex items-center justify-between pb-[0.25vw]">
+                                <span className="text-[0.75vw] font-semibold text-gray-700">Select the File type :</span>
                                 <div className="relative" ref={fitDropdownRef}>
                                     <button
                                         onClick={() => setIsFitDropdownOpen(!isFitDropdownOpen)}
-                                        className="flex items-center justify-between w-32 bg-white border border-gray-100 shadow-sm rounded-md px-4 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 hover:bg-gray-50 transition-colors"
+                                        className="flex items-center justify-between w-[6vw] px-[0.75vw] py-[0.5vw] bg-white border border-gray-200 rounded-[0.5vw] shadow-sm hover:bg-gray-50 transition-colors"
                                     >
-                                        <span className="font-medium">{imageType}</span>
-                                        <ChevronDown size={14} className={`text-gray-400 transition-transform duration-200 ${isFitDropdownOpen ? 'rotate-180' : ''}`} />
+                                        <span className="text-[0.8vw] font-bold text-gray-700">{imageType}</span>
+                                        <ChevronDown size="0.9vw" className={`text-gray-400 transition-transform ${isFitDropdownOpen ? 'rotate-180' : ''}`} />
                                     </button>
                                     
                                     {isFitDropdownOpen && (
-                                        <div className="absolute top-full right-0 mt-1 w-32 bg-white border border-gray-100 rounded-lg shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                                        <>
+                                        <div className="fixed inset-0 z-[90]" onClick={() => setIsFitDropdownOpen(false)} />
+                                        <div className="absolute right-0 top-full mt-[0.5vw] w-[6vw] bg-white border border-gray-100 rounded-[0.5vw] shadow-2xl overflow-hidden z-[100] flex flex-col py-[0.25vw] animate-in fade-in zoom-in-95 duration-150">
                                             {['Fit', 'Fill', 'Stretch'].map((option) => (
                                                 <button
                                                     key={option}
@@ -668,102 +670,99 @@ const FileInteractionEditor = ({
                                                         handleFitChange(option);
                                                         setIsFitDropdownOpen(false);
                                                     }}
-                                                    className={`w-full text-left px-4 py-2 text-xs transition-colors flex items-center justify-between
-                                                        ${imageType === option ? 'bg-indigo-50 text-indigo-600 font-medium' : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'}
-                                                    `}
+                                                    className={`px-[1vw] py-[0.5vw] text-[0.8vw] font-medium text-gray-600 hover:bg-gray-50 hover:text-indigo-600 transition-colors text-center ${imageType === option ? 'bg-indigo-50/50 text-indigo-600' : ''}`}
                                                 >
                                                     {option}
-                                                    {imageType === option && <Check size={12} />} 
                                                 </button>
                                             ))}
                                         </div>
+                                        </>
                                     )}
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-4 mb-2">
+                            <div className="flex items-center gap-[0.75vw]">
                                 {/* Preview Box */}
-                                <div className="flex flex-col items-center gap-1">
-                                    <div className="w-[120px] h-[80px] border-2 border-dashed border-gray-300 rounded-lg p-1 flex items-center justify-center bg-gray-50 overflow-hidden relative">
-                                        {previewSrc ? (
-                                            <img src={previewSrc} className="w-full h-full object-contain" alt="Current" />
-                                        ) : (
-                                            <span className="text-xs text-gray-400">Empty</span>
-                                        )}
-                                    </div>
-                                    <span className="text-[10px] text-gray-400">Temp 1</span>
+                                <div onClick={() => fileInputRef.current?.click()} className="w-[4.5vw] h-[4.5vw] bg-gray-50 border-2 border-dashed border-gray-300 rounded-[0.75vw] p-[0.3vw] flex items-center justify-center overflow-hidden cursor-pointer group hover:border-indigo-400 transition-colors">
+                                    {previewSrc ? (
+                                        <img src={previewSrc} className="w-full h-full object-contain" alt="Current" />
+                                    ) : (
+                                        <span className="text-[0.6vw] text-gray-400 font-medium whitespace-nowrap">Empty</span>
+                                    )}
                                 </div>
 
                                 {/* Swap Icon */}
-                                <div className="text-gray-400 flex flex-col items-center gap-0.5">
-                                    <ArrowRightLeft size={16} />
+                                <div className="flex-shrink-0">
+                                    <Replace size="1.2vw" className="text-gray-300" />
                                 </div>
 
                                 {/* Upload Box */}
-                                <div className="flex flex-col items-center w-full">
-                                    <div
-                                        className="w-full h-[80px] border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50 transition-colors bg-white relative"
-                                        onClick={() => fileInputRef.current?.click()}
-                                    >
-                                        <Upload size={18} className="text-gray-400 mb-1" />
-                                        <span className="text-[10px] text-gray-500">Drag & Drop or <span className="text-indigo-600 font-medium">Upload</span></span>
-                                        <input type="file" ref={fileInputRef} className="hidden" accept="image/*,application/pdf" onChange={handleFileUpload} />
-                                    </div>
-                                    <span className="text-[9px] text-gray-400 mt-1">Supported File Format : PDF, JPG, PNG</span>
+                                <div 
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="flex-1 h-[4.5vw] border-2 border-dashed border-gray-200 bg-gray-50 rounded-[0.75vw] flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 hover:border-indigo-400 transition-all duration-300"
+                                >
+                                    <Upload size="1.1vw" className="text-indigo-600 mb-[0.2vw]" />
+                                    <p className="text-[0.65vw] text-gray-400 font-medium text-center px-[1vw]">
+                                        Drag & Drop or <span className="text-indigo-600 font-bold">Upload File</span>
+                                    </p>
+                                    <input type="file" ref={fileInputRef} className="hidden" accept="image/*,application/pdf" onChange={handleFileUpload} />
                                 </div>
+                            </div>
+                            <div className="flex justify-end">
+                                <span className="text-[0.6vw] text-gray-400 font-medium">Supported Format : PDF, JPG, PNG</span>
                             </div>
                         </div>
 
                         {/* Opacity Section */}
-                        <div>
-                            <div className="flex items-center gap-3 mb-4">
-                                <span className="text-sm font-semibold text-gray-800 whitespace-nowrap">Opacity</span>
-                                <div className="h-[1px] flex-grow bg-gray-200"></div>
+                        <div className="space-y-[0.75vw]">
+                            <div className="flex items-center gap-[0.5vw]">
+                                <span className="text-[0.85vw] font-semibold text-gray-900 whitespace-nowrap">Opacity</span>
+                                <div className="h-[0.1vw] w-full bg-gray-200"></div>
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-[1vw] px-[0.25vw]">
                                 <input
                                     type="range"
                                     min="0"
                                     max="100"
                                     value={opacity}
                                     onChange={handleOpacityChange}
-                                    className="flex-1 h-1 rounded- appearance-none cursor-pointer"
+                                    className="flex-1 h-[0.25vw] appearance-none cursor-pointer"
                                     style={{ background: `linear-gradient(to right, #6366f1 0%, #6366f1 ${opacity}%, #f3f4f6 ${opacity}%, #f3f4f6 100%)` }}
                                 />
-                                <span className="text-sm font-medium text-gray-700 w-10 text-right">{opacity} %</span>
+                                <span className="text-[0.85vw] font-semibold text-gray-700 w-[3vw] text-right whitespace-nowrap">{opacity} %</span>
                             </div>
                         </div>
 
                         {/* Adjustments Collapsible */}
-                        <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+                        <div className="bg-white border border-gray-100 rounded-[0.75vw] shadow-sm overflow-hidden">
                             <button
                                 onClick={() => setNestedSection(nestedSection === 'adjustments' ? null : 'adjustments')}
-                                className="w-full flex justify-between items-center p-4 bg-white hover:bg-gray-50 transition-colors"
+                                className="w-full flex justify-between items-center px-[1vw] py-[0.8vw] bg-white hover:bg-gray-50 transition-colors"
                             >
-                                <span className="text-[14px] font-semibold text-gray-700">Adjustments</span>
-                                <ChevronDown size={16} className={`text-gray-400 transition-transform duration-200 ${nestedSection === 'adjustments' ? 'rotate-180' : ''}`} />
+                                <span className="text-[0.85vw] font-semibold text-gray-700">Adjustments</span>
+                                <ChevronDown size="0.9vw" className={`text-gray-400 transition-transform duration-200 ${nestedSection === 'adjustments' ? 'rotate-180' : ''}`} />
                             </button>
                             {nestedSection === 'adjustments' && (
-                                <div className="relative px-6 pb-5 pt-5 border-t border-gray-100">
-                                    <div className="px-1 pb-2 space-y-2  text-xs animate-in slide-in-from-top-2">
+                                <div className="px-[1.5vw] pb-[1.25vw] pt-[1vw] border-t border-gray-100">
+                                    <div className="space-y-[0.75vw] animate-in slide-in-from-top-2">
                                         {[
                                             ['Exposure', 'exposure', -100, 100], ['Contrast', 'contrast', -100, 100], ['Saturation', 'saturation', -100, 100], ['Temperature', 'temperature', -100, 100], ['Tint', 'tint', -180, 180], ['Highlights', 'highlights', -100, 100], ['Shadows', 'shadows', -100, 100],
                                         ].map(([label, key, min, max]) => (
-                                            <div key={key} className="space-y-1">
-                                                <div className="flex justify-between items-center">
-                                                    <div className="flex items-center gap-2">
-                                                        <DraggableSpan label={label} value={filters[key]} onChange={(v) => startTransition(() => setFilters((f) => ({ ...f, [key]: v })))} min={min} max={max} className="text-[13px] font-medium text-gray-700" />
+                                            <div key={key} className="space-y-[0.25vw]">
+                                                <div className="flex justify-between items-center px-[0.2vw]">
+                                                    <div className="flex items-center gap-[0.5vw]">
+                                                        <DraggableSpan label={label} value={filters[key]} onChange={(v) => startTransition(() => setFilters((f) => ({ ...f, [key]: v })))} min={min} max={max} className="text-[0.75vw] font-semibold text-gray-700" />
                                                         <button
                                                             onClick={() => setFilters((f) => ({ ...f, [key]: 0 }))}
                                                             className="text-gray-400 hover:text-indigo-600 transition-colors"
                                                             title={`Reset ${label}`}
                                                         >
-                                                            <RotateCcw size={12} />
+                                                            <RotateCcw size="0.7vw" />
                                                         </button>
                                                     </div>
-                                                    <span className="text-xs font-bold text-gray-900">{filters[key]}</span>
+                                                    <span className="text-[0.75vw] font-bold text-indigo-600">{filters[key]}</span>
                                                 </div>
-                                                <input type="range" min={min} max={max} value={filters[key]} onChange={(e) => setFilters((f) => ({ ...f, [key]: +e.target.value }))} style={{ background: `linear-gradient(to right, #6366f1 0%, #6366f1 ${((filters[key] - min) / (max - min)) * 100}%, #f3f4f6 ${((filters[key] - min) / (max - min)) * 100}%, #f3f4f6 100%)` }} />
+                                                <input type="range" min={min} max={max} value={filters[key]} onChange={(e) => setFilters((f) => ({ ...f, [key]: +e.target.value }))} className="h-[0.15vw] appearance-none cursor-pointer" style={{ background: `linear-gradient(to right, #6366f1 0%, #6366f1 ${((filters[key] - min) / (max - min)) * 100}%, #f3f4f6 ${((filters[key] - min) / (max - min)) * 100}%, #f3f4f6 100%)` }} />
                                             </div>
                                         ))}
                                     </div>
@@ -772,27 +771,27 @@ const FileInteractionEditor = ({
                         </div>
 
                         {/* Corner Radius Collapsible */}
-                        <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+                        <div className="bg-white border border-gray-100 rounded-[0.75vw] shadow-sm overflow-hidden">
                             <button
                                 onClick={() => setNestedSection(nestedSection === 'radius' ? null : 'radius')}
-                                className="w-full flex justify-between items-center p-4 bg-white hover:bg-gray-50 transition-colors"
+                                className="w-full flex justify-between items-center px-[1vw] py-[0.8vw] bg-white hover:bg-gray-50 transition-colors"
                             >
-                                <span className="text-[14px] font-semibold text-gray-700">Corner Radius</span>
-                                <ChevronDown size={16} className={`text-gray-400 transition-transform duration-200 ${nestedSection === 'radius' ? 'rotate-180' : ''}`} />
+                                <span className="text-[0.85vw] font-semibold text-gray-700">Corner Radius</span>
+                                <ChevronDown size="0.9vw" className={`text-gray-400 transition-transform duration-200 ${nestedSection === 'radius' ? 'rotate-180' : ''}`} />
                             </button>
                             {nestedSection === 'radius' && (
-                                <div className="relative px-6 pb-5 pt-5 border-t border-gray-100">
-                                    <div className="flex flex-col items-center gap-6">
-                                        <div className="flex items-center gap-6">
-                                            <RadiusBox onChange={updateRadius} corner="tl" value={radius.tl} radiusStyle="rounded-tl-3xl rounded-tr-md rounded-br-md rounded-bl-md" />
-                                            <RadiusBox onChange={updateRadius} corner="tr" value={radius.tr} radiusStyle="rounded-tr-3xl rounded-tl-md rounded-br-md rounded-bl-md" />
+                                <div className="px-[1.5vw] pb-[1.5vw] pt-[1.25vw] border-t border-gray-100">
+                                    <div className="flex flex-col items-center gap-[1.5vw]">
+                                        <div className="flex items-center gap-[1.5vw]">
+                                            <RadiusBox onChange={updateRadius} corner="tl" value={radius.tl} radiusStyle="rounded-tl-[1.5vw] rounded-tr-[0.5vw] rounded-br-[0.5vw] rounded-bl-[0.5vw]" />
+                                            <RadiusBox onChange={updateRadius} corner="tr" value={radius.tr} radiusStyle="rounded-tr-[1.5vw] rounded-tl-[0.5vw] rounded-br-[0.5vw] rounded-bl-[0.5vw]" />
                                         </div>
-                                        <div className="absolute left-1/2 top-20 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
-                                            <button onClick={() => setIsRadiusLinked(!isRadiusLinked)} className="pointer-events-auto p-1.5 transition-colors bg-white rounded-full">{isRadiusLinked ? <LinkIcon size={20} className="text-gray-900" /> : <Link2Off size={20} className="text-gray-400" />}</button>
+                                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[10] pointer-events-none mt-[1vw]">
+                                            <button onClick={() => setIsRadiusLinked(!isRadiusLinked)} className="pointer-events-auto p-[0.4vw] transition-colors bg-white rounded-full shadow-md border border-gray-100">{isRadiusLinked ? <LinkIcon size="1vw" className="text-gray-900" /> : <Link2Off size="1vw" className="text-gray-400" />}</button>
                                         </div>
-                                        <div className="flex items-center gap-6">
-                                            <RadiusBox onChange={updateRadius} corner="bl" value={radius.bl} radiusStyle="rounded-bl-3xl rounded-tr-md rounded-br-md rounded-tl-md" />
-                                            <RadiusBox onChange={updateRadius} corner="br" value={radius.br} radiusStyle="rounded-br-3xl rounded-tr-md rounded-tl-md rounded-bl-md" />
+                                        <div className="flex items-center gap-[1.5vw]">
+                                            <RadiusBox onChange={updateRadius} corner="bl" value={radius.bl} radiusStyle="rounded-bl-[1.5vw] rounded-tr-[0.5vw] rounded-br-[0.5vw] rounded-tl-[0.5vw]" />
+                                            <RadiusBox onChange={updateRadius} corner="br" value={radius.br} radiusStyle="rounded-br-[1.5vw] rounded-tr-[0.5vw] rounded-tl-[0.5vw] rounded-bl-[0.5vw]" />
                                         </div>
                                     </div>
                                 </div>
@@ -800,17 +799,17 @@ const FileInteractionEditor = ({
                         </div>
 
                         {/* Effect Collapsible */}
-                        <div className="bg-white border border-gray-100 rounded-xl shadow-sm overflow-hidden">
+                        <div className="bg-white border border-gray-100 rounded-[0.75vw] shadow-sm overflow-hidden">
                             <button
                                 onClick={() => setNestedSection(nestedSection === 'effects' ? null : 'effects')}
-                                className="w-full flex justify-between items-center p-4 bg-white hover:bg-gray-50 transition-colors"
+                                className="w-full flex justify-between items-center px-[1vw] py-[0.8vw] bg-white hover:bg-gray-50 transition-colors"
                             >
-                                <span className="text-[14px] font-semibold text-gray-700">Effect</span>
-                                <ChevronDown size={16} className={`text-gray-400 transition-transform duration-200 ${nestedSection === 'effects' ? 'rotate-180' : ''}`} />
+                                <span className="text-[0.85vw] font-semibold text-gray-700">Effect</span>
+                                <ChevronDown size="0.9vw" className={`text-gray-400 transition-transform duration-200 ${nestedSection === 'effects' ? 'rotate-180' : ''}`} />
                             </button>
                             {nestedSection === 'effects' && (
-                                <div className="relative px-6 pb-5 pt-5 border-t border-gray-100">
-                                    <div className="p-0 pt-0 space-y-2  bg-white border-t border-gray-50">
+                                <div className="px-[1.25vw] pb-[1.25vw] pt-[0.75vw] border-t border-gray-100">
+                                    <div className="space-y-[0.5vw]">
                                         {['Drop Shadow', 'Inner Shadow', 'Blur', 'Background Blur'].map((eff) => (
                                             <div key={eff} className="relative">
                                                 <div
@@ -823,9 +822,9 @@ const FileInteractionEditor = ({
                                                             setActivePopup(activePopup === eff ? null : eff);
                                                         }
                                                     }}
-                                                    className={`flex items-center justify-between p-2 rounded-lg border transition-all cursor-pointer ${activePopup === eff ? 'border-black-800 bg-indigo-50/20' : 'bg-gray-50/80 border-gray-100 hover:border-gray-300'}`}
+                                                    className={`flex items-center justify-between p-[0.5vw] rounded-[0.4vw] border transition-all cursor-pointer ${activePopup === eff ? 'border-indigo-600 bg-indigo-50/20' : 'bg-gray-50/80 border-gray-100 hover:border-gray-300'}`}
                                                 >
-                                                    <span className="text-xs font-bold text-gray-700 flex-1">{eff}</span>
+                                                    <span className="text-[0.7vw] font-bold text-gray-700 flex-1">{eff}</span>
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
@@ -838,34 +837,34 @@ const FileInteractionEditor = ({
                                                                 setActivePopup(eff);
                                                             }
                                                         }}
-                                                        className="p-1 hover:bg-white/50 rounded-lg transition-colors"
+                                                        className="p-[0.25vw] hover:bg-white/50 rounded-[0.25vw] transition-colors"
                                                     >
-                                                        {activeEffects.includes(eff) ? <Trash2 size={16} className="text-red-500" /> : <Plus size={16} className="text-gray-400" />}
+                                                        {activeEffects.includes(eff) ? <Trash2 size="0.9vw" className="text-red-500" /> : <Plus size="0.9vw" className="text-gray-400" />}
                                                     </button>
                                                 </div>
                                                 {activePopup === eff && (
-                                                    <div className="fixed z-[50] bg-white rounded-lg shadow-2xl border border-gray-100 p-6 animate-in slide-in-from-right-4 fade-in duration-200" style={{ width: '300px', top: '35%', left: '92%', transform: 'translateX(-120%)' }}>
-                                                        <div className="flex items-center mb-4">
-                                                            <span className="text-sm font-bold text-gray-800">{eff}</span>
-                                                            <div className="h-[1px] flex-1 mx-3 bg-gray-100" />
-                                                            <button onClick={() => setActivePopup(null)} className="p-1.5 rounded-lg hover:bg-gray-100 transition" aria-label="Close"><X size={16} className="text-gray-500" /></button></div>
-                                                        <div className="space-y-3">
+                                                    <div className="fixed z-[50] bg-white rounded-[0.75vw] shadow-2xl border border-gray-100 p-[1.25vw] animate-in slide-in-from-right-4 fade-in duration-200" style={{ width: '18vw', top: '35%', right: '21vw' }}>
+                                                        <div className="flex items-center mb-[1vw]">
+                                                            <span className="text-[0.8vw] font-bold text-gray-800">{eff}</span>
+                                                            <div className="h-[0.1vw] flex-1 mx-[0.75vw] bg-gray-100" />
+                                                            <button onClick={() => setActivePopup(null)} className="p-[0.4vw] rounded-[0.4vw] hover:bg-gray-100 transition" aria-label="Close"><X size="1vw" className="text-gray-500" /></button></div>
+                                                        <div className="space-y-[0.75vw]">
                                                             {eff.includes('Shadow') && (
-                                                                <><div className="flex items-start gap-2"><div className="relative"><div className="w-[65px] h-[65px] rounded-sm flex items-center justify-center text-white text-sm font-semibold cursor-pointer overflow-hidden" style={{ background: `linear-gradient(to right, ${effectSettings[eff].color} 0%, ${effectSettings[eff].color}88 50%, transparent 100%)` }}><span className="relative z-10">{effectSettings[eff].opacity} %</span><input type="color" value={effectSettings[eff].color} onChange={(e) => updateEffectSetting(eff, 'color', e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" /></div></div><div className="flex-1 space-y-3"><div className="flex items-center gap-2"><span className="text-xs text-gray-800 font-normal whitespace-nowrap">Code :</span><div className="flex-1 relative"><input type="text" value={effectSettings[eff].color} onChange={(e) => updateEffectSetting(eff, 'color', e.target.value)} className="w-full text-[14px] text-gray-800 outline-none bg-transparent border border-gray-300 rounded-lg px-3 pr-8 h-9" />
-                                                                    <div className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 cursor-pointer"><Pencil size={16} className="text-gray-400" strokeWidth={2} />{'EyeDropper' in window ? <button onClick={() => handleColorPick(eff)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" /> : <input type="color" value={effectSettings[eff].color} onChange={(e) => updateEffectSetting(eff, 'color', e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />}</div></div></div>
-                                                                    <div className="flex items-center gap-2">
-                                                                        <DraggableSpan label="Opacity :" value={effectSettings[eff].opacity} onChange={(v) => updateEffectSetting(eff, 'opacity', v)} className="text-xs text-gray-800 font-normal whitespace-nowrap" />
-                                                                        <div className="flex-1 flex items-center gap-2">
-                                                                            <input type="range" min="0" max="100" value={effectSettings[eff].opacity} onChange={(e) => updateEffectSetting(eff, 'opacity', Number(e.target.value))} className="flex-1 w-1 h-1 appearance-none cursor-pointer" style={{ background: `linear-gradient(to right, #6366f1 0%, #6366f1 ${effectSettings[eff].opacity}%, #e5e7eb ${effectSettings[eff].opacity}%, #e5e7eb 100%)` }} />
-                                                                            <span className="text-xs text-gray-800">{effectSettings[eff].opacity} %</span></div></div></div></div>
+                                                                <><div className="flex items-start gap-[0.7vw]"><div className="relative"><div className="w-[4vw] h-[4vw] rounded-[0.25vw] flex items-center justify-center text-white text-[0.7vw] font-semibold cursor-pointer overflow-hidden" style={{ background: `linear-gradient(to right, ${effectSettings[eff].color} 0%, ${effectSettings[eff].color}88 50%, transparent 100%)` }}><span className="relative z-10">{effectSettings[eff].opacity} %</span><input type="color" value={effectSettings[eff].color} onChange={(e) => updateEffectSetting(eff, 'color', e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" /></div></div><div className="flex-1 space-y-[0.75vw]"><div className="flex items-center gap-[0.5vw]"><span className="text-[0.7vw] text-gray-800 font-normal whitespace-nowrap">Code :</span><div className="flex-1 relative"><input type="text" value={effectSettings[eff].color} onChange={(e) => updateEffectSetting(eff, 'color', e.target.value)} className="w-full text-[0.75vw] font-semibold text-gray-800 outline-none bg-transparent border border-gray-200 rounded-[0.4vw] px-[0.5vw] pr-[2vw] h-[2.2vw]" />
+                                                                    <div className="absolute right-[0.5vw] top-1/2 -translate-y-1/2 w-[0.9vw] h-[0.9vw] cursor-pointer"><Pencil size="0.9vw" className="text-gray-400" strokeWidth={2} />{'EyeDropper' in window ? <button onClick={() => handleColorPick(eff)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" /> : <input type="color" value={effectSettings[eff].color} onChange={(e) => updateEffectSetting(eff, 'color', e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />}</div></div></div>
+                                                                    <div className="flex items-center gap-[0.5vw]">
+                                                                        <DraggableSpan label="Opacity :" value={effectSettings[eff].opacity} onChange={(v) => updateEffectSetting(eff, 'opacity', v)} className="text-[0.7vw] text-gray-800 font-normal whitespace-nowrap" />
+                                                                        <div className="flex-1 flex items-center gap-[0.5vw]">
+                                                                            <input type="range" min="0" max="100" value={effectSettings[eff].opacity} onChange={(e) => updateEffectSetting(eff, 'opacity', Number(e.target.value))} className="flex-1 h-[0.15vw] appearance-none cursor-pointer" style={{ background: `linear-gradient(to right, #6366f1 0%, #6366f1 ${effectSettings[eff].opacity}%, #e5e7eb ${effectSettings[eff].opacity}%, #e5e7eb 100%)` }} />
+                                                                            <span className="text-[0.7vw] font-bold text-gray-800 w-[2vw] text-right">{effectSettings[eff].opacity} %</span></div></div></div></div>
 
-                                                                    <div className="space-y-3 pt-2"><EffectControlRow label="X Axis" value={effectSettings[eff].x} onChange={(v) => updateEffectSetting(eff, 'x', v)} min={-100} max={100} />
+                                                                    <div className="space-y-[0.5vw] pt-[0.5vw]"><EffectControlRow label="X Axis" value={effectSettings[eff].x} onChange={(v) => updateEffectSetting(eff, 'x', v)} min={-100} max={100} />
                                                                         <EffectControlRow label="Y Axis" value={effectSettings[eff].y} onChange={(v) => updateEffectSetting(eff, 'y', v)} min={-100} max={100} />
                                                                         <EffectControlRow label="Blur %" value={effectSettings[eff].blur} onChange={(v) => updateEffectSetting(eff, 'blur', v)} min={0} max={100} />
                                                                         <EffectControlRow label="Spread" value={effectSettings[eff].spread} onChange={(v) => updateEffectSetting(eff, 'spread', v)} min={0} max={100} /></div></>
                                                             )}
                                                             {!eff.includes('Shadow') && (
-                                                                <div className="space-y-3">
+                                                                <div className="space-y-[0.5vw]">
                                                                     <EffectControlRow label="Blur %" value={effectSettings[eff].blur} onChange={(v) => updateEffectSetting(eff, 'blur', v)} min={0} max={100} />
                                                                     <EffectControlRow label="Spread" value={effectSettings[eff].spread} onChange={(v) => updateEffectSetting(eff, 'spread', v)} min={0} max={100} /></div>
                                                             )}
@@ -879,78 +878,75 @@ const FileInteractionEditor = ({
                             )}
                         </div>
                     </div>
-
                 )}
             </div>
 
             {/* Interaction Panel - ImageEditor Style */}
-            <div className="bg-white border border-gray-200 rounded-[15px] shadow-sm relative font-sans">
+            <div className="bg-white border border-gray-200 rounded-[0.8vw] shadow-sm overflow-hidden relative font-sans">
                 <div 
-                    className={`flex items-center justify-between px-4 py-4 border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition-colors ${activeSection === 'interaction' ? 'rounded-t-[15px]' : 'rounded-[15px]'}`}
+                    className="flex items-center justify-between px-[1vw] py-[1vw] border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition-colors"
                     onClick={() => setActiveSection(activeSection === 'interaction' ? null : 'interaction')}
                 >
-                    <div className="flex items-center gap-2.5">
-                        <Sparkles size={16} className="text-gray-800" />
-                        <span className="font-medium text-gray-700 text-sm">Interaction</span>
+                    <div className="flex items-center gap-[0.5vw]">
+                        <Sparkles size="1vw" className="text-gray-800" />
+                        <span className="font-semibold text-gray-900 text-[0.85vw]">Interaction</span>
                     </div>
-                    <ChevronUp size={16} className={`text-gray-500 transition-transform duration-200 ${activeSection === 'interaction' ? '' : 'rotate-180'}`} />
+                    <ChevronUp size="1vw" className={`text-gray-500 transition-transform duration-200 ${activeSection === 'interaction' ? '' : 'rotate-180'}`} strokeWidth={2.5} />
                 </div>
 
                 {activeSection === 'interaction' && (
-                    <div className="space-y-4 px-5 pb-5 pt-4">
-
-
-                        <div className="flex items-center gap-3">
-                            <span className="text-sm font-bold text-gray-800 whitespace-nowrap">Add Frame to Interact</span>
-                            <div className="h-[1px] flex-grow bg-gray-200"></div>
+                    <div className="space-y-[1.25vw] px-[1.25vw] mb-[1.5vw] pt-[1vw]">
+                        <div className="flex items-center gap-[0.5vw]">
+                            <span className="text-[0.85vw] font-semibold text-gray-900 whitespace-nowrap">Add Frame to Interact</span>
+                            <div className="h-[0.1vw] flex-grow bg-gray-200"></div>
                         </div>
                         <div
-                            className="border border-dashed border-gray-400 p-8 rounded-lg flex flex-col items-center justify-center bg-white relative h-28 cursor-pointer hover:bg-gray-50 transition-colors group mt-2"
+                            className="border-2 border-dashed border-gray-200 p-[1.5vw] flex flex-col items-center justify-center bg-gray-50 relative h-[7vw] cursor-pointer hover:bg-gray-100 hover:border-indigo-400 transition-all group"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onStartInteractionDraw && onStartInteractionDraw();
                             }}
                         >
                             {/* Corner Markers */}
-                            <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-black"></div>
-                            <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-black"></div>
-                            <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-black"></div>
-                            <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-black"></div>
+                            <div className="absolute -top-[2px] -left-[2px] w-[0.8vw] h-[0.8vw] border-t-2 border-l-2 border-indigo-600"></div>
+                            <div className="absolute -top-[2px] -right-[2px] w-[0.8vw] h-[0.8vw] border-t-2 border-r-2 border-indigo-600"></div>
+                            <div className="absolute -bottom-[2px] -left-[2px] w-[0.8vw] h-[0.8vw] border-b-2 border-l-2 border-indigo-600"></div>
+                            <div className="absolute -bottom-[2px] -right-[2px] w-[0.8vw] h-[0.8vw] border-b-2 border-r-2 border-indigo-600"></div>
 
-                            <p className="text-[13px] text-gray-400 text-center font-medium leading-tight pointer-events-none group-hover:text-gray-500">
+                            <p className="text-[0.7vw] text-gray-400 text-center font-bold leading-tight pointer-events-none group-hover:text-gray-600">
                                 Click And Drag Frame On Page<br />To Activate Interaction
                             </p>
                         </div>
 
                         {/* Size Controls */}
-                        <div className="flex items-center gap-4 bg-gray-50 p-2 rounded-lg justify-center">
-                            <span className="text-sm font-semibold text-gray-800 text-nowrap">Size :</span>
-                            <div className="flex items-center gap-1">
-                                <span className="text-xs text-gray-500 font-bold">W</span>
-                                <button onClick={() => handleSizeUpdate('width', width - 1)} className="p-1 hover:text-indigo-600 transition-colors"><ChevronLeft size={16} /></button>
+                        <div className="flex items-center gap-[1vw] bg-gray-50 p-[0.5vw] rounded-[0.5vw] justify-center">
+                            <span className="text-[0.75vw] font-bold text-gray-800 whitespace-nowrap">Size :</span>
+                            <div className="flex items-center gap-[0.25vw]">
+                                <span className="text-[0.65vw] text-gray-400 font-bold">W</span>
+                                <button onClick={() => handleSizeUpdate('width', width - 1)} className="p-[0.2vw] hover:text-indigo-600 transition-colors"><ChevronLeft size="1vw" /></button>
                                 <input
                                     type="text"
                                     value={width}
                                     onChange={(e) => handleSizeUpdate('width', e.target.value)}
-                                    className="w-12 h-8 bg-white border border-gray-300 rounded text-center text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    className="w-[3.5vw] h-[2vw] bg-white border border-gray-200 rounded-[0.25vw] text-center text-[0.75vw] font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                                 />
-                                <button onClick={() => handleSizeUpdate('width', width + 1)} className="p-1 hover:text-indigo-600 transition-colors"><ChevronRight size={16} /></button>
+                                <button onClick={() => handleSizeUpdate('width', width + 1)} className="p-[0.2vw] hover:text-indigo-600 transition-colors"><ChevronRight size="1vw" /></button>
                             </div>
-                            <div className="flex items-center gap-1">
-                                <span className="text-xs text-gray-500 font-bold">H</span>
-                                <button onClick={() => handleSizeUpdate('height', height - 1)} className="p-1 hover:text-indigo-600 transition-colors"><ChevronLeft size={16} /></button>
+                            <div className="flex items-center gap-[0.25vw]">
+                                <span className="text-[0.65vw] text-gray-400 font-bold">H</span>
+                                <button onClick={() => handleSizeUpdate('height', height - 1)} className="p-[0.2vw] hover:text-indigo-600 transition-colors"><ChevronLeft size="1vw" /></button>
                                 <input
                                     type="text"
                                     value={height}
                                     onChange={(e) => handleSizeUpdate('height', e.target.value)}
-                                    className="w-12 h-8 bg-white border border-gray-300 rounded text-center text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    className="w-[3.5vw] h-[2vw] bg-white border border-gray-200 rounded-[0.25vw] text-center text-[0.75vw] font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                                 />
-                                <button onClick={() => handleSizeUpdate('height', height + 1)} className="p-1 hover:text-indigo-600 transition-colors"><ChevronRight size={16} /></button>
+                                <button onClick={() => handleSizeUpdate('height', height + 1)} className="p-[0.2vw] hover:text-indigo-600 transition-colors"><ChevronRight size="1vw" /></button>
                             </div>
                         </div>
 
                         {/* List of Interaction Frames */}
-                        <div className="space-y-3 pt-4 border-t border-gray-100">
+                        <div className="space-y-[0.75vw] pt-[1vw] border-t border-gray-100">
                             {frames.length > 0 ? (
                                 frames.map((frame, index) => {
                                     const isSelected = selectedElement && selectedElement.id === frame.id;
@@ -969,7 +965,7 @@ const FileInteractionEditor = ({
                                     }
 
                                     return (
-                                        <div key={frame.id} className={`transition-all duration-300 ${isSelected ? 'scale-[1.02]' : ''}`}>
+                                        <div key={frame.id} className={`transition-all duration-300 ${isSelected ? 'scale-[1.01]' : ''}`}>
                                             {activeEl && InteractionPanelComponent && (
                                                 <InteractionPanelComponent
                                                     selectedElement={activeEl}
@@ -1020,13 +1016,12 @@ const FileInteractionEditor = ({
                                     );
                                 })
                             ) : (
-                                <div className="text-center py-4 text-gray-400 italic text-xs">
+                                <div className="text-center py-[1.5vw] text-gray-400 italic text-[0.7vw]">
                                     No interaction frames found on this page.
                                 </div>
                             )}
                         </div>
                     </div>
-
                 )}
             </div>
         </div>

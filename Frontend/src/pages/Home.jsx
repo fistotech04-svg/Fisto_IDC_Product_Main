@@ -66,7 +66,7 @@ export default function Home() {
 
   return (
     <>
- <div className="min-h-screen bg-white font-sans text-gray-900 overflow-x-hidden relative top-[4vw]">
+ <div className="min-h-screen bg-white font-sans text-gray-900 overflow-x-hidden pt-[8vh]">
       
       {/* Hero Section */}
       <div className="relative w-full overflow-visible bg-black bg-cover bg-center" >
@@ -163,14 +163,14 @@ export default function Home() {
 
           {/* Categories */}
           <div className="flex items-center gap-[0.75vw] overflow-x-auto scrollbar-hide mb-[2vw] pb-[0.5vw]">
-                <span className="font-bold text-black text-[0.875vw] whitespace-nowrap mr-[0.5vw]">Categories :</span>
-                <button className="px-[1.25vw] py-[0.5vw] rounded-full bg-black text-white text-[0.75vw] font-bold shadow-md whitespace-nowrap">
+                <span className="font-semibold text-black text-[0.9vw] whitespace-nowrap mr-[0.5vw]">Categories :</span>
+                <button className="px-[1.5vw] py-[0.7vw] rounded-full bg-black text-white text-[0.7vw] font-semibold shadow-md whitespace-nowrap">
                     Most Popular Books
                 </button>
                 {categories.slice(1).map((cat, idx) => (
                     <button 
                         key={idx}
-                        className="px-[1.25vw] py-[0.5vw] rounded-full bg-white border border-gray-100 text-gray-600 text-[0.75vw] font-medium hover:bg-gray-50 shadow-sm whitespace-nowrap transition-colors"
+                        className="px-[1.5vw] py-[0.7vw] rounded-full bg-white border border-gray-100 text-gray-600 text-[0.7vw] font-medium hover:bg-gray-50 shadow-sm whitespace-nowrap transition-colors"
                     >
                         {cat.name}
                     </button>

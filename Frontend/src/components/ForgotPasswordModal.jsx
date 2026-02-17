@@ -105,30 +105,30 @@ export default function ForgotPasswordModal({ isOpen, onClose, email }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
-      <div className="bg-white rounded-3xl w-full max-w-4xl p-8 relative shadow-2xl animate-in fade-in zoom-in duration-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-[1vw] bg-black/60 backdrop-blur-sm transition-opacity">
+      <div className="bg-white rounded-[1.5vw] w-full max-w-[40vw] p-[1.5vw] relative shadow-2xl animate-in fade-in zoom-in duration-300">
         
         {/* Close Button */}
         <button 
           onClick={onClose}
-          className="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 transition-colors border border-red-200"
+          className="absolute top-[1vw] right-[1vw] p-[0.4vw] rounded-full hover:bg-gray-100 transition-colors border border-red-200"
         >
-          <X className="w-6 h-6 text-red-500" />
+          <X className="w-[1.25vw] h-[1.25vw] text-red-500" />
         </button>
 
         {step === 'otp' ? (
           /* OTP Section */
-          <div className="flex flex-col items-center justify-center py-10 text-center">
-            <h2 className="text-4xl font-normal mb-8 text-black">Forgot Password ?</h2>
+          <div className="flex flex-col items-center justify-center py-[1.5vw] text-center">
+            <h2 className="text-[2vw] font-normal mb-[1.5vw] text-black">Forgot Password ?</h2>
             
-            <p className="text-gray-600 mb-2 font-medium">
+            <p className="text-gray-600 mb-[0.25vw] font-medium text-[0.875vw]">
               We have sent One Time Password (OTP) via email to this Account
             </p>
-            <p className="text-[#4c5add] font-semibold text-lg mb-12">
+            <p className="text-[#4c5add] font-semibold text-[1vw] mb-[2vw]">
               {email || 'example@gmail.com'}
             </p>
 
-            <div className="flex gap-6 mb-4">
+            <div className="flex gap-[1vw] mb-[0.75vw]">
               {otp.map((digit, index) => (
                 <input
                   key={index}
@@ -138,85 +138,87 @@ export default function ForgotPasswordModal({ isOpen, onClose, email }) {
                   value={digit}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
-                  className="w-16 h-16 border-[1.5px] border-[#373d8b]/40 rounded-xl text-center text-2xl font-semibold text-[#373d8b] focus:border-[#4c5add] focus:ring-4 focus:ring-[#4c5add]/10 outline-none transition-all"
+                  className="w-[3.5vw] h-[3.5vw] border-[0.1vw] border-[#373d8b]/40 rounded-[0.5vw] text-center text-[1.25vw] font-semibold text-[#373d8b] focus:border-[#4c5add] focus:ring-4 focus:ring-[#4c5add]/10 outline-none transition-all"
                 />
               ))}
             </div>
 
-            <div className="text-[#373d8b] font-medium mb-10">
+            <div className="text-[#373d8b] font-medium mb-[2vw] text-[0.875vw]">
               Resent in <span className="font-bold">00.{timer.toString().padStart(2, '0')}</span>
             </div>
 
             <button
               onClick={handleVerifyOtp}
-              className="w-64 py-3.5 bg-[#4c5add] hover:bg-[#3f4bc0] text-white rounded-full font-semibold text-lg shadow-lg shadow-indigo-200 transition-all transform hover:scale-[1.02]"
+              className="w-[14vw] py-[0.75vw] bg-[#4c5add] hover:bg-[#3f4bc0] text-white rounded-full font-semibold text-[1vw] shadow-lg shadow-indigo-200 transition-all transform hover:scale-[1.02]"
             >
               Verify OTP
             </button>
           </div>
         ) : (
           /* Reset Password Section */
-          <div className="py-6 px-4">
-            <h2 className="text-4xl font-normal text-center mb-12 text-black">Reset your Password</h2>
+          <div className="py-[1vw] px-[0.5vw]">
+            <h2 className="text-[2vw] font-normal text-center mb-[2vw] text-black">Reset your Password</h2>
             
-            <div className="flex flex-col lg:flex-row gap-16 justify-center max-w-5xl mx-auto">
-              {/* Left Column: Inputs */}
-              <div className="flex-1 space-y-8 max-w-md">
-                <div className="space-y-3">
-                  <label className="text-lg font-semibold ml-1 text-black">New Password</label>
+            <div className="flex flex-col gap-[1.5vw] justify-center max-w-[30vw] mx-auto">
+              {/* Inputs */}
+              <div className="space-y-[1.25vw]">
+                <div className="space-y-[0.5vw]">
+                  <label className="text-[0.875vw] font-semibold ml-[0.25vw] text-black">New Password</label>
                   <div className="relative">
                     <input
                       type={showNewPass ? "text" : "password"}
                       value={passwords.newPassword}
                       onChange={(e) => setPasswords({...passwords, newPassword: e.target.value})}
-                      className="w-full px-6 py-3.5 rounded-full border border-[#373d8b]/30 text-gray-800 focus:border-[#4c5add] focus:ring-4 focus:ring-[#4c5add]/10 outline-none transition-all placeholder-gray-400"
+                      className="w-full px-[1.25vw] py-[0.75vw] rounded-full border border-[#373d8b]/30 text-gray-800 focus:border-[#4c5add] focus:ring-4 focus:ring-[#4c5add]/10 outline-none transition-all placeholder-gray-400 text-[0.875vw]"
                       placeholder="Create your new Password"
                     />
                     <button
                         type="button"
                         onClick={() => setShowNewPass(!showNewPass)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[#373d8b]"
+                        className="absolute right-[0.75vw] top-1/2 -translate-y-1/2 text-[#373d8b]"
                     >
-                        {showNewPass ? <EyeOff size={22}/> : <Eye size={22}/>}
+                        {showNewPass ? <EyeOff size="1.125vw"/> : <Eye size="1.125vw"/>}
                     </button>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <label className="text-lg font-semibold ml-1 text-black">Re-Enter Password</label>
+                <div className="space-y-[0.5vw]">
+                  <label className="text-[0.875vw] font-semibold ml-[0.25vw] text-black">Re-Enter Password</label>
                   <div className="relative">
                     <input
                       type={showConfirmPass ? "text" : "password"}
                       value={passwords.confirmPassword}
                       onChange={(e) => setPasswords({...passwords, confirmPassword: e.target.value})}
-                      className="w-full px-6 py-3.5 rounded-full border border-[#373d8b]/30 text-gray-800 focus:border-[#4c5add] focus:ring-4 focus:ring-[#4c5add]/10 outline-none transition-all placeholder-gray-400"
+                      className="w-full px-[1.25vw] py-[0.75vw] rounded-full border border-[#373d8b]/30 text-gray-800 focus:border-[#4c5add] focus:ring-4 focus:ring-[#4c5add]/10 outline-none transition-all placeholder-gray-400 text-[0.875vw]"
                       placeholder="Re - Enter your Password"
                     />
                     <button
                         type="button"
                         onClick={() => setShowConfirmPass(!showConfirmPass)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[#373d8b]"
+                        className="absolute right-[0.75vw] top-1/2 -translate-y-1/2 text-[#373d8b]"
                     >
-                        {showConfirmPass ? <EyeOff size={22}/> : <Eye size={22}/>}
+                        {showConfirmPass ? <EyeOff size="1.125vw"/> : <Eye size="1.125vw"/>}
                     </button>
                   </div>
                 </div>
               </div>
 
-              {/* Right Column: Requirements */}
-              <div className="flex-1 space-y-5 pt-2 max-w-md bg-transparent">
-                  <RequirementItemV2 met={criteria.length} text="Minimum 8 characters (Maximum 16 characters)" />
-                  <RequirementItemV2 met={criteria.upper} text="At least 1 uppercase letter (A-Z)" />
-                  <RequirementItemV2 met={criteria.lower} text="At least 1 lowercase letter (a-z)" />
-                  <RequirementItemV2 met={criteria.number} text="At least 1 number (0-9)" />
-                  <RequirementItemV2 met={criteria.special} text="At least 1 special character (! @ # $ % ^ & *)" />
+              {/* Requirements */}
+              <div className="space-y-[0.75vw] pt-[0.25vw] bg-transparent">
+                  <div className="grid grid-cols-1 gap-[0.5vw]">
+                    <RequirementItemV2 met={criteria.length} text="Min 8 - Max 16 chars" />
+                    <RequirementItemV2 met={criteria.upper} text="At least 1 uppercase (A-Z)" />
+                    <RequirementItemV2 met={criteria.lower} text="At least 1 lowercase (a-z)" />
+                    <RequirementItemV2 met={criteria.number} text="At least 1 number (0-9)" />
+                    <RequirementItemV2 met={criteria.special} text="At least 1 special char" />
+                  </div>
               </div>
             </div>
 
-            <div className="flex justify-center mt-12">
+            <div className="flex justify-center mt-[1.25vw]">
                 <button
                 onClick={handleResetPassword}
-                className="w-72 py-3.5 bg-[#4c5add] hover:bg-[#3f4bc0] text-white rounded-full font-semibold text-lg shadow-lg shadow-indigo-200 transition-all transform hover:scale-[1.02]"
+                className="w-[16vw] py-[0.75vw] bg-[#4c5add] hover:bg-[#3f4bc0] text-white rounded-full font-semibold text-[1vw] shadow-lg shadow-indigo-200 transition-all transform hover:scale-[1.02]"
                 >
                 Reset Password
                 </button>
@@ -230,13 +232,13 @@ export default function ForgotPasswordModal({ isOpen, onClose, email }) {
 
 function RequirementItemV2({ met, text }) {
     return (
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-[0.5vw]">
         {met ? (
-          <Check className="w-5 h-5 text-green-500 shrink-0" strokeWidth={2.5} />
+          <Check className="w-[1vw] h-[1vw] text-green-500 shrink-0" strokeWidth={2.5} />
         ) : (
-          <Check className="w-5 h-5 text-red-500 shrink-0" strokeWidth={2.5} /> 
+          <Check className="w-[1vw] h-[1vw] text-red-500 shrink-0" strokeWidth={2.5} /> 
         )}
-         <span className={`text-[15px] font-medium ${met ? 'text-gray-700' : 'text-gray-500'}`}>{text}</span>
+         <span className={`text-[0.75vw] font-medium ${met ? 'text-gray-700' : 'text-gray-500'}`}>{text}</span>
       </div>
     );
 }
