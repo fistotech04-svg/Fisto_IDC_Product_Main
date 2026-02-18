@@ -703,6 +703,178 @@ window.$RefreshSig$ = () => (type) => type;</script>
       [data-interaction="none"]::after {
         display: none !important;
       }
+    </style><style>
+      html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
+      *:focus { outline: 0.15vw solid #6366f1 !important; outline-offset: 0.1vw !important; }
+      [data-editable="true"]:hover { background-color: rgba(99, 102, 241, 0.05); }
+      [contenteditable]:hover { background-color: rgba(99, 102, 241, 0.05); cursor: text; }
+      [contenteditable]:focus { background-color: rgba(99, 102, 241, 0.08); }
+      /* Frame Logic:
+         By default (unselected), frames are invisible (transparent) but interactive.
+         When selected (data-selected="true"), they show the blue dashed border and bg.
+      */
+      [data-interaction-type="frame"] {
+        cursor: pointer;
+        border: 0.15vw dashed transparent;
+        background-color: transparent;
+        z-index: 100;
+        position: absolute;
+        pointer-events: auto;
+      }
+
+      /* Hover state to reveal hidden frames so user can find them */
+      [data-interaction-type="frame"]:hover {
+        background-color: rgba(0, 149, 255, 0.05) !important;
+        border: 0.1vw dashed rgba(0, 149, 255, 0.3) !important;
+      }
+
+      [data-interaction-type="frame"][data-selected="true"] {
+        border: 0.15vw dashed #0095FF !important;
+        background-color: rgba(0, 149, 255, 0.1) !important;
+        outline: none !important;
+        cursor: move !important;
+        z-index: 101;
+      }
+
+      .resize-handle { 
+        position: absolute; 
+        width: 0.6vw; 
+        height: 0.6vw; 
+        background: #6366f1; 
+        border: 0.05vw solid white; 
+        z-index: 10; 
+        pointer-events: auto;
+        display: none; /* Hidden by default */
+      }
+
+      /* Show handles only when frame is selected */
+      [data-interaction-type="frame"][data-selected="true"] .resize-handle {
+        display: block;
+      }
+      
+      .resize-n { top: -0.3vw; left: 50%; cursor: n-resize; transform: translateX(-50%); }
+      .resize-s { bottom: -0.3vw; left: 50%; cursor: s-resize; transform: translateX(-50%); }
+      .resize-e { right: -0.3vw; top: 50%; cursor: e-resize; transform: translateY(-50%); }
+      .resize-w { left: -0.3vw; top: 50%; cursor: w-resize; transform: translateY(-50%); }
+      .resize-nw { top: -0.3vw; left: -0.3vw; cursor: nw-resize; }
+      .resize-ne { top: -0.3vw; right: -0.3vw; cursor: ne-resize; }
+      .resize-sw { bottom: -0.3vw; left: -0.3vw; cursor: sw-resize; }
+      .resize-se { bottom: -0.3vw; right: -0.3vw; cursor: se-resize; }
+      
+      [data-interaction-type="frame"]::after {
+        content: attr(data-interaction);
+        position: absolute;
+        top: 0.4vw;
+        left: 0.4vw;
+        background: rgba(99, 102, 241, 0.9);
+        color: white;
+        padding: 0.1vw 0.5vw;
+        border-radius: 0.3vw;
+        font-size: 0.6vw;
+        font-weight: 700;
+        pointer-events: none;
+        text-transform: uppercase;
+        letter-spacing: 0.03vw;
+        box-shadow: 0 0.1vw 0.3vw rgba(0,0,0,0.1);
+        z-index: 100;
+        display: none; /* Hide label by default */
+      }
+      
+      /* Show label only when selected or hovered */
+      [data-interaction-type="frame"][data-selected="true"]::after,
+      [data-interaction-type="frame"]:hover::after {
+         display: block;
+      }
+
+      [data-interaction="none"]::after {
+        display: none !important;
+      }
+    </style><style>
+      html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
+      *:focus { outline: 0.15vw solid #6366f1 !important; outline-offset: 0.1vw !important; }
+      [data-editable="true"]:hover { background-color: rgba(99, 102, 241, 0.05); }
+      [contenteditable]:hover { background-color: rgba(99, 102, 241, 0.05); cursor: text; }
+      [contenteditable]:focus { background-color: rgba(99, 102, 241, 0.08); }
+      /* Frame Logic:
+         By default (unselected), frames are invisible (transparent) but interactive.
+         When selected (data-selected="true"), they show the blue dashed border and bg.
+      */
+      [data-interaction-type="frame"] {
+        cursor: pointer;
+        border: 0.15vw dashed transparent;
+        background-color: transparent;
+        z-index: 100;
+        position: absolute;
+        pointer-events: auto;
+      }
+
+      /* Hover state to reveal hidden frames so user can find them */
+      [data-interaction-type="frame"]:hover {
+        background-color: rgba(0, 149, 255, 0.05) !important;
+        border: 0.1vw dashed rgba(0, 149, 255, 0.3) !important;
+      }
+
+      [data-interaction-type="frame"][data-selected="true"] {
+        border: 0.15vw dashed #0095FF !important;
+        background-color: rgba(0, 149, 255, 0.1) !important;
+        outline: none !important;
+        cursor: move !important;
+        z-index: 101;
+      }
+
+      .resize-handle { 
+        position: absolute; 
+        width: 0.6vw; 
+        height: 0.6vw; 
+        background: #6366f1; 
+        border: 0.05vw solid white; 
+        z-index: 10; 
+        pointer-events: auto;
+        display: none; /* Hidden by default */
+      }
+
+      /* Show handles only when frame is selected */
+      [data-interaction-type="frame"][data-selected="true"] .resize-handle {
+        display: block;
+      }
+      
+      .resize-n { top: -0.3vw; left: 50%; cursor: n-resize; transform: translateX(-50%); }
+      .resize-s { bottom: -0.3vw; left: 50%; cursor: s-resize; transform: translateX(-50%); }
+      .resize-e { right: -0.3vw; top: 50%; cursor: e-resize; transform: translateY(-50%); }
+      .resize-w { left: -0.3vw; top: 50%; cursor: w-resize; transform: translateY(-50%); }
+      .resize-nw { top: -0.3vw; left: -0.3vw; cursor: nw-resize; }
+      .resize-ne { top: -0.3vw; right: -0.3vw; cursor: ne-resize; }
+      .resize-sw { bottom: -0.3vw; left: -0.3vw; cursor: sw-resize; }
+      .resize-se { bottom: -0.3vw; right: -0.3vw; cursor: se-resize; }
+      
+      [data-interaction-type="frame"]::after {
+        content: attr(data-interaction);
+        position: absolute;
+        top: 0.4vw;
+        left: 0.4vw;
+        background: rgba(99, 102, 241, 0.9);
+        color: white;
+        padding: 0.1vw 0.5vw;
+        border-radius: 0.3vw;
+        font-size: 0.6vw;
+        font-weight: 700;
+        pointer-events: none;
+        text-transform: uppercase;
+        letter-spacing: 0.03vw;
+        box-shadow: 0 0.1vw 0.3vw rgba(0,0,0,0.1);
+        z-index: 100;
+        display: none; /* Hide label by default */
+      }
+      
+      /* Show label only when selected or hovered */
+      [data-interaction-type="frame"][data-selected="true"]::after,
+      [data-interaction-type="frame"]:hover::after {
+         display: block;
+      }
+
+      [data-interaction="none"]::after {
+        display: none !important;
+      }
     </style></head>
 <body>
     <!-- A4 Page -->
@@ -740,7 +912,7 @@ window.$RefreshSig$ = () => (type) => type;</script>
 
         <!-- Title Section -->
         <section class="title-section">
-            <h2 class="main-title" contenteditable="true" style="cursor: text; outline: none; outline-offset: 2px; color: rgb(26, 54, 93); -webkit-text-fill-color: rgb(26, 54, 93); background-image: none; background-clip: initial; paint-order: normal; -webkit-text-stroke: 0px rgba(0, 0, 0, 0); border: none;" data-editable="true" data-fill-color="#1A365D" data-fill-opacity="100" data-fill-type="solid" data-stroke-color="#" data-stroke-opacity="100" data-stroke-fill-type="solid" data-stroke-gradient-type="Linear" data-dash-length="4" data-dash-gap="4" data-round-corners="false" data-stroke-type="solid" data-stroke-position="center" data-border-thickness="0">Annual Business Report 2024</h2>
+            <h2 class="main-title" contenteditable="true" style="cursor: text; outline: rgb(99, 102, 241) solid 0.15vw; outline-offset: 0.15vw; color: rgb(26, 54, 93); -webkit-text-fill-color: rgb(26, 54, 93); background-image: none; background-clip: initial; paint-order: normal; -webkit-text-stroke: 0px rgba(0, 0, 0, 0); border: none;" data-editable="true" data-fill-color="#1A365D" data-fill-opacity="100" data-fill-type="solid" data-stroke-color="#" data-stroke-opacity="100" data-stroke-fill-type="solid" data-stroke-gradient-type="Linear" data-dash-length="4" data-dash-gap="4" data-round-corners="false" data-stroke-type="solid" data-stroke-position="center" data-border-thickness="0" data-selection-active="true">Annual Business Report 2024</h2>
             <p class="subtitle" contenteditable="true" style="cursor: text; outline: none;" data-editable="true">Strategic Vision and Performance Overview</p>
         </section>
 
@@ -773,7 +945,7 @@ window.$RefreshSig$ = () => (type) => type;</script>
             </div>
             <div class="content-text">
                 <h3 class="section-heading" contenteditable="true" style="cursor: text; outline: none;" data-editable="true">Our Mission</h3>
-                <p contenteditable="true" style="cursor: text; outline: none; outline-offset: 2px; color: rgb(71, 85, 105); -webkit-text-fill-color: rgb(71, 85, 105); background-image: none; background-clip: initial; paint-order: normal; -webkit-text-stroke: 0px rgba(0, 0, 0, 0); border: none;" data-editable="true" data-selection-active="true" data-fill-color="#475569" data-fill-opacity="100" data-fill-type="solid" data-stroke-color="#" data-stroke-opacity="100" data-stroke-fill-type="solid" data-stroke-gradient-type="Linear" data-dash-length="4" data-dash-gap="4" data-round-corners="false" data-stroke-type="solid" data-stroke-position="center" data-border-thickness="0">We are dedicated to delivering innovative solutions that transform businesses and create lasting value for our stakeholders.</p>
+                <p contenteditable="true" style="cursor: text; outline: none; outline-offset: 2px; color: rgb(71, 85, 105); -webkit-text-fill-color: rgb(71, 85, 105); background-image: none; background-clip: initial; paint-order: normal; -webkit-text-stroke: 0px rgba(0, 0, 0, 0); border: none;" data-editable="true" data-fill-color="#475569" data-fill-opacity="100" data-fill-type="solid" data-stroke-color="#" data-stroke-opacity="100" data-stroke-fill-type="solid" data-stroke-gradient-type="Linear" data-dash-length="4" data-dash-gap="4" data-round-corners="false" data-stroke-type="solid" data-stroke-position="center" data-border-thickness="0">We are dedicated to delivering innovative solutions that transform businesses and create lasting value for our stakeholders.</p>
                 <h4 class="highlights-title" contenteditable="true" style="cursor: text; outline: none;" data-editable="true">Key Highlights:</h4>
                 <div class="highlight-item">
                     <span contenteditable="true" style="cursor: text; outline: none;" data-editable="true">📈 Revenue growth of 25% year-over-year</span>
@@ -806,7 +978,7 @@ window.$RefreshSig$ = () => (type) => type;</script>
                 <!-- Card 2 -->
                 <div class="service-card">
                     <div class="service-card-video">
-                        <video muted="" playsinline="" data-editable="true" style="cursor: pointer; outline: none; outline-offset: 2px;" data-selection-active="true" controls="" class="hide-controls">
+                        <video muted="" playsinline="" data-editable="true" style="cursor: pointer; outline: none; outline-offset: 0.15vw;" controls="" class="hide-controls">
                             <source src="https://www.pexels.com/download/video/4309723/" type="video/mp4">
                         </video>
                     </div>
@@ -864,7 +1036,7 @@ window.$RefreshSig$ = () => (type) => type;</script>
                 <!-- Member 4 -->
                 <div class="team-member">
                     <div class="team-video purple">
-                        <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&amp;auto=format&amp;fit=crop&amp;w=200&amp;q=80" alt="Emily Chen" style="width: 100%; height: 100%; object-fit: contain !important; cursor: pointer; outline: rgb(99, 102, 241) solid 2px; outline-offset: 2px; filter: brightness(100%) contrast(100%) saturate(100%) hue-rotate(0deg) sepia(0%) brightness(100%) contrast(100%) !important; opacity: 1 !important; backdrop-filter: none !important; mask-image: none !important;" data-editable="true" data-selection-active="true">
+                        <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&amp;auto=format&amp;fit=crop&amp;w=200&amp;q=80" alt="Emily Chen" style="width: 100%; height: 100%; cursor: pointer; outline: none; outline-offset: 2px; object-fit: contain !important; filter: brightness(100%) contrast(100%) saturate(100%) hue-rotate(0deg) sepia(0%) brightness(100%) contrast(100%) !important; opacity: 1 !important; backdrop-filter: none !important; mask-image: none !important;" data-editable="true" data-selection-active="true">
                     </div>
                     <p class="team-name" contenteditable="true" style="cursor: text; outline: none;" data-editable="true">Emily Chen</p>
                     <p class="team-role" contenteditable="true" style="cursor: text; outline: none;" data-editable="true">COO</p>

@@ -59,7 +59,6 @@ const hsvToHex = ({ h, s, v }) => {
 export default function ColorPicker({ color, onChange, opacity, onOpacityChange, onClose, className, style, ...props }) {
   const [hsv, setHsv] = useState(() => hexToHsv(color));
 
-
   useEffect(() => {
     setHsv(hexToHsv(color));
   }, [color]);
@@ -120,33 +119,33 @@ export default function ColorPicker({ color, onChange, opacity, onOpacityChange,
 
   return (
     <div 
-        className={`z-50 w-[260px] bg-white rounded-[20px] shadow-[0_10px_40px_-5px_rgba(0,0,0,0.15)] border border-gray-100 p-4 animate-in fade-in zoom-in-95 duration-200 select-none font-sans ${className || ""}`}
+        className={`z-50 w-[18vw] bg-white rounded-[1vw] shadow-[0_0.5vw_2vw_-0.25vw_rgba(0,0,0,0.15)] border border-gray-100 p-[1vw] animate-in fade-in zoom-in-95 duration-200 select-none font-sans ${className || ""}`}
         style={style}
         {...props}
     >
        {/* Header */}
-       <div className="flex items-center justify-between mb-4">
-         <div className="flex items-center gap-2 flex-grow">
-           <span className="text-[14px] font-semibold text-gray-900 whitespace-nowrap">Colors Pallet</span>
-           <div className="h-px w-full bg-gray-200"></div>
+       <div className="flex items-center justify-between mb-[1vw]">
+         <div className="flex items-center gap-[0.5vw] flex-grow">
+           <span className="text-[0.85vw] font-semibold text-gray-900 whitespace-nowrap">Colors Pallet</span>
+           <div className="h-[1px] w-full bg-gray-200"></div>
          </div>
          {onClose && (
            <button 
              onClick={onClose}
-             className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-all"
+             className="p-[0.35vw] rounded-[0.4vw] cursor-pointer text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-all"
            >
-             <Icon icon="heroicons:x-mark" width={18} />
+             <Icon icon="heroicons:x-mark" width="1vw" />
            </button>
          )}
        </div>
 
        {/* Main Area */}
-       <div className="flex gap-3 h-[180px] mb-5">
+       <div className="flex gap-[0.75vw] h-[9.375vw] mb-[1.25vw]">
           {/* Saturation/Value Box */}
           <div 
             ref={satDrag.ref}
             onMouseDown={satDrag.onMouseDown}
-            className="flex-1 rounded-xl relative cursor-crosshair overflow-hidden"
+            className="flex-1 rounded-[0.6vw] relative cursor-crosshair overflow-hidden"
             style={{ backgroundColor: hueColor }}
           >
              <div className="absolute inset-0 bg-gradient-to-r from-white to-transparent"></div>
@@ -154,7 +153,7 @@ export default function ColorPicker({ color, onChange, opacity, onOpacityChange,
              
              {/* Circular Thumb */}
              <div 
-               className="absolute w-4 h-4 border-2 border-white rounded-full shadow-lg -ml-2 -mt-2 pointer-events-none"
+               className="absolute w-[0.85vw] h-[0.85vw] border-2 border-white rounded-full shadow-lg -ml-[0.425vw] -mt-[0.425vw] pointer-events-none"
                style={{ 
                  left: `${hsv.s}%`, 
                  top: `${100 - hsv.v}%`,
@@ -166,18 +165,18 @@ export default function ColorPicker({ color, onChange, opacity, onOpacityChange,
           <div 
              ref={hueDrag.ref}
              onMouseDown={hueDrag.onMouseDown}
-             className="w-5 rounded-full relative cursor-pointer"
+             className="w-[1.25vw] rounded-full relative cursor-pointer"
              style={{ 
                background: "linear-gradient(to bottom, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%)"
              }}
           >
              {/* Thumb with lines */}
              <div 
-               className="absolute left-1/2 -translate-x-1/2 w-7 h-7 pointer-events-none"
-               style={{ top: `${(hsv.h / 360) * 100}%`, marginTop: '-14px' }}
+               className="absolute left-1/2 -translate-x-1/2 w-[1.5vw] h-[1.5vw] pointer-events-none"
+               style={{ top: `${(hsv.h / 360) * 100}%`, marginTop: '-0.75vw' }}
              >
-                <div className="absolute top-1/2 left-0 w-full h-px bg-white"></div>
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-white border-2 border-white rounded-full shadow-md">
+                <div className="absolute top-1/2 left-0 w-full h-[1px] bg-white"></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[0.75vw] h-[0.75vw] bg-white border-2 border-white rounded-full shadow-md">
                    <div 
                      className="w-full h-full rounded-full border border-gray-200"
                      style={{ backgroundColor: hsvToHex(hsv) }}
@@ -188,28 +187,28 @@ export default function ColorPicker({ color, onChange, opacity, onOpacityChange,
        </div>
 
        {/* Controls */}
-       <div className="space-y-4">
+       <div className="space-y-[1vw]">
           {/* Hex Input */}
           <div className="flex items-center justify-between">
-             <span className="text-[14px] font-semibold text-gray-800">Color Code :</span>
-             <div className="flex items-center gap-2 border-2 border-gray-300 rounded-xl px-2 py-1.5 w-[130px] focus-within:border-[#5d5efc] transition-all">
-                <span className="text-gray-400 text-xs font-medium">#</span>
+             <span className="text-[0.85vw] font-semibold text-gray-800">Color Code :</span>
+             <div className="flex items-center gap-[0.5vw] border-2 border-gray-300 rounded-[0.6vw] px-[0.5vw] py-[0.35vw] w-[7vw] focus-within:border-[#5d5efc] transition-all">
+                <span className="text-gray-400 text-[0.65vw] font-medium">#</span>
                 <input 
                   type="text" 
                   value={color.replace("#", "").toLowerCase()}
                   onChange={(e) => onChange(`#${e.target.value}`)}
-                  className="w-full text-[13px] font-semibold text-gray-700 outline-none lowercase font-mono"
+                  className="w-full text-[0.7vw] font-semibold text-gray-700 outline-none lowercase font-mono"
                   maxLength={6}
                 />
-                <Icon icon="heroicons:pencil" width={16} className="text-gray-500" />
+                <Icon icon="heroicons:pencil" width="0.85vw" className="text-gray-500" />
              </div>
           </div>
 
           {/* Opacity Slider */}
           <div className="flex items-center justify-between">
-             <span className="text-[14px] font-semibold text-gray-800">Opacity :</span>
-             <div className="flex items-center gap-3 w-[130px]">
-                <div className="relative flex-1 h-1.5 bg-gray-100 rounded-full">
+             <span className="text-[0.85vw] font-semibold text-gray-800">Opacity :</span>
+             <div className="flex items-center gap-[0.75vw] w-[7vw]">
+                <div className="relative flex-1 h-[0.35vw] bg-gray-100 rounded-full">
                    <div 
                      className="absolute top-0 left-0 h-full bg-[#7c5dff] rounded-full"
                      style={{ width: `${opacity}%` }}
@@ -223,8 +222,8 @@ export default function ColorPicker({ color, onChange, opacity, onOpacityChange,
                       className="absolute inset-0 w-full opacity-0 cursor-pointer z-10"
                    />
                    <div 
-                      className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-[#7c5dff] border-2 border-white rounded-full shadow-md pointer-events-none"
-                      style={{ left: `${opacity}%`, marginLeft: "-8px" }}
+                      className="absolute top-1/2 -translate-y-1/2 w-[0.85vw] h-[0.85vw] bg-[#7c5dff] border-2 border-white rounded-full shadow-md pointer-events-none"
+                      style={{ left: `${opacity}%`, marginLeft: "-0.425vw" }}
                    ></div>
                 </div>
              </div>

@@ -88,7 +88,7 @@ const TopToolbar = ({
         <div className="flex items-center p-[0.3vw]" style={{ gap: '0.6vw' }}>
             <button 
                 onClick={() => handleZoom && handleZoom(zoom - 10)}
-                className="p-[0.4vw] hover:bg-white hover:shadow-sm rounded-[0.6vw] transition-all text-gray-500 hover:text-indigo-600"
+                className="p-[0.4vw] hover:bg-white cursor-pointer hover:shadow-sm rounded-[0.6vw] transition-all text-gray-500 hover:text-indigo-600"
             >
                 <Minus size="0.9vw" />
             </button>
@@ -99,14 +99,14 @@ const TopToolbar = ({
             </div>
             <button 
                 onClick={() => handleZoom && handleZoom(zoom + 10)}
-                className="p-[0.4vw] hover:bg-white hover:shadow-sm rounded-[0.6vw] transition-all text-gray-500 hover:text-indigo-600"
+                className="p-[0.4vw] hover:bg-white cursor-pointer hover:shadow-sm rounded-[0.6vw] transition-all text-gray-500 hover:text-indigo-600"
             >
                 <Plus size="0.9vw" />
             </button>
             <div className="w-[0.1vw] h-[1.2vw] bg-gray-200 mx-[0.2vw]"></div>
             <button 
                 onClick={onReset}
-                className="text-[0.85vw] font-semibold hover:text-indigo-700 px-[0.6vw] py-[0.2vw] hover:bg-indigo-50 rounded-[0.4vw] transition-all"
+                className="text-[0.85vw] font-semibold cursor-pointer hover:text-indigo-700 px-[0.6vw] py-[0.2vw] hover:bg-indigo-50 rounded-[0.4vw] transition-all"
             >
                 Reset
             </button>

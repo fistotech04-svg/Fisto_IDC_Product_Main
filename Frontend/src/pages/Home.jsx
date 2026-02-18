@@ -98,12 +98,12 @@ export default function Home() {
                 <div className="flex flex-wrap gap-[1vw]">
                     <button 
                         onClick={handleCreateFlipbook}
-                        className="px-[1.5vw] py-[0.75vw] bg-white text-[#4c5add] rounded-[0.5vw] font-bold shadow hover:bg-gray-50 transition-all flex items-center gap-[0.5vw] text-[1vw]"
+                        className="px-[1.5vw] py-[0.75vw] bg-white text-[#4c5add] cursor-pointer rounded-[0.5vw] font-semibold shadow hover:bg-gray-50 transition-all flex items-center gap-[0.5vw] text-[1vw]"
                     >
                         <BookOpen size="1.25vw" />
                         Create Flipbook
                     </button>
-                    <button className="px-[1.5vw] py-[0.75vw] bg-[#4c5add] text-white rounded-[0.5vw] font-bold shadow hover:bg-[#3f4bc0] transition-all flex items-center gap-[0.5vw] text-[1vw]">
+                    <button className="px-[1.5vw] py-[0.75vw] bg-[#4c5add] text-white cursor-pointer rounded-[0.5vw] font-semibold shadow hover:bg-[#3f4bc0] transition-all flex items-center gap-[0.5vw] text-[1vw]">
                         <Video size="1.25vw" />
                         Demo video
                     </button>

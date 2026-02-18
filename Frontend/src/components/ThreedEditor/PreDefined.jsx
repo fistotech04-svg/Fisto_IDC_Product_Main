@@ -5,34 +5,34 @@ import ColorPicker from "./ColorPicker";
 
 // --- Reusable UI Components ---
 
-const Accordion = ({ title, icon: iconName, children, isOpen, onToggle, iconSize = 20, onReset }) => {
+const Accordion = ({ title, icon: iconName, children, isOpen, onToggle, iconSize = "1.04vw", onReset }) => {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-3 transition-all duration-200 hover:shadow-md">
+    <div className="bg-white rounded-[0.75vw] shadow-sm border border-gray-100 overflow-hidden mb-[0.75vw] transition-all duration-200 hover:shadow-md">
       <div
-        className={`flex items-center justify-between px-4 py-3.5 bg-white cursor-pointer select-none transition-colors duration-200 ${
+        className={`flex items-center justify-between px-[1vw] py-[0.85vw] bg-white cursor-pointer select-none transition-colors duration-200 ${
           isOpen ? "border-b border-gray-100" : ""
         }`}
         onClick={onToggle}
       >
-        <div className="flex items-center gap-3 text-gray-800 font-semibold text-[14px]">
+        <div className="flex items-center gap-[0.75vw] text-gray-800 font-semibold text-[0.85vw]">
           {iconName && <Icon icon={iconName} width={iconSize} height={iconSize} className="text-gray-500" />}
           <span>{title}</span>
         </div>
-        <div className="flex items-center gap-3 text-gray-400">
+        <div className="flex items-center gap-[0.75vw] text-gray-400">
           <button
-            className="hover:text-[#5d5efc] hover:bg-indigo-50 p-1 rounded-md transition-all duration-200"
+            className="hover:text-[#5d5efc] hover:bg-indigo-50 p-[0.25vw] rounded-[0.35vw] transition-all duration-200"
             onClick={(e) => {
               e.stopPropagation();
               if (onReset) onReset();
             }}
           >
-            <Icon icon="ix:reset" width={16} height={16} />
+            <Icon icon="ix:reset" width="0.85vw" height="0.85vw" />
           </button>
           <Icon
             icon="heroicons:chevron-down"
             className={`transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
-            width={16}
-            height={16}
+            width="0.85vw"
+            height="0.85vw"
           />
         </div>
       </div>
@@ -42,18 +42,18 @@ const Accordion = ({ title, icon: iconName, children, isOpen, onToggle, iconSize
           isOpen ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
-        <div className="p-5 pt-2">{children}</div>
+        <div className="p-[1.25vw] pt-[0.5vw]">{children}</div>
       </div>
     </div>
   );
 };
 
 const SectionHeader = ({ label, showLine = true }) => (
-  <div className="flex items-center gap-3 mb-4 mt-2">
-    <span className="text-sm font-semibold text-gray-900 whitespace-nowrap">
+  <div className="flex items-center gap-[0.75vw] mb-[1vw] mt-[0.5vw]">
+    <span className="text-[0.8vw] font-semibold text-gray-900 whitespace-nowrap">
       {label}
     </span>
-    {showLine && <div className="h-[1px] bg-gray-100 w-full flex-1"></div>}
+    {showLine && <div className="h-[0.05vw] bg-gray-100 w-full flex-1"></div>}
   </div>
 );
 
@@ -61,11 +61,11 @@ const CustomSlider = ({ label, value, onChange, unit = "%", min = 0, max = 100, 
   const percentage = ((value - min) / (max - min)) * 100;
   
   return (
-    <div className="flex items-center justify-between mb-5 last:mb-0 h-7">
-      <div className="w-24 text-[13px] font-medium text-gray-600 shrink-0 flex items-center justify-between pr-2">
+    <div className="flex items-center justify-between mb-[1.25vw] last:mb-0 h-[1.75vw]">
+      <div className="w-[6vw] text-[0.75vw] font-medium text-gray-600 shrink-0 flex items-center justify-between pr-[0.5vw]">
         {label} <span>:</span>
       </div>
-      <div className="relative flex-1 h-1.5 bg-gray-100 rounded-full cursor-pointer group touch-none">
+      <div className="relative flex-1 h-[0.4vw] bg-gray-100 rounded-full cursor-pointer group touch-none">
         {/* Fill */}
         <div
           className="absolute top-0 left-0 h-full bg-[#5d5efc] rounded-full transition-all duration-75"
@@ -73,8 +73,8 @@ const CustomSlider = ({ label, value, onChange, unit = "%", min = 0, max = 100, 
         ></div>
         {/* Thumb */}
         <div
-          className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-[#5d5efc] border-2 border-white rounded-full shadow-md hover:scale-110 transition-transform duration-100"
-          style={{ left: `${Math.max(0, Math.min(100, percentage))}%`, marginLeft: "-6px" }}
+          className="absolute top-1/2 -translate-y-1/2 w-[0.9vw] h-[0.9vw] bg-[#5d5efc] border-[0.15vw] border-white rounded-full shadow-md hover:scale-110 transition-transform duration-100"
+          style={{ left: `${Math.max(0, Math.min(100, percentage))}%`, marginLeft: "-0.45vw" }}
         ></div>
         {/* Input Range (Hidden overlay for functionality) */}
         <input
@@ -87,8 +87,8 @@ const CustomSlider = ({ label, value, onChange, unit = "%", min = 0, max = 100, 
           className="absolute inset-0 w-full opacity-0 cursor-pointer z-10"
         />
       </div>
-      <div className="w-10 text-right text-[12px] font-medium text-gray-500 tabular-nums">
-        {typeof value === 'number' ? value.toFixed(step < 1 ? 1 : 0) : value} <span className="text-[10px] ml-0.5 text-gray-400">{unit}</span>
+      <div className="w-[2.5vw] text-right text-[0.62vw] font-medium text-gray-500 tabular-nums">
+        {typeof value === 'number' ? value.toFixed(step < 1 ? 1 : 0) : value} <span className="text-[0.75vw] ml-[0.15vw] text-gray-400">{unit}</span>
       </div>
     </div>
   );
@@ -111,45 +111,45 @@ const NumberStepper = ({ label, value, axisLabel, compact, onChange, step = 1 })
     <div
       className={`flex items-center ${
         label ? "justify-between" : "justify-center"
-      } ${compact ? "gap-1" : "gap-2 mb-3"}`}
+      } ${compact ? "gap-[0.25vw]" : "gap-[0.5vw] mb-[0.75vw]"}`}
     >
       {label && (
-        <div className={`font-medium text-gray-600 ${compact ? "text-xs w-24" : "text-[13px] w-24"}`}>
+        <div className={`font-medium text-gray-600 ${compact ? "text-[0.65vw] w-[6vw]" : "text-[0.68vw] w-[6vw]"}`}>
            {label} :
         </div>
       )}
 
-      <div className={`flex items-center ${compact ? "gap-1" : "gap-2"}`}>
+      <div className={`flex items-center ${compact ? "gap-[0.25vw]" : "gap-[0.5vw]"}`}>
         {axisLabel && (
-          <span className={`${compact ? "text-xs w-3" : "text-[11px]"} text-gray-500 uppercase text-center font-bold`}>
+          <span className={`${compact ? "text-[0.65vw] w-[0.75vw]" : "text-[0.58vw]"} text-gray-500 uppercase text-center font-bold`}>
             {axisLabel}:
           </span>
         )}
         <button 
           onClick={handleDecrement}
-          className={`text-gray-400 hover:text-[#5d5efc] transition-colors ${compact ? "" : "p-0.5 hover:bg-indigo-50 rounded"}`}
+          className={`text-gray-400 hover:text-[#5d5efc] transition-colors ${compact ? "" : "p-[0.15vw] hover:bg-indigo-50 rounded"}`}
         >
           <Icon
             icon="heroicons:chevron-left"
-            width={compact ? 12 : 16}
-            height={compact ? 12 : 16}
+            width={compact ? "0.65vw" : "0.85vw"}
+            height={compact ? "0.65vw" : "0.85vw"}
           />
         </button>
         <div
           className={`${
-            compact ? "px-1.5 py-0.5 min-w-[32px] text-[11px] rounded" : "px-3 py-1.5 min-w-[44px] text-[12px] rounded-[6px]"
+            compact ? "px-[0.4vw] py-[0.15vw] min-w-[1.65vw] text-[0.6vw] rounded" : "px-[0.75vw] py-[0.4vw] min-w-[2.3vw] text-[0.65vw] rounded-[0.35vw]"
           } border border-gray-200 text-gray-700 font-semibold text-center bg-white shadow-sm hover:border-[#5d5efc] transition-colors`}
         >
           {value}
         </div>
         <button 
           onClick={handleIncrement}
-          className={`text-gray-400 hover:text-[#5d5efc] transition-colors ${compact ? "" : "p-0.5 hover:bg-indigo-50 rounded"}`}
+          className={`text-gray-400 hover:text-[#5d5efc] transition-colors ${compact ? "" : "p-[0.15vw] hover:bg-indigo-50 rounded"}`}
         >
           <Icon
             icon="heroicons:chevron-right"
-            width={compact ? 12 : 16}
-            height={compact ? 12 : 16}
+            width={compact ? "0.65vw" : "0.85vw"}
+            height={compact ? "0.65vw" : "0.85vw"}
           />
         </button>
       </div>
@@ -179,36 +179,36 @@ const CustomDropdown = ({ label, value, options, onChange }) => {
   };
 
   return (
-    <div className="relative mb-5" ref={dropdownRef}>
+    <div className="relative mb-[1.25vw]" ref={dropdownRef}>
       {label && (
-         <div className="text-[13px] font-medium text-gray-600 mb-2 flex items-center justify-between">
+         <div className="text-[0.68vw] font-medium text-gray-600 mb-[0.5vw] flex items-center justify-between">
             {label} <span>:</span>
          </div>
       )}
       
       <div 
-        className={`w-full px-3 py-2 flex items-center justify-between bg-white border ${isOpen ? 'border-[#5d5efc] ring-1 ring-[#5d5efc]/20' : 'border-gray-200'} rounded-lg shadow-sm cursor-pointer transition-all hover:border-gray-300`}
+        className={`w-full px-[0.75vw] py-[0.5vw] flex items-center justify-between bg-white border ${isOpen ? 'border-[#5d5efc] ring-1 ring-[#5d5efc]/20' : 'border-gray-200'} rounded-[0.5vw] shadow-sm cursor-pointer transition-all hover:border-gray-300`}
         onClick={toggleDropdown}
       >
-         <span className="text-[12px] font-medium text-gray-700 capitalize">
+         <span className="text-[0.65vw] font-medium text-gray-700 capitalize">
             {selectedOption?.label || value}
          </span>
          <Icon 
             icon="heroicons:chevron-down" 
             className={`text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
-            width={14} 
-            height={14} 
+            width="0.75vw" 
+            height="0.75vw" 
          />
       </div>
 
       {isOpen && (
-        <div className={`absolute left-0 right-0 bg-white border border-gray-100 rounded-lg shadow-xl z-50 max-h-48 overflow-y-auto custom-scrollbar ${
+        <div className={`absolute left-0 right-0 bg-white border border-gray-100 rounded-[0.5vw] shadow-xl z-50 max-h-[12vw] overflow-y-auto custom-scrollbar ${
             dropdownPosition === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'
         }`}>
             {options.map((opt) => (
                 <div 
                     key={opt.value}
-                    className={`px-3 py-2 text-[12px] cursor-pointer transition-colors ${value === opt.value ? 'bg-indigo-50 text-[#5d5efc] font-medium' : 'text-gray-600 hover:bg-gray-50'}`}
+                    className={`px-[0.75vw] py-[0.5vw] text-[0.65vw] cursor-pointer transition-colors ${value === opt.value ? 'bg-indigo-50 text-[#5d5efc] font-medium' : 'text-gray-600 hover:bg-gray-50'}`}
                     onClick={() => {
                         onChange(opt.value);
                         setIsOpen(false);
@@ -253,7 +253,7 @@ export default function SettingsPanel({ controls, updateControl, activePanel, se
   const fmtDeg = (rad) => (rad !== undefined && rad !== null) ? Math.round(rad * (180 / Math.PI)) : "0";
 
   return (
-    <div className="flex flex-col gap-1 pb-10">
+    <div className="flex flex-col gap-[0.25vw] pb-[2.5vw]">
       {/* 1. Factor Adjustment Section */}
       <Accordion
         title="Factor Adjustment"
@@ -263,28 +263,28 @@ export default function SettingsPanel({ controls, updateControl, activePanel, se
         onReset={onResetFactor}
       >
 
-        <div className="space-y-6">
+        <div className="space-y-[1.5vw]">
           {/* Color & Transparency */}
           <div>
             <SectionHeader label="Color & Transparency" />
 
-            <div className="flex items-center justify-between mb-5 mt-4 group relative">
-              <span className="text-[13px] font-medium text-gray-600 w-24 flex items-center justify-between pr-2">
+            <div className="flex items-center justify-between mb-[1.25vw] mt-[1vw] group relative">
+              <span className="text-[0.75vw] font-medium text-gray-600 w-[6vw] flex items-center justify-between pr-[0.5vw]">
                 Factor <span>:</span>
               </span>
-              <div className="flex items-center gap-2.5 flex-1">
+              <div className="flex items-center gap-[0.65vw] flex-1">
                 <div 
-                    className="w-8 h-8 rounded-[6px] border border-gray-200 shadow-sm cursor-pointer hover:border-[#5d5efc] transition-colors"
+                    className="w-[2vw] h-[2vw] rounded-[0.35vw] border border-gray-200 shadow-sm cursor-pointer hover:border-[#5d5efc] transition-colors"
                     style={{ backgroundColor: controls.color || '#000000' }}
                     onClick={handleColorClick}
                 >
                 </div>
                 <div 
-                    className="flex-1 flex items-center justify-between border border-gray-200 rounded-[6px] px-3 py-1.5 bg-white hover:border-gray-300 transition-colors shadow-sm cursor-pointer"
+                    className="flex-1 flex items-center justify-between border border-gray-200 rounded-[0.35vw] px-[0.75vw] py-[0.4vw] bg-white hover:border-gray-300 transition-colors shadow-sm cursor-pointer"
                     onClick={handleColorClick}
                 >
-                  <span className="text-[12px] text-gray-600 font-medium tracking-wide font-mono uppercase">{controls.color || '#000000'}</span>
-                  <span className="text-[12px] text-gray-400 font-medium">{controls.alpha}%</span>
+                  <span className="text-[0.75vw] text-gray-600 font-medium tracking-wide font-mono uppercase">{controls.color || '#000000'}</span>
+                  <span className="text-[0.75vw] text-gray-400 font-medium">{controls.alpha}%</span>
                 </div>
               </div>
 
@@ -323,7 +323,7 @@ export default function SettingsPanel({ controls, updateControl, activePanel, se
           {/* Surface Finish */}
           <div>
             <SectionHeader label="Surface Finish" />
-            <div className="space-y-1">
+            <div className="space-y-[0.25vw]">
                 <CustomSlider
                 label="Metallic"
                 value={controls.metallic}
@@ -340,7 +340,7 @@ export default function SettingsPanel({ controls, updateControl, activePanel, se
           {/* Surface Detail */}
           <div>
             <SectionHeader label="Surface Detail" />
-            <div className="space-y-1">
+            <div className="space-y-[0.25vw]">
                 <CustomSlider
                 label="Normal Map"
                 value={controls.normal}
@@ -358,12 +358,12 @@ export default function SettingsPanel({ controls, updateControl, activePanel, se
           <div>
             <SectionHeader label="Texture Placement" />
             
-            <div className="mb-4 px-1 flex items-center gap-1.5 text-xs text-green-600 font-medium bg-green-50 p-2 rounded-md border border-green-100">
-                 <Icon icon="fluent:checkmark-circle-20-filled" width={14} />
+            <div className="mb-[1vw] px-[0.25vw] flex items-center gap-[0.4vw] text-[0.65vw] text-green-600 font-medium bg-green-50 p-[0.5vw] rounded-[0.35vw] border border-green-100">
+                 <Icon icon="fluent:checkmark-circle-20-filled" width="0.75vw" />
                  <span>UV Unwrapped</span>
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-[0.25vw]">
                 <CustomSlider
                 label="Scale X"
                 value={controls.scale}
@@ -389,7 +389,7 @@ export default function SettingsPanel({ controls, updateControl, activePanel, se
                 unit="°"
                 />
             
-                <div className="mt-6 space-y-1">
+                <div className="mt-[1.5vw] space-y-[0.25vw]">
                     <CustomSlider
                         label="Offset X"
                         value={controls.offset?.x || 0}
@@ -418,79 +418,79 @@ export default function SettingsPanel({ controls, updateControl, activePanel, se
       <Accordion
         title="Model Position"
         icon="hugeicons:3d-move"
-        iconSize={24}
+        iconSize="1.25vw"
         isOpen={activePanel === "position"}
         onToggle={() => togglePanel("position")}
         onReset={() => onResetTransform('all')}
       >
-        <div className="flex flex-col gap-1 pb-2">
+        <div className="flex flex-col gap-[0.25vw] pb-[0.5vw]">
            {/* Move Row */}
-           <div className="flex flex-col items-start gap-2 mb-2 w-full">
-              <div className="flex items-center w-full pr-1">
-                 <span className="text-[13px] font-medium text-black ml-1">Move :</span>
-                 <button onClick={() => onResetTransform('position')} className="text-gray-400 hover:text-[#5d5efc] transition-colors p-1 rounded-md hover:bg-gray-100" title="Reset Move">
-                    <Icon icon="ix:reset" width={14} height={14} />
+           <div className="flex flex-col items-start gap-[0.5vw] mb-[0.5vw] w-full">
+              <div className="flex items-center w-full pr-[0.25vw]">
+                 <span className="text-[0.75vw] font-medium text-black ml-[0.25vw]">Move :</span>
+                 <button onClick={() => onResetTransform('position')} className="text-gray-400 hover:text-[#5d5efc] transition-colors p-[0.25vw] rounded-[0.35vw] hover:bg-gray-100" title="Reset Move">
+                    <Icon icon="ix:reset" width="0.85vw" height="0.85vw" />
                  </button>
               </div>
-              <div className="grid grid-cols-3 gap-2 w-full">
-                 <div className="flex flex-col items-center gap-1.5">
-                    <span className="text-[10px] font-semibold text-gray-400 uppercase">X</span>
+              <div className="grid grid-cols-3 gap-[0.5vw] w-full">
+                 <div className="flex flex-col items-center gap-[0.35vw]">
+                    <span className="text-[0.6vw] font-semibold text-gray-400 uppercase">X</span>
                     <NumberStepper value={fmt(transformValues?.position?.x)} compact onChange={(val) => onManualTransformChange('position', 'x', val)} step={0.5} />
                  </div>
-                 <div className="flex flex-col items-center gap-1.5">
-                    <span className="text-[10px] font-semibold text-gray-400 uppercase">Y</span>
+                 <div className="flex flex-col items-center gap-[0.35vw]">
+                    <span className="text-[0.6vw] font-semibold text-gray-400 uppercase">Y</span>
                     <NumberStepper value={fmt(transformValues?.position?.y)} compact onChange={(val) => onManualTransformChange('position', 'y', val)} step={0.5} />
                  </div>
-                 <div className="flex flex-col items-center gap-1.5">
-                    <span className="text-[10px] font-semibold text-gray-400 uppercase">Z</span>
+                 <div className="flex flex-col items-center gap-[0.35vw]">
+                    <span className="text-[0.6vw] font-semibold text-gray-400 uppercase">Z</span>
                     <NumberStepper value={fmt(transformValues?.position?.z)} compact onChange={(val) => onManualTransformChange('position', 'z', val)} step={0.5} />
                  </div>
               </div>
            </div>
 
            {/* Rotate Row */}
-           <div className="flex flex-col items-start gap-2 mb-2 bg-gray-50 rounded-lg py-2 w-full">
-              <div className="flex items-center w-full pr-1">
-                 <span className="text-[13px] font-medium text-black ml-1">Rotate :</span>
-                 <button onClick={() => onResetTransform('rotation')} className="text-gray-400 hover:text-[#5d5efc] transition-colors p-1 rounded-md hover:bg-gray-100" title="Reset Rotation">
-                    <Icon icon="ix:reset" width={14} height={14} />
+           <div className="flex flex-col items-start gap-[0.5vw] mb-[0.5vw] bg-gray-50 rounded-[0.5vw] py-[0.5vw] w-full">
+              <div className="flex items-center w-full pr-[0.25vw]">
+                 <span className="text-[0.75vw] font-medium text-black ml-[0.25vw]">Rotate :</span>
+                 <button onClick={() => onResetTransform('rotation')} className="text-gray-400 hover:text-[#5d5efc] transition-colors p-[0.25vw] rounded-[0.35vw] hover:bg-gray-100" title="Reset Rotation">
+                    <Icon icon="ix:reset" width="0.85vw" height="0.85vw" />
                  </button>
               </div>
-              <div className="grid grid-cols-3 gap-2 w-full">
-                 <div className="flex flex-col items-center gap-1.5">
-                    <span className="text-[10px] font-semibold text-gray-400 uppercase">X</span>
+              <div className="grid grid-cols-3 gap-[0.5vw] w-full">
+                 <div className="flex flex-col items-center gap-[0.35vw]">
+                    <span className="text-[0.6vw] font-semibold text-gray-400 uppercase">X</span>
                     <NumberStepper value={fmtDeg(transformValues?.rotation?.x)} compact onChange={(val) => onManualTransformChange('rotation', 'x', val)} step={5} />
                  </div>
-                 <div className="flex flex-col items-center gap-1.5">
-                    <span className="text-[10px] font-semibold text-gray-400 uppercase">Y</span>
+                 <div className="flex flex-col items-center gap-[0.35vw]">
+                    <span className="text-[0.6vw] font-semibold text-gray-400 uppercase">Y</span>
                     <NumberStepper value={fmtDeg(transformValues?.rotation?.y)} compact onChange={(val) => onManualTransformChange('rotation', 'y', val)} step={5} />
                  </div>
-                 <div className="flex flex-col items-center gap-1.5">
-                    <span className="text-[10px] font-semibold text-gray-400 uppercase">Z</span>
+                 <div className="flex flex-col items-center gap-[0.35vw]">
+                    <span className="text-[0.6vw] font-semibold text-gray-400 uppercase">Z</span>
                     <NumberStepper value={fmtDeg(transformValues?.rotation?.z)} compact onChange={(val) => onManualTransformChange('rotation', 'z', val)} step={5} />
                  </div>
               </div>
            </div>
 
            {/* Scale Row */}
-           <div className="flex flex-col items-start gap-2 w-full">
-              <div className="flex items-center w-full pr-1">
-                 <span className="text-[13px] font-medium text-black ml-1">Scale :</span>
-                 <button onClick={() => onResetTransform('scale')} className="text-gray-400 hover:text-[#5d5efc] transition-colors p-1 rounded-md hover:bg-gray-100" title="Reset Scale">
-                    <Icon icon="ix:reset" width={14} height={14} />
+           <div className="flex flex-col items-start gap-[0.5vw] w-full">
+              <div className="flex items-center w-full pr-[0.25vw]">
+                 <span className="text-[0.75vw] font-medium text-black ml-[0.25vw]">Scale :</span>
+                 <button onClick={() => onResetTransform('scale')} className="text-gray-400 hover:text-[#5d5efc] transition-colors p-[0.25vw] rounded-[0.35vw] hover:bg-gray-100" title="Reset Scale">
+                    <Icon icon="ix:reset" width="0.85vw" height="0.85vw" />
                  </button>
               </div>
-              <div className="grid grid-cols-3 gap-2 w-full">
-                 <div className="flex flex-col items-center gap-1.5">
-                    <span className="text-[10px] font-semibold text-gray-400 uppercase">X</span>
+              <div className="grid grid-cols-3 gap-[0.5vw] w-full">
+                 <div className="flex flex-col items-center gap-[0.35vw]">
+                    <span className="text-[0.6vw] font-semibold text-gray-400 uppercase">X</span>
                     <NumberStepper value={fmt(transformValues?.scale?.x)} compact onChange={(val) => onManualTransformChange('scale', 'x', val)} step={0.1} />
                  </div>
-                 <div className="flex flex-col items-center gap-1.5">
-                    <span className="text-[10px] font-semibold text-gray-400 uppercase">Y</span>
+                 <div className="flex flex-col items-center gap-[0.35vw]">
+                    <span className="text-[0.6vw] font-semibold text-gray-400 uppercase">Y</span>
                     <NumberStepper value={fmt(transformValues?.scale?.y)} compact onChange={(val) => onManualTransformChange('scale', 'y', val)} step={0.1} />
                  </div>
-                 <div className="flex flex-col items-center gap-1.5">
-                    <span className="text-[10px] font-semibold text-gray-400 uppercase">Z</span>
+                 <div className="flex flex-col items-center gap-[0.35vw]">
+                    <span className="text-[0.6vw] font-semibold text-gray-400 uppercase">Z</span>
                     <NumberStepper value={fmt(transformValues?.scale?.z)} compact onChange={(val) => onManualTransformChange('scale', 'z', val)} step={0.1} />
                  </div>
               </div>
@@ -506,7 +506,7 @@ export default function SettingsPanel({ controls, updateControl, activePanel, se
         onToggle={() => togglePanel("lighting")}
       >
         {/* Visualizer Box */}
-        <div className="relative bg-[#f8fafc] h-[180px] rounded-xl border border-gray-100 mb-6 flex flex-col items-center justify-center shadow-inner overflow-hidden group">
+        <div className="relative bg-[#f8fafc] h-[9.375vw] rounded-[0.5vw] border border-gray-100 mb-[1.5vw] flex flex-col items-center justify-center shadow-inner overflow-hidden group">
           {/* Dynamic Sun Position */}
           <div 
             className="absolute text-amber-400 drop-shadow-sm transition-all duration-300"
@@ -516,18 +516,18 @@ export default function SettingsPanel({ controls, updateControl, activePanel, se
               transform: 'translate(-50%, -50%)'
             }}
           >
-            <Icon icon="heroicons:sun" width={24} height={24} />
+            <Icon icon="heroicons:sun" width="1.25vw" height="1.25vw" />
           </div>
 
           <div className="flex flex-col items-center text-gray-300 group-hover:text-gray-400 transition-colors">
-            <Icon icon="heroicons:cube" width={40} height={40} className="stroke-1" />
+            <Icon icon="heroicons:cube" width="2.08vw" height="2.08vw" className="stroke-1" />
           </div>
 
           {/* Light Effect */}
           <div className="absolute inset-0 bg-linear-to-br from-white/60 via-transparent to-indigo-50/10 pointer-events-none"></div>
         </div>
 
-        <div className="flex justify-center gap-2 mb-8">
+        <div className="flex justify-center gap-[0.5vw] mb-[2vw]">
           <NumberStepper 
             value={Math.round(controls.lightPosition?.x || 10)} 
             axisLabel="X" 
@@ -551,7 +551,7 @@ export default function SettingsPanel({ controls, updateControl, activePanel, se
           />
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-[1.5vw]">
             <div>
 
                  <SectionHeader label="Environment" />
@@ -572,7 +572,7 @@ export default function SettingsPanel({ controls, updateControl, activePanel, se
                         { label: 'Warehouse', value: 'warehouse' },
                     ]}
                  />
-                 <div className="mt-2">
+                 <div className="mt-[0.5vw]">
                      <CustomSlider
                         label="Rotation"
                         value={controls.envRotation || 0}
@@ -587,7 +587,7 @@ export default function SettingsPanel({ controls, updateControl, activePanel, se
 
             <div>
                 <SectionHeader label="Lighting & Reflection" />
-                <div className="space-y-1">
+                <div className="space-y-[0.25vw]">
                     <CustomSlider
                     label="Specular"
                     value={controls.specular}
@@ -603,7 +603,7 @@ export default function SettingsPanel({ controls, updateControl, activePanel, se
 
             <div>
                 <SectionHeader label="Adjust Shadow" />
-                <div className="space-y-1">
+                <div className="space-y-[0.25vw]">
                     <CustomSlider
                     label="Shadow"
                     value={controls.shadow}

@@ -390,18 +390,18 @@ export default function ThreedEditor() {
       {/* --- WARNING MODAL --- */}
       {showWarning && (
            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-               <div className="bg-white p-6 rounded-2xl shadow-xl max-w-sm w-full text-center">
-                   <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                       <Icon icon="ph:warning-circle-bold" className="text-red-600 text-2xl" />
+               <div className="bg-white p-[1.5vw] rounded-[1vw] shadow-xl max-w-[20vw] w-full text-center">
+                   <div className="w-[3vw] h-[3vw] bg-red-100 rounded-full flex items-center justify-center mx-auto mb-[1vw]">
+                       <Icon icon="ph:warning-circle-bold" className="text-red-600 text-[1.5vw]" />
                    </div>
-                   <h3 className="text-lg font-bold text-gray-900 mb-2">Unsupported File Type</h3>
-                   <p className="text-sm text-gray-600 mb-6">
+                   <h3 className="text-[1vw] font-bold text-gray-900 mb-[0.5vw]">Unsupported File Type</h3>
+                   <p className="text-[0.75vw] text-gray-600 mb-[1.5vw]">
                        Please upload a 3D model in one of the following formats: <br/>
-                       <span className="font-mono text-xs bg-gray-100 px-1 py-0.5 rounded">.glb, .gltf, .obj, .fbx, .stl, .step</span>
+                       <span className="font-mono text-[0.65vw] bg-gray-100 px-[0.25vw] py-[0.15vw] rounded">.glb, .gltf, .obj, .fbx, .stl, .step</span>
                    </p>
                    <button 
                        onClick={() => setShowWarning(false)}
-                       className="w-full py-2.5 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors"
+                       className="w-full py-[0.65vw] bg-gray-900 text-white rounded-[0.75vw] font-medium hover:bg-gray-800 transition-colors text-[0.85vw]"
                    >
                        Got it
                    </button>
@@ -425,9 +425,9 @@ export default function ThreedEditor() {
       {isSidebarCollapsed && modelUrl && (
           <button
             onClick={() => setIsSidebarCollapsed(false)}
-            className="absolute left-6 top-6 z-30 p-2 bg-white rounded-xl shadow-lg border border-gray-100 text-gray-600 hover:text-[#3b4190] hover:border-blue-100 transition-all"
+            className="absolute left-[1.5vw] top-[1.5vw] z-30 p-[0.5vw] bg-white rounded-[0.75vw] shadow-lg border border-gray-100 text-gray-600 hover:text-[#3b4190] hover:border-blue-100 transition-all"
           >
-            <Icon icon="ph:list-bold" width={20} />
+            <Icon icon="ph:list-bold" width="1.04vw" />
           </button>
       )}
 
@@ -482,8 +482,8 @@ export default function ThreedEditor() {
 
           {modelUrl && (
             <div 
-              className={`absolute left-6 z-20 p-1 transition-all duration-500 ease-in-out overflow-hidden w-[200px] pointer-events-none select-none
-                ${isTextureOpen ? "bottom-[220px]" : "bottom-[80px]"}
+              className={`absolute left-[1.5vw] z-20 p-[0.25vw] transition-all duration-500 ease-in-out overflow-hidden w-[10.4vw] pointer-events-none select-none
+                ${isTextureOpen ? "bottom-[11.45vw]" : "bottom-[4.16vw]"}
               `}
             > 
                 <EditorInfoBox stats={modelStats} />
@@ -493,9 +493,9 @@ export default function ThreedEditor() {
 
           {!modelUrl && (
             <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none select-none">
-              <div className="flex flex-col items-center gap-3 opacity-50">
-                <Icon icon="ph:cube-focus-thin" width={80} className="text-gray-50" />
-                <span className="text-[14px] font-medium text-gray-50">Uploaded 3D Model will be shown here</span>
+              <div className="flex flex-col items-center gap-[0.75vw] opacity-50">
+                <Icon icon="ph:cube-focus-thin" width="4.16vw" className="text-gray-50" />
+                <span className="text-[0.72vw] font-medium text-gray-50">Uploaded 3D Model will be shown here</span>
               </div>
             </div>
           )}

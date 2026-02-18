@@ -1810,7 +1810,7 @@ const MainEditor = () => {
               <div className="relative">
                 <button
                   onClick={() => setShowPageSettingsMenu(prev => !prev)}
-                  className="bg-white hover:bg-gray-100 text-gray-700 p-[0.5vw] rounded-[0.5vw] shadow-md border border-gray-200 transition-all"
+                  className="bg-white hover:bg-gray-100 cursor-pointer text-gray-700 p-[0.5vw] rounded-[0.5vw] shadow-md border border-gray-200 transition-all"
                   title="Page Settings"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="1.1vw" height="1.1vw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings-icon lucide-settings"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>
@@ -1821,7 +1821,7 @@ const MainEditor = () => {
                   <div className="absolute top-full right-0 mt-[0.5vw] w-[12vw] bg-white rounded-[0.8vw] shadow-xl border border-gray-100 p-[0.5vw] z-[9999] flex flex-col gap-[0.2vw]">
                     <button
                       onClick={() => { addNewPage(currentPage); setShowPageSettingsMenu(false); }}
-                      className="flex items-center gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.4vw] text-left"
+                      className="flex items-center cursor-pointer gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.4vw] text-left"
                     >
                       <svg width="0.9vw" height="0.9vw" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -1831,7 +1831,7 @@ const MainEditor = () => {
                     </button>
                     <button
                       onClick={() => { setShowAddFilesModal(true); setShowPageSettingsMenu(false); }}
-                      className="flex items-center gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.4vw] text-left"
+                      className="flex items-center cursor-pointer gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.4vw] text-left"
                     >
                       <svg width="0.9vw" height="0.9vw" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
@@ -1843,7 +1843,7 @@ const MainEditor = () => {
                     </button>
                     <button
                       onClick={() => { duplicatePage(currentPage); setShowPageSettingsMenu(false); }}
-                      className="flex items-center gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.4vw] text-left"
+                      className="flex items-center cursor-pointer gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.4vw] text-left"
                     >
                       <svg width="0.9vw" height="0.9vw" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -1853,7 +1853,7 @@ const MainEditor = () => {
                     </button>
                     <button
                       onClick={() => { setShowTemplateModal(true); setShowPageSettingsMenu(false); }}
-                      className="flex items-center gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.4vw] text-left"
+                      className="flex items-center cursor-pointer gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.4vw] text-left"
                     >
                       <svg width="0.9vw" height="0.9vw" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -1867,7 +1867,7 @@ const MainEditor = () => {
                     
                     <button
                       onClick={() => { clearPage(currentPage); setShowPageSettingsMenu(false); }}
-                      className="flex items-center gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.4vw] text-left"
+                      className="flex items-center cursor-pointer gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.4vw] text-left"
                     >
                       <svg width="0.9vw" height="0.9vw" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="10"></circle>
@@ -1877,7 +1877,7 @@ const MainEditor = () => {
                     </button>
                     <button
                       onClick={() => { deletePage(currentPage); setShowPageSettingsMenu(false); }}
-                      className="flex items-center gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-red-500 hover:bg-red-50 rounded-[0.4vw] text-left"
+                      className="flex items-center cursor-pointer gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-red-500 hover:bg-red-50 rounded-[0.4vw] text-left"
                     >
                       <svg width="0.9vw" height="0.9vw" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="3 6 5 6 21 6"></polyline>

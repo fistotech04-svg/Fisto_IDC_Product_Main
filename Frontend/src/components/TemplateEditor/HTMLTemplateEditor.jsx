@@ -119,7 +119,7 @@ const HTMLTemplateEditor = forwardRef(({
         // Create draft element
         const el = doc.createElement('div');
         el.style.position = 'absolute';
-        el.style.border = '2px dashed #0095FF';
+        el.style.border = '0.15vw dashed #0095FF';
         el.style.backgroundColor = 'rgba(0, 149, 255, 0.1)';
         el.style.left = x + 'px';
         el.style.top = y + 'px';
@@ -150,7 +150,7 @@ const HTMLTemplateEditor = forwardRef(({
         interactionDraftRef.current.style.left = left + 'px';
         interactionDraftRef.current.style.top = top + 'px';
         // Ensure it's visible during drag by overriding any CSS
-        interactionDraftRef.current.style.border = '2px dashed #0095FF';
+        interactionDraftRef.current.style.border = '0.15vw dashed #0095FF';
         interactionDraftRef.current.style.backgroundColor = 'rgba(0, 149, 255, 0.1)';
         interactionDraftRef.current.style.zIndex = '10000';
       };
@@ -331,8 +331,8 @@ const HTMLTemplateEditor = forwardRef(({
       el.addEventListener('focus', () => {
         // Do NOT switch page context automatically to avoid re-renders
         deselectAll(); 
-        el.style.outline = '2px solid #6366f1';
-        el.style.outlineOffset = '2px';
+        el.style.outline = '0.15vw solid #6366f1';
+        el.style.outlineOffset = '0.15vw';
         setSelectedElement(el);
         if (onElementSelect) onElementSelect(el, 'text', pageIndex);
       });
@@ -363,8 +363,8 @@ const HTMLTemplateEditor = forwardRef(({
               e.preventDefault();
               e.stopPropagation();
               deselectAll();
-              el.style.outline = '2px solid #6366f1';
-              el.style.outlineOffset = '2px';
+              el.style.outline = '0.15vw solid #6366f1';
+              el.style.outlineOffset = '0.15vw';
               setSelectedElement(el);
 
               // Check for file interaction override
@@ -560,8 +560,8 @@ const HTMLTemplateEditor = forwardRef(({
                   activeSelection.dataset.selected = 'true';
                   activeSelection.style.outline = 'none';
                 } else {
-                  activeSelection.style.outline = '2px solid #6366f1';
-                  activeSelection.style.outlineOffset = '2px';
+                  activeSelection.style.outline = '0.15vw solid #6366f1';
+                  activeSelection.style.outlineOffset = '0.15vw';
                 }
             }
         }, 50);
@@ -790,7 +790,7 @@ const HTMLTemplateEditor = forwardRef(({
                     width: `${scaledWidth}px`,
                     height: `${scaledHeight}px`,
                     flexShrink: 0,
-                    borderRight: '1px solid #eee'
+                    borderRight: '0.05vw solid #eee'
                   }}
                   onClick={() => !p.isEditable && onPageChange(p.index)}
                 >
@@ -811,7 +811,14 @@ const HTMLTemplateEditor = forwardRef(({
                   />
                   {/* Blank Page Placeholder */}
                   {((p.isEditable && !p.html)) && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <div 
+                        className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none origin-top-left"
+                        style={{
+                            width: '595px',
+                            height: '842px',
+                            transform: `scale(${scale})`,
+                        }}
+                      >
                           <span className="text-sm text-gray-300 font-medium mb-1">A4 sheet (210 x 297 mm)</span>
                           <span className="text-lg text-gray-300 font-medium">Choose Templets to Edit page</span>
                       </div>

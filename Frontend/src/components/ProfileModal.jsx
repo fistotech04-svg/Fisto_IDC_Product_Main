@@ -48,7 +48,7 @@ export default function ProfileModal({ isOpen, onClose, isAutoSaveEnabled, onTog
             </h2>
             <button 
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors ml-[0.75vw]"
+                className="text-gray-400 cursor-pointer hover:text-gray-600 transition-colors ml-[0.75vw]"
             >
                 <X size="1.1vw" />
             </button>
@@ -75,9 +75,9 @@ export default function ProfileModal({ isOpen, onClose, isAutoSaveEnabled, onTog
         <div className="flex items-center justify-between gap-[0.5vw] mb-[1.5vw] px-[0.25vw]">
             <div className="flex items-center gap-[0.5vw]">
                 <Crown size="1.25vw" className="text-yellow-400 fill-yellow-400" />
-                <span className="text-[0.75vw] font-semibold text-gray-700">Your Current Plan - </span>
+                <span className="text-[0.75vw] font-semibold text-gray-700">Your Current Plan</span>
             </div>
-            <div className="px-[0.75vw] py-[0.25vw] rounded-[0.25vw] bg-gradient-to-r from-green-500 to-green-600 text-white text-[0.65vw] font-bold uppercase tracking-wider shadow-sm">
+            <div className="px-[0.75vw] py-[0.25vw] rounded-[0.25vw] bg-gradient-to-r from-green-500 to-green-600 text-white text-[0.65vw] font-semibold uppercase tracking-wider shadow-sm">
                 Free
             </div>
         </div>
@@ -95,7 +95,7 @@ export default function ProfileModal({ isOpen, onClose, isAutoSaveEnabled, onTog
         </div>
 
         {/* Subscribe Button */}
-        <button className="w-full bg-black text-white text-[0.85vw] font-bold py-[0.85vw] rounded-[0.75vw] hover:bg-zinc-800 transition-colors shadow-lg mb-[0.75vw]">
+        <button className="w-full bg-black text-white text-[0.85vw] font-semibold py-[0.85vw] rounded-[0.75vw] hover:bg-zinc-800 transition-colors shadow-lg mb-[0.75vw]">
             399/- Subscribe Now
         </button>
 

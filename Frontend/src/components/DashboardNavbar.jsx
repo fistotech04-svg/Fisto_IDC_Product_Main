@@ -23,7 +23,7 @@ export default function DashboardNavbar() {
       {/* Logo */}
       <div className="flex-shrink-0">
         <Link to="/home">
-           <img src={FistoLogo} alt="FIST-O" className="h-[2.5vw] w-auto object-contain hover:scale-105 transition-transform duration-300" />
+           <img src={FistoLogo} alt="FIST-O" className="h-[2.5vw] w-auto object-contain transition-transform duration-300" />
         </Link>
       </div>
 

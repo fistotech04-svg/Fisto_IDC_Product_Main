@@ -64,6 +64,9 @@ const IconEditor = ({
   const [showGallery, setShowGallery] = useState(false);
   const [activeTab, setActiveTab] = useState('gallery');
   const [tempSelectedIcon, setTempSelectedIcon] = useState(null);
+  const [iconifyIcons, setIconifyIcons] = useState([]);
+  const [isSearchingIconify, setIsSearchingIconify] = useState(false);
+  const searchTimeoutRef = useRef(null);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(50);
@@ -71,7 +74,35 @@ const IconEditor = ({
   // Reset visible count when search or gallery availability changes
   useEffect(() => {
     setVisibleCount(50);
-  }, [searchQuery, showGallery]);
+    if (activeTab === 'gallery' && searchQuery.trim()) {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+      searchTimeoutRef.current = setTimeout(() => {
+          fetchIconifyIcons(searchQuery);
+      }, 500);
+    }
+  }, [searchQuery, showGallery, activeTab]);
+
+  const fetchIconifyIcons = async (query) => {
+      if (!query.trim()) {
+          setIconifyIcons([]);
+          return;
+      }
+      setIsSearchingIconify(true);
+      try {
+          const res = await fetch(`https://api.iconify.design/search?query=${encodeURIComponent(query)}&limit=100`);
+          const data = await res.json();
+          if (data && data.icons) {
+              setIconifyIcons(data.icons.map(name => ({ name, isIconify: true })));
+          } else {
+              setIconifyIcons([]);
+          }
+      } catch (err) {
+          console.error("Iconify search failed", err);
+          setIconifyIcons([]);
+      } finally {
+          setIsSearchingIconify(false);
+      }
+  };
 
   const handleScroll = (e) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
@@ -319,13 +350,28 @@ const IconEditor = ({
     e.target.value = '';
   }
 
-  const handleReplaceFromGallery = () => {
+  const handleReplaceFromGallery = async () => {
       if(!tempSelectedIcon) return;
       
       let newViewBox = '0 0 24 24';
       let innerHtml = '';
 
-      if (tempSelectedIcon.Component) {
+      if (tempSelectedIcon.isIconify) {
+          try {
+              const res = await fetch(`https://api.iconify.design/${tempSelectedIcon.name}.svg`);
+              const svgText = await res.text();
+              const parser = new DOMParser();
+              const doc = parser.parseFromString(svgText, 'image/svg+xml');
+              const svg = doc.querySelector('svg');
+              if (svg) {
+                  newViewBox = svg.getAttribute('viewBox') || '0 0 24 24';
+                  innerHtml = svg.innerHTML;
+              }
+          } catch (err) {
+              console.error("Failed to load Iconify SVG", err);
+              return;
+          }
+      } else if (tempSelectedIcon.Component) {
           const svgString = renderToStaticMarkup(<tempSelectedIcon.Component strokeWidth={2} />);
           const parser = new DOMParser();
           const doc = parser.parseFromString(svgString, 'image/svg+xml');
@@ -430,7 +476,13 @@ const IconEditor = ({
               </div>
 
               <div 
-                onClick={() => setShowGallery(true)}
+                onClick={() => {
+                    setShowGallery(true);
+                    setSearchQuery('');
+                    setIconifyIcons([]);
+                    setTempSelectedIcon(null);
+                    setActiveTab('gallery');
+                }}
                 className="relative h-[7vw] rounded-[0.5vw] overflow-hidden cursor-pointer group border border-gray-200 select-none bg-gray-100 shadow-sm hover:shadow-md transition-all duration-300"
               >
                 {/* Background with icon previews */}
@@ -633,9 +685,9 @@ const IconEditor = ({
         <div
           className="fixed z-[10000] bg-white border border-gray-100 rounded-[0.75vw] shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
           style={{
-            width: '20vw',
-            height: '34vw',
-            top: '55%',
+            width: '22vw',
+            height: '36vw',
+            top: '50%',
             left: '80%',
             transform: 'translate(-50%, -50%)'
           }}
@@ -643,15 +695,15 @@ const IconEditor = ({
            <div className="flex px-[1vw] pt-[0.75vw] border-b bg-white">
              <button
                onClick={() => setActiveTab("gallery")}
-               className={`flex-1 pb-[0.5vw] text-[0.75vw] font-bold transition-all ${activeTab === "gallery" ? "border-b-2 border-black text-black" : "border-transparent text-gray-400"}`}
+               className={`flex-1 pb-[0.5vw] text-[0.7vw] font-bold transition-all ${activeTab === "gallery" ? "border-b-2 border-black text-black" : "border-transparent text-gray-400"}`}
              >
-               Icon Gallery
+               Icons
              </button>
              <button
                onClick={() => setActiveTab("uploaded")}
-               className={`flex-1 pb-[0.5vw] text-[0.75vw] font-bold transition-all ${activeTab === "uploaded" ? "border-b-2 border-black text-black" : "border-transparent text-gray-400"}`}
+               className={`flex-1 pb-[0.5vw] text-[0.7vw] font-bold transition-all ${activeTab === "uploaded" ? "border-b-2 border-black text-black" : "border-transparent text-gray-400"}`}
              >
-               Uploaded Icons
+               Uploaded
              </button>
            </div>
            
@@ -661,7 +713,7 @@ const IconEditor = ({
                   <Search size="1vw" className="absolute left-[0.75vw] top-1/2 -translate-y-1/2 text-gray-400" />
                   <input 
                     type="text" 
-                    placeholder="Search icons..." 
+                    placeholder="Search icons (Lucide & Iconify)..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full h-[2.25vw] pl-[2.25vw] pr-[2vw] text-[0.75vw] bg-gray-50 border border-gray-200 rounded-full outline-none focus:border-black  transition-colors"
@@ -683,11 +735,11 @@ const IconEditor = ({
              onScroll={handleScroll}
            >
              {activeTab === 'gallery' && (
-                 <>
+                 <div className="space-y-[1.5vw]">
                      <div className="grid grid-cols-5 gap-[0.75vw]">
                          {filteredIcons.slice(0, visibleCount).map((icon, index) => (
                             <div 
-                                key={index} 
+                                key={`lucide-${index}`} 
                                 onClick={() => setTempSelectedIcon(icon)}
                                 className={`aspect-square rounded-[0.4vw] flex items-center justify-center cursor-pointer transition-all hover:bg-gray-100 ${tempSelectedIcon === icon ? 'bg-gray-200 ring-2 ring-gray-300' : 'bg-transparent'}`}
                             >
@@ -704,8 +756,30 @@ const IconEditor = ({
                                 )}
                             </div>
                         ))}
+
+                        {iconifyIcons.map((icon, index) => (
+                            <div 
+                                key={`iconify-${index}`} 
+                                onClick={() => setTempSelectedIcon(icon)}
+                                className={`aspect-square rounded-[0.4vw] flex items-center justify-center cursor-pointer transition-all hover:bg-gray-100 ${tempSelectedIcon?.name === icon.name ? 'bg-gray-200 ring-2 ring-gray-300' : 'bg-transparent'}`}
+                            >
+                                <Icon icon={icon.name} className="w-[2.25vw] h-[2.25vw] text-black" />
+                            </div>
+                        ))}
+
+                        {isSearchingIconify && (
+                            <div className="col-span-5 flex flex-col items-center justify-center py-[2vw] gap-[0.5vw]">
+                                <Icon icon="line-md:loading-twotone-loop" className="text-gray-400" width="2.5vw" height="2.5vw" />
+                            </div>
+                        )}
+                        
+                        {!isSearchingIconify && searchQuery.trim() && filteredIcons.length === 0 && iconifyIcons.length === 0 && (
+                             <div className="col-span-5 text-center py-[1vw]">
+                                 <span className="text-[0.7vw] text-gray-400">No results found for "{searchQuery}"</span>
+                             </div>
+                        )}
                     </div>
-                 </>
+                 </div>
              )}
 
              {activeTab === 'uploaded' && (

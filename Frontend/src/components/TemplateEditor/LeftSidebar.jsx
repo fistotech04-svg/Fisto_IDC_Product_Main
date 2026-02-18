@@ -168,7 +168,7 @@ const LeftSidebar = ({
         <h2 className="text-[1.2vw] font-semibold text-gray-800">Pages</h2>
         <button
           onClick={onOpenUploadModal} 
-          className="flex items-center gap-[0.4vw] bg-transparent hover:bg-gray-100 text-gray-700 px-[0.8vw] py-[0.4vw] rounded-[0.4vw] text-[0.8vw] font-medium transition-colors"
+          className="flex items-center gap-[0.4vw] cursor-pointer bg-transparent hover:bg-gray-100 text-gray-700 px-[0.8vw] py-[0.4vw] rounded-[0.4vw] text-[0.8vw] font-medium transition-colors"
         >
           <Plus size="1.1vw" />
           Add Files
@@ -291,19 +291,19 @@ const LeftSidebar = ({
                         Page Settings <div className="h-px bg-gray-100 flex-1"></div>
                     </div>
                     
-                    <button onClick={() => { insertPageAfter(idx); setActiveMenuPageId(null); }} className="flex items-center gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.5vw] text-left">
+                    <button onClick={() => { insertPageAfter(idx); setActiveMenuPageId(null); }} className="flex items-center cursor-pointer gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.5vw] text-left">
                         <Plus size="0.9vw" /> Add Page
                     </button>
-                    <button onClick={() => { switchToPage(idx); onOpenUploadModal(); setActiveMenuPageId(null); }} className="flex items-center gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.5vw] text-left">
+                    <button onClick={() => { switchToPage(idx); onOpenUploadModal(); setActiveMenuPageId(null); }} className="flex items-center cursor-pointer gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.5vw] text-left">
                         <FilePlus size="0.9vw" /> Add File
                     </button>
-                    <button onClick={() => { duplicatePage(idx); setActiveMenuPageId(null); }} className="flex items-center gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.5vw] text-left">
+                    <button onClick={() => { duplicatePage(idx); setActiveMenuPageId(null); }} className="flex items-center cursor-pointer gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.5vw] text-left">
                         <Copy size="0.9vw" /> Duplicate
                     </button>
-                    <button onClick={(e) => handleRenameStart(e, page)} className="flex items-center gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.5vw] text-left">
+                    <button onClick={(e) => handleRenameStart(e, page)} className="flex items-center cursor-pointer gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.5vw] text-left">
                         <Edit2 size="0.9vw" /> Rename
                     </button>
-                    <button onClick={() => { switchToPage(idx); onOpenTemplateModal(); setActiveMenuPageId(null); }} className="flex items-center gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.5vw] text-left">
+                    <button onClick={() => { switchToPage(idx); onOpenTemplateModal(); setActiveMenuPageId(null); }} className="flex items-center cursor-pointer gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.5vw] text-left">
                         <Layout size="0.9vw" /> Template
                     </button>
 
@@ -312,16 +312,16 @@ const LeftSidebar = ({
                          Page Order <div className="h-px bg-gray-100 flex-1"></div>
                     </div>
 
-                    <button onClick={() => { movePageUp(idx); setActiveMenuPageId(null); }} className="flex items-center gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.5vw] text-left">
+                    <button onClick={() => { movePageUp(idx); setActiveMenuPageId(null); }} className="flex items-center cursor-pointer gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.5vw] text-left">
                         <ArrowUp size="0.9vw" /> Move Up
                     </button>
-                    <button onClick={() => { movePageDown(idx); setActiveMenuPageId(null); }} className="flex items-center gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.5vw] text-left">
+                    <button onClick={() => { movePageDown(idx); setActiveMenuPageId(null); }} className="flex items-center cursor-pointer gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.5vw] text-left">
                          <ArrowDown size="0.9vw" /> Move Down
                     </button>
-                    <button onClick={() => { movePageToFirst(idx); setActiveMenuPageId(null); }} className="flex items-center gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.5vw] text-left">
+                    <button onClick={() => { movePageToFirst(idx); setActiveMenuPageId(null); }} className="flex items-center cursor-pointer gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.5vw] text-left">
                         <ArrowUpToLine size="0.9vw" /> Move to First
                     </button>
-                    <button onClick={() => { movePageToLast(idx); setActiveMenuPageId(null); }} className="flex items-center gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.5vw] text-left">
+                    <button onClick={() => { movePageToLast(idx); setActiveMenuPageId(null); }} className="flex items-center cursor-pointer gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.5vw] text-left">
                         <ArrowDownToLine size="0.9vw" /> Move to Last
                     </button>
 
@@ -329,10 +329,10 @@ const LeftSidebar = ({
                     <div className="h-px bg-gray-100 my-[0.25vw]"></div>
 
                     {/* Actions */}
-                    <button onClick={() => { clearPage(idx); setActiveMenuPageId(null); }} className="flex items-center gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.5vw] text-left">
+                    <button onClick={() => { clearPage(idx); setActiveMenuPageId(null); }} className="flex items-center cursor-pointer gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-gray-700 hover:bg-gray-50 rounded-[0.5vw] text-left">
                         <Ban size="0.9vw" /> Clear
                     </button>
-                    <button onClick={() => { deletePage(idx); setActiveMenuPageId(null); }} className="flex items-center gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-red-500 hover:bg-red-50 rounded-[0.5vw] text-left">
+                    <button onClick={() => { deletePage(idx); setActiveMenuPageId(null); }} className="flex items-center cursor-pointer gap-[0.6vw] px-[0.8vw] py-[0.5vw] text-[0.75vw] font-medium text-red-500 hover:bg-red-50 rounded-[0.5vw] text-left">
                         <Trash2 size="0.9vw" /> Delete
                     </button>
                 </div>,
@@ -346,7 +346,7 @@ const LeftSidebar = ({
       <div className="p-[1vw] border-t border-gray-100 bg-white">
         <button 
           onClick={() => addNewPage()}
-          className="w-full bg-black hover:bg-gray-800 text-white py-[0.8vw] rounded-[0.6vw] flex items-center justify-center gap-[0.5vw] text-[0.8vw] font-medium transition-colors"
+          className="w-full bg-black cursor-pointer hover:bg-gray-800 text-white py-[0.8vw] rounded-[0.6vw] flex items-center justify-center gap-[0.5vw] text-[0.8vw] font-medium transition-colors"
         >
           <Plus size="1.1vw" />
           Add Page

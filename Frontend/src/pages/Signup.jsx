@@ -225,7 +225,7 @@ export default function Signup() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-[0.875vw] px-[1vw] rounded-full bg-[#4c5add] hover:bg-[#3f4bc0] text-white font-semibold text-[1.125vw] shadow-lg shadow-indigo-200 transition-all transform hover:scale-[1.02] focus:outline-none text-center block disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full py-[0.875vw] px-[1vw] cursor-pointer rounded-full bg-[#4c5add] hover:bg-[#3f4bc0] text-white font-semibold text-[1.125vw] shadow-lg shadow-indigo-200 transition-all transform hover:scale-[1.02] focus:outline-none text-center block disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center gap-[0.5vw]">
@@ -258,7 +258,7 @@ export default function Signup() {
               {/* Google Login */}
               <button 
                 type="button"
-                className="w-full flex items-center justify-center px-[1vw] py-[0.875vw] rounded-full bg-white text-gray-900 font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 transition-all shadow-lg shadow-gray-200 border border-gray-100 text-[1vw]"
+                className="w-full flex cursor-pointer items-center justify-center px-[1vw] py-[0.875vw] rounded-full bg-white text-gray-900 font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 transition-all shadow-lg shadow-gray-200 border border-gray-100 text-[1vw]"
               >
                  <svg className="w-[1.25vw] h-[1.25vw] mr-[0.75vw]" viewBox="0 0 24 24">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>

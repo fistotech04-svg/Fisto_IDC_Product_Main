@@ -106,7 +106,7 @@ const RightSidebar = ({
 
             <button
                 onClick={openPreview}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-[0.4vw] flex items-center gap-[0.4vw] px-[0.8vw] py-[0.4vw] text-[0.8vw] font-medium transition-colors shadow-sm"
+                className="bg-indigo-600 cursor-pointer hover:bg-indigo-700 text-white rounded-[0.4vw] flex items-center gap-[0.4vw] px-[0.8vw] py-[0.4vw] text-[0.8vw] font-medium transition-colors shadow-sm"
             >
                 <Eye size="1vw" /> Preview
             </button>

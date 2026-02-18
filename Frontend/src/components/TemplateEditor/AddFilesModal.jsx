@@ -34,15 +34,11 @@ const AddFilesModal = ({ isOpen, onClose, onUpload, isLoading }) => {
 
     return (
         <div
-            className="fixed inset-0 z-[300] flex items-center justify-center bg-black/40 backdrop-blur-[2px] animate-in fade-in duration-200"
+            className="fixed inset-0 z-[300] flex items-center justify-center bg-black/40 animate-in fade-in duration-200"
             onClick={onClose}
         >
             {isLoading ? (
-                <div className="bg-white rounded-[1.5vw] p-[3vw] shadow-2xl flex flex-col items-center justify-center min-w-[20vw] min-h-[20vw] animate-in zoom-in-95 duration-200">
-                    <div className="w-[4vw] h-[4vw] border-[0.3vw] border-[#6C63FF] border-t-transparent rounded-full animate-spin mb-[1.5vw]"></div>
-                    <p className="text-[#1e234a] font-bold text-[1.2vw] mb-[0.5vw]">Processing Files...</p>
-                    <p className="text-gray-500 text-[0.8vw] font-medium">Please wait while we prepare your pages.</p>
-                </div>
+                <></>
             ) : (
                 <div
                     className="bg-white rounded-[1.5vw] w-full max-w-[25vw] p-[1.5vw] shadow-2xl relative animate-in zoom-in-95 duration-200"
@@ -57,7 +53,7 @@ const AddFilesModal = ({ isOpen, onClose, onUpload, isLoading }) => {
                         {/* Close Button Styled like screenshot */}
                         <button
                             onClick={onClose}
-                            className="ml-[0.8vw] p-[0.3vw] rounded-full border border-red-200 bg-white hover:bg-red-50 transition-colors group"
+                            className="ml-[0.8vw] p-[0.3vw] rounded-full border border-red-200 cursor-pointer bg-white hover:bg-red-50 transition-colors group"
                         >
                             <X size="1.2vw" className="text-red-500 group-hover:scale-110 transition-transform" />
                         </button>

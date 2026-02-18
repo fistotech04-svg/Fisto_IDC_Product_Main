@@ -678,7 +678,7 @@ export default function MyFlipbooks() {
         {/* Create Button */}
         <button 
             onClick={() => setIsCreateModalOpen(true)}
-            className="w-full bg-black text-white py-[0.75vw] px-[1vw] rounded-[0.5vw] flex items-center justify-center gap-[0.5vw] font-bold mb-[2vw] hover:bg-gray-800 transition-colors shadow-lg text-[0.9vw]"
+            className="w-full bg-black text-white cursor-pointer py-[0.75vw] px-[1vw] rounded-[0.5vw] flex items-center justify-center gap-[0.5vw] font-semibold mb-[2vw] hover:bg-gray-800 transition-colors shadow-lg text-[0.9vw]"
         >
           <BookOpen size="1.1vw" />
           Create Flipbook
@@ -695,7 +695,7 @@ export default function MyFlipbooks() {
             <div className="flex justify-end mb-[1vw]">
                 <button 
                   onClick={handleAddFolderClick}
-                  className="flex items-center gap-[0.375vw] px-[0.75vw] py-[0.375vw] rounded-[0.5vw] border border-gray-200 shadow-sm text-gray-500 font-medium text-[0.75vw] bg-white hover:bg-gray-50 transition-colors"
+                  className="flex items-center cursor-pointer gap-[0.375vw] px-[0.75vw] py-[0.375vw] rounded-[0.5vw] border border-gray-200 shadow-sm text-gray-500 font-medium text-[0.75vw] bg-white hover:bg-gray-50 transition-colors"
                 >
                     <Plus size="0.9vw" /> Folder
                 </button>
