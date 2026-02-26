@@ -178,7 +178,6 @@ export const StepModel = React.forwardRef(({ url, ...props }, ref) => {
 });
 
 // Helper component to choose the right model component
-// Helper component to choose the right model component
 const RenderModel = React.forwardRef(({ type, ...props }, ref) => {
     switch(type) {
         case 'obj': return <OBJModel ref={ref} {...props} />;

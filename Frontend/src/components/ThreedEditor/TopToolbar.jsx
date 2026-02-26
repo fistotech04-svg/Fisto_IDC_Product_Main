@@ -10,7 +10,10 @@ const TopToolbar = ({
     targetPosition, 
     materialList, 
     selectedMaterial, 
+    hiddenMaterials,
     onSelectMaterial, 
+    onToggleVisibility,
+    onDeleteMaterial,
     modelName, 
     onRename,
     onUndo,
@@ -40,42 +43,45 @@ const TopToolbar = ({
     };
 
     return (
-        <div className="absolute inset-x-0 left-5 z-30 pointer-events-none">
+        <div className="absolute inset-x-0 left-[1.04vw] z-30 pointer-events-none">
             {/* Left Section: Materials + Undo/Redo */}
-            <div className="absolute top-5 left-0 flex items-start gap-3 pointer-events-auto transition-none">
+            <div className="absolute top-[1.04vw] left-0 flex items-start gap-[0.62vw] pointer-events-auto transition-none">
                 <MaterialList 
                     isCollapsed={isSidebarCollapsed} 
                     setIsCollapsed={setIsSidebarCollapsed} 
                     isTextureOpen={isTextureOpen}
                     materials={materialList}
                     selectedMaterial={selectedMaterial}
+                    hiddenMaterials={hiddenMaterials}
                     onSelect={onSelectMaterial}
+                    onToggleVisibility={onToggleVisibility}
+                    onDeleteMaterial={onDeleteMaterial}
                     modelName={modelName}
                 />
                 
-                <div className="flex items-center bg-white h-[42px] px-1.5 rounded-[12px] border border-gray-200 gap-1 shadow-sm">
+                <div className="flex items-center bg-white h-[2.5vw] px-[0.4vw] rounded-[0.62vw] border border-gray-200 gap-[0.21vw] shadow-sm">
                     <button 
                         onClick={onUndo} 
                         disabled={!canUndo}
-                        className={`w-9 h-8 flex items-center justify-center rounded-lg hover:bg-gray-50 transition-all text-gray-700 ${!canUndo ? "opacity-50 cursor-not-allowed" : ""}`}
+                        className={`w-[2.2vw] h-[2vw] flex items-center justify-center rounded-[0.42vw] hover:bg-gray-50 transition-all text-gray-700 ${!canUndo ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
-                        <Icon icon="lucide:undo-dot" width={18} />
+                        <Icon icon="lucide:undo-dot" width="1.1vw" height="1.1vw" />
                     </button>
                     <button 
                         onClick={onRedo} 
                         disabled={!canRedo}
-                        className={`w-9 h-8 flex items-center justify-center rounded-lg hover:bg-gray-50 transition-all text-gray-700 ${!canRedo ? "opacity-50 cursor-not-allowed" : ""}`}
+                        className={`w-[2.2vw] h-[2vw] flex items-center justify-center rounded-[0.42vw] hover:bg-gray-50 transition-all text-gray-700 ${!canRedo ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
-                        <Icon icon="lucide:redo-dot" width={18} />
+                        <Icon icon="lucide:redo-dot" width="1.1vw" height="1.1vw" />
                     </button>
                 </div>
             </div>
 
             {/* Center: Model Name Section (Individual Item) */}
-            <div className="absolute top-5 left-1/2 -translate-x-1/2 pointer-events-auto">
+            <div className="absolute top-[1.04vw] left-1/2 -translate-x-1/2 pointer-events-auto">
                 <div 
                     onClick={!isEditingName ? startEditing : undefined}
-                    className={`flex items-center bg-white h-[42px] px-5 gap-2.5 rounded-[12px] ${!isEditingName ? "cursor-pointer hover:bg-gray-50 group border border-transparent hover:border-gray-200" : "border border-blue-500 ring-2 ring-blue-100"} transition-all`}
+                    className={`flex items-center bg-white h-[2.5vw] px-[1.2vw] gap-[0.6vw] rounded-[0.62vw] ${!isEditingName ? "cursor-pointer hover:bg-gray-50 group border border-transparent hover:border-gray-200" : "border border-blue-500 ring-[0.1vw] ring-blue-100"} transition-all`}
                 >
                     {isEditingName ? (
                         <input 
@@ -85,35 +91,38 @@ const TopToolbar = ({
                             onChange={(e) => setTempName(e.target.value)}
                             onBlur={stopEditing}
                             onKeyDown={handleKeyDown}
-                            className="text-[14px] font-semibold text-gray-800 tracking-tight outline-none bg-transparent w-[200px] text-center"
+                            className="text-[0.85vw] font-semibold text-gray-800 tracking-tight outline-none bg-transparent w-[10.42vw] text-center"
                         />
                     ) : (
                         <>
-                            <span className="text-[14px] font-semibold text-gray-600 tracking-tight">{modelName || "Untitled Model"}</span>
-                            <Icon icon="heroicons:pencil-square" width={16} className="text-gray-400 group-hover:text-gray-900 transition-colors" />
+                            <span className="text-[0.85vw] font-semibold text-gray-600 tracking-tight">{modelName || "Untitled Model"}</span>
+                            <Icon icon="heroicons:pencil-square" width="0.95vw" height="0.95vw" className="text-gray-400 group-hover:text-gray-900 transition-colors" />
                         </>
                     )}
                 </div>
             </div>
 
             {/* Right: Coordinates & Reset Section (Individual Box) */}
-            <div className="absolute top-5 right-5 flex items-center gap-3 pointer-events-auto">
-                <div className="bg-white h-[42px] px-5 rounded-[12px] border border-gray-200 flex items-center gap-5 shadow-sm">
-                    <div className="text-[12px] font-semibold flex items-center gap-2">
-                        <span className="text-gray-400 uppercase tracking-widest text-[10px]">X</span>
-                        <span className="text-gray-700 min-w-[20px] text-right">{targetPosition?.x ?? 0}</span>
+            <div className="absolute top-[1.04vw] right-[1.04vw] flex items-center gap-[0.62vw] pointer-events-auto">
+                <div className="bg-white h-[2.5vw] px-[1.2vw] rounded-[0.62vw] border border-gray-200 flex items-center gap-[1.2vw] shadow-sm">
+                    <div className="text-[0.7vw] font-semibold flex items-baseline gap-[0.42vw]">
+                        <span className="text-gray-400 uppercase tracking-widest text-[0.55vw]">X</span>
+                        <span className="text-gray-700 min-w-[1.2vw] text-left">{targetPosition?.x ?? 0}</span>
                     </div>
-                    <div className="text-[12px] font-semibold flex items-center gap-2">
-                        <span className="text-gray-400 uppercase tracking-widest text-[10px]">Y</span>
-                        <span className="text-gray-700 min-w-[20px] text-right">{targetPosition?.y ?? 0}</span>
+                    <div className="text-[0.7vw] font-semibold flex items-baseline gap-[0.42vw]">
+                        <span className="text-gray-400 uppercase tracking-widest text-[0.55vw]">Y</span>
+                        <span className="text-gray-700 min-w-[1.2vw] text-left">{targetPosition?.y ?? 0}</span>
                     </div>
-                    <div className="text-[12px] font-semibold flex items-center gap-2 border-r border-gray-100 pr-5 h-5">
-                        <span className="text-gray-400 uppercase tracking-widest text-[10px]">Z</span>
-                        <span className="text-gray-700 min-w-[20px] text-right">{targetPosition?.z ?? 0}</span>
+                    <div className="text-[0.7vw] font-semibold flex items-baseline gap-[0.42vw]">
+                        <span className="text-gray-400 uppercase tracking-widest text-[0.55vw]">Z</span>
+                        <span className="text-gray-700 min-w-[1.2vw] text-left">{targetPosition?.z ?? 0}</span>
                     </div>
+                    
+                    <div className="h-[1.2vw] w-px bg-gray-200 ml-[-0.2vw]"></div>
+
                     <button 
                         onClick={onReset}
-                        className="text-[13px] font-semibold text-blue-600 hover:text-blue-700 transition-all uppercase tracking-wide"
+                        className="text-[0.75vw] font-semibold text-blue-600 hover:text-blue-700 transition-all uppercase tracking-wide flex items-center h-full pt-[0.1vw]"
                     >
                         Reset
                     </button>

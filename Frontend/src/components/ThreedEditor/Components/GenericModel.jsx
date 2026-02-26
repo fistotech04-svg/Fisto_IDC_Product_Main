@@ -5,7 +5,7 @@ import { GLTFExporter } from "three-stdlib";
 import { OBJExporter } from "three-stdlib";
 import { STLExporter } from "three-stdlib";
 
-const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelStats, setMaterialList, selectedMaterial, onSelectMaterial, modelName, transformMode, materialSettings, onTransformChange, onTransformEnd, transformValues, selectedTexture, onTextureApplied, onTextureIdentified, onUpdateMaterialSetting, resetKey, sceneResetTrigger, uvUnwrapTrigger }, ref) => {
+const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelStats, setMaterialList, selectedMaterial, onSelectMaterial, modelName, transformMode, materialSettings, hiddenMaterials, onTransformChange, onTransformEnd, transformValues, selectedTexture, onTextureApplied, onTextureIdentified, onUpdateMaterialSetting, resetKey, sceneResetTrigger, uvUnwrapTrigger }, ref) => {
   const [position, setPosition] = useState([0, 0, 0]);
   const [scale, setScale] = useState(1);
   const groupRef = React.useRef(null);
@@ -63,6 +63,27 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
               const result = exporter.parse(scene);
               saveString(result, `${name}.stl`);
           }
+      },
+      deleteMaterial: (matName) => {
+          if (!scene) return;
+          const meshesToRemove = [];
+          scene.traverse((child) => {
+              if (child.isMesh && child.material) {
+                  let shouldDelete = false;
+                  if (Array.isArray(child.material)) {
+                      shouldDelete = child.material.some(m => m.name === matName);
+                  } else {
+                      shouldDelete = child.material.name === matName;
+                  }
+                  if (shouldDelete) meshesToRemove.push(child);
+              }
+          });
+          meshesToRemove.forEach(mesh => {
+              if (mesh.parent) {
+                  mesh.parent.remove(mesh);
+                  if (mesh.geometry) mesh.geometry.dispose();
+              }
+          });
       }
   }));
     
@@ -95,27 +116,25 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
      // To support "Specific Material" vs "Full Model", we check `selectedMaterial`.
      // If null, it applies to all? Yes, lines 40-45 handle this.
      
-     // Check if we are in "Full Model" mode
-     // Either no selection, or the selection matches the Model Name (from Material List header)
-     const targetMatName = selectedMaterial ? selectedMaterial.name : null;
-     const isFullModel = !targetMatName || (modelName && targetMatName === modelName);
+     const selMat = selectedMaterial; 
+     const targetMatName = selMat ? selMat.name : null;
+     const targetParentGroup = selMat ? selMat.parentGroup : null;
+
+     if (targetParentGroup && targetParentGroup !== modelName) return;
+     if (selMat && selMat.isGroup && targetMatName !== modelName && targetMatName !== "Scene") return;
+
+     const isFullModel = !targetMatName || (modelName && targetMatName === modelName) || targetMatName === "Scene";
 
      let appliedCount = 0;
      scene.traverse((child) => {
           if (child.isMesh && child.material) {
               const apply = (mat) => {
-                   // Ensure we only modify Standard Materials, Physical, or Phong
                    if (!mat.isMeshStandardMaterial && !mat.isMeshPhysicalMaterial && !mat.isMeshPhongMaterial) return;
                    
                    let isMatch = false;
                    if (!isFullModel) {
                        isMatch = mat.name === targetMatName;
-                       // Group handling: if selectedMaterial is a group name
-                       if (selectedMaterial && selectedMaterial.isGroup) {
-                            isMatch = selectedMaterial.materials.includes(mat.name);
-                       }
                    } else {
-                       // Full Model: Apply to all
                        isMatch = true; 
                    }
                    
@@ -173,15 +192,22 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
   useEffect(() => {
       if (!scene || !onTextureIdentified) return;
 
-      if (!selectedMaterial || (modelName && selectedMaterial.name === modelName)) {
-          // Full Model or No Selection -> Clear Highlight
+      if (!selectedMaterial || (modelName && selectedMaterial.name === modelName) || selectedMaterial.name === "Scene") {
+          onTextureIdentified(null);
+          return;
+      }
+      
+      const targetParentGroup = selectedMaterial.parentGroup;
+      if (targetParentGroup && targetParentGroup !== modelName) {
+          onTextureIdentified(null);
+          return;
+      }
+      if (selectedMaterial.isGroup && selectedMaterial.name !== modelName) {
           onTextureIdentified(null);
           return;
       }
 
       const targetMatName = selectedMaterial.name;
-      const isGroup = selectedMaterial.isGroup;
-      const groupMats = selectedMaterial.materials || []; // Array of names
       
       let foundMat = null;
 
@@ -193,11 +219,7 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
                   if (foundMat) return;
                   
                   let match = false;
-                  if (isGroup) {
-                      match = groupMats.includes(m.name);
-                  } else {
-                      match = m.name === targetMatName;
-                  }
+                  match = m.name === targetMatName;
                   
                   if (match) {
                       foundMat = m;
@@ -372,15 +394,15 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
          setMaterialList(structuredList);
     }
 
-    setModelStats(prev => ({
-        ...prev,
+    setModelStats({
         vertexCount: vertCount.toLocaleString(),
         polygonCount: Math.round(polyCount).toLocaleString(),
         materialCount: processedMaterials.size,
         dimensions: `${Math.round(size.x * 100) / 100} X ${Math.round(size.y * 100) / 100} X ${Math.round(size.z * 100) / 100} unit`
-    }));
+    });
 
-  }, [scene, setModelStats, setMaterialList]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scene]);
 
   // 2. Wireframe Update Effect
   useLayoutEffect(() => {
@@ -403,25 +425,36 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
     const timeouts = [];
 
     const targetName = selectedMaterial ? selectedMaterial.name : null;
+    const targetParentGroup = selectedMaterial ? selectedMaterial.parentGroup : null;
     const isGroup = selectedMaterial ? selectedMaterial.isGroup : false;
-    const groupMaterials = (isGroup && selectedMaterial.materials) ? selectedMaterial.materials : [];
+    
+    const isThisModelGroup = targetName === modelName;
+    const isScene = targetName === "Scene";
 
-    const isFullModelSelect = (targetName && modelName && targetName === modelName);
+    let modelIsActive = true;
+    if (targetParentGroup && targetParentGroup !== modelName) modelIsActive = false;
+    if (isGroup && !isThisModelGroup && !isScene) modelIsActive = false;
+    
+    const isFullModelSelect = isScene || isThisModelGroup;
 
     const FLASH_COLOR = new THREE.Color("#ff0000"); // Red
     const FLASH_INTENSITY = 1.5;
     const HIGHLIGHT_INTENSITY_LOW = 0.5;
 
+    const groupMaterials = (isGroup && selectedMaterial.materials) ? selectedMaterial.materials : [];
+
     const processHighlight = (m) => {
         if (!m.emissive) return;
 
-        let isTarget = isFullModelSelect;
-        if (!isTarget) {
-            if (isGroup) {
-                isTarget = groupMaterials.includes(m.name);
-            } else {
-                isTarget = m.name === targetName;
-            }
+        let isTarget = false;
+        if (modelIsActive) {
+             if (isFullModelSelect) {
+                  isTarget = true;
+             } else if (isGroup) {
+                  isTarget = groupMaterials.includes(m.name);
+             } else {
+                  isTarget = m.name === targetName;
+             }
         }
 
         if (isTarget) {
@@ -495,8 +528,14 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
       if (!scene) return;
 
       const timerId = setTimeout(() => {
-          const targetMatName = selectedMaterial ? selectedMaterial.name : modelName;
-          const isFullModel = !selectedMaterial || (modelName && selectedMaterial.name === modelName);
+          const selMat = selectedMaterial;
+          const targetMatName = selMat ? selMat.name : modelName;
+          const targetParentGroup = selMat ? selMat.parentGroup : null;
+          
+          if (targetParentGroup && targetParentGroup !== modelName) return;
+          if (selMat && selMat.isGroup && targetMatName !== modelName && targetMatName !== "Scene") return;
+
+          const isFullModel = !selMat || targetMatName === modelName || targetMatName === "Scene";
     
           // Helper via ref
           const safeUpdate = (key, val) => {
@@ -638,9 +677,13 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
     const color = materialSettings.color;
 
     const selMat = selectedMaterial; 
-    
     const targetMatName = selMat ? selMat.name : null;
-    const isFullModel = !targetMatName || (modelName && targetMatName === modelName);
+    const targetParentGroup = selMat ? selMat.parentGroup : null;
+
+    if (targetParentGroup && targetParentGroup !== modelName) return;
+    if (selMat && selMat.isGroup && targetMatName !== modelName && targetMatName !== "Scene") return;
+
+    const isFullModel = !targetMatName || targetMatName === modelName || targetMatName === "Scene";
 
     scene.traverse((child) => {
         if (child.isMesh && child.material) {
@@ -650,9 +693,6 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
                 let isMatch = false;
                 if (!isFullModel) {
                      isMatch = m.name === targetMatName;
-                     if (selMat && selMat.isGroup) {
-                          isMatch = selMat.materials.includes(m.name);
-                     }
                 } else {
                      isMatch = true; 
                 }
@@ -707,6 +747,25 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
     });
   }, [scene, materialSettings, modelName, selectedMaterial, resetKey]);
 
+  // C. Handle overall visibility
+  useEffect(() => {
+    if (!scene) return;
+    
+    scene.traverse((child) => {
+        if (child.isMesh && child.material) {
+            let isHidden = false;
+            if (hiddenMaterials) {
+                if (Array.isArray(child.material)) {
+                    isHidden = child.material.some(m => hiddenMaterials.has(m.name));
+                } else {
+                    isHidden = hiddenMaterials.has(child.material.name);
+                }
+            }
+            child.visible = !isHidden;
+        }
+    });
+  }, [scene, hiddenMaterials]);
+
   // Sync transformValues (from UI) to Object
   useEffect(() => {
       if (!transformTarget || !transformValues) return;
@@ -741,9 +800,25 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
 
     const targetName = selectedMaterial ? selectedMaterial.name : null;
     const targetUuid = selectedMaterial ? selectedMaterial.uuid : null;
+    const targetParentGroup = selectedMaterial ? selectedMaterial.parentGroup : null;
+    const isGroup = selectedMaterial ? selectedMaterial.isGroup : false;
     
-    // Default to Full Model (modelGroup) if nothing selected or Model Name selected
-    if (!targetName || (modelName && targetName === modelName)) {
+    if (targetParentGroup && targetParentGroup !== modelName) {
+        setTransformTarget(null);
+        return;
+    }
+    if (isGroup && targetName !== modelName && targetName !== "Scene") {
+        setTransformTarget(null);
+        return;
+    }
+
+    if (!targetName || targetName === "Scene") {
+        setTransformTarget(null);
+        return;
+    }
+
+    // Default to Full Model (modelGroup) if Model Name selected
+    if (targetName === modelName) {
         if (modelGroup) {
             setTransformTarget(modelGroup);
             
@@ -811,31 +886,7 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
         });
     }
 
-    if (foundMesh) {
-         if (!foundMesh.userData.originCentered) {
-             foundMesh.geometry = foundMesh.geometry.clone();
-             
-             foundMesh.geometry.computeBoundingBox();
-             const center = new THREE.Vector3();
-             foundMesh.geometry.boundingBox.getCenter(center);
-             
-             if (center.lengthSq() > 0.000001) {
-                 const worldCenter = foundMesh.localToWorld(center.clone());
-                 
-                 foundMesh.geometry.translate(-center.x, -center.y, -center.z);
-                 
-                 if (foundMesh.parent) {
-                     foundMesh.position.copy(foundMesh.parent.worldToLocal(worldCenter));
-                 } else {
-                     foundMesh.position.copy(worldCenter);
-                 }
-                 
-                 foundMesh.updateMatrixWorld();
-             }
-             
-             foundMesh.userData.originCentered = true;
-         }
-    }
+    // We use the mesh as-is for the target without shifting its geometry to avoid jumping issues.
 
     setTransformTarget(foundMesh || modelGroup);
     
@@ -1023,7 +1074,7 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
                             }
                         }
                         if (mat && mat.name) {
-                            onSelectMaterial({ name: mat.name, uuid: e.object.uuid });
+                            onSelectMaterial({ name: mat.name, uuid: e.object.uuid, parentGroup: modelName });
                         }
                     }
                 }}

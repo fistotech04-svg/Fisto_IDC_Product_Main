@@ -1,4 +1,4 @@
-import React, { useState, Suspense, useEffect, useCallback, useRef } from "react";
+import React, { useState, Suspense, useEffect, useCallback, useRef, useMemo } from "react";
 import * as THREE from "three";
 import { Icon } from "@iconify/react";
 import { Canvas, useFrame } from "@react-three/fiber";
@@ -13,6 +13,7 @@ import { GlobalLoader } from "./Components/GlobalLoader";
 import RenderModel from "./Components/ModelLoaders";
 import useModalHistory from "./hooks/useModalHistory";
 import ExportModal from "./Components/ExportModal";
+import AddModelModal from "./Components/AddModelModal";
 
 
 import { useOutletContext } from "react-router-dom";
@@ -20,11 +21,20 @@ import { useOutletContext } from "react-router-dom";
 export default function ThreedEditor() {
   const { threedState, setThreedState } = useOutletContext();
 
-  const [modelUrl, setModelUrl] = useState(threedState.modelUrl);
-  const [modelFile, setModelFile] = useState(threedState.modelFile); // Persistence: Store the file object
-  const [modelType, setModelType] = useState(threedState.modelType);
+  const [models, setModels] = useState(threedState.models || (threedState.modelUrl ? [{
+      id: "default",
+      url: threedState.modelUrl,
+      file: threedState.modelFile,
+      type: threedState.modelType,
+      name: threedState.modelName || "Model"
+  }] : []));
+
+  // Keeping original state vars for overall project info (like total filesize) or backward compatibility
+  const [modelUrl, setModelUrl] = useState(models.length > 0 ? models[0].url : null);
+  const [modelFile, setModelFile] = useState(models.length > 0 ? models[0].file : null); 
+  const [modelType, setModelType] = useState(models.length > 0 ? models[0].type : "glb");
   const [autoRotate, setAutoRotate] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(!threedState.modelUrl); // If model exists, don't collapse
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(models.length === 0); // If model exists, don't collapse
   const [isTextureOpen, setIsTextureOpen] = useState(false);
   const [manualLoading, setManualLoading] = useState(false);
 
@@ -39,7 +49,8 @@ export default function ThreedEditor() {
   const isGlobalLoading = manualLoading || active;
   
   // Model Statistics State
-  const [modelStats, setModelStats] = useState(threedState.modelStats);
+  const [modelStatsMap, setModelStatsMap] = useState({});
+  const [modelStats, setModelStats] = useState(threedState.modelStats || { fileSize: "0 MB" });
   
   const controlsRef = React.useRef(null);
   const modelRef = React.useRef(null);
@@ -47,6 +58,7 @@ export default function ThreedEditor() {
 
   // Target Position State
   const [targetPosition, setTargetPosition] = useState({ x: 0, y: 0, z: 0 });
+  const [modelMaterialLists, setModelMaterialLists] = useState({});
   const [materialList, setMaterialList] = useState(threedState.materialList || []);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [selectedTexture, setSelectedTexture] = useState(null);
@@ -58,6 +70,7 @@ export default function ThreedEditor() {
 
   const [showWarning, setShowWarning] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showAddModelModal, setShowAddModelModal] = useState(false);
 
   // Right Panel & Sidebar State
   const [activeRightTab, setActiveRightTab] = useState("pre"); // "pre" | "custom"
@@ -95,20 +108,121 @@ export default function ThreedEditor() {
       stateRef.current = { transformValues, materialSettings, modelName };
   }, [transformValues, materialSettings, modelName]);
 
+  const [hiddenMaterials, setHiddenMaterials] = useState(new Set(threedState.hiddenMaterials || []));
+  const [deletedMaterials, setDeletedMaterials] = useState(new Set(threedState.deletedMaterials || []));
+
   // Sync State changes to Context (Debounced or on change)
   useEffect(() => {
       setThreedState(prev => ({
           ...prev,
-          modelUrl,
-          modelFile, // Sync file to context
+          models, // Save models array
+          modelUrl, // Keep for backward compat
+          modelFile, 
           modelType,
           modelStats,
           transformValues,
           materialSettings,
-          modelName,
-          materialList
+          materialList,
+          hiddenMaterials,
+          deletedMaterials
       }));
-  }, [modelUrl, modelFile, modelType, modelStats, transformValues, materialSettings, modelName, materialList, setThreedState]);
+  }, [models, modelUrl, modelFile, modelType, modelStats, transformValues, materialSettings, modelName, materialList, hiddenMaterials, deletedMaterials, setThreedState]);
+
+  const handleAddModel = (file) => {
+      if (!file) return;
+      
+      const url = URL.createObjectURL(file);
+      const ext = file.name.split('.').pop().toLowerCase();
+      
+      const newModel = {
+          id: Date.now().toString(),
+          url: url,
+          file: file,
+          type: ext === 'step' || ext === 'stp' ? 'step' : ext,
+          name: file.name.replace(/\.[^/.]+$/, "")
+      };
+      
+      setModels(prev => [...prev, newModel]);
+      setManualLoading(true);
+      
+      // Do NOT clear selectedMaterial or hiddenMaterials, just add to the list
+      // Ensure sidebar is open to show the new material list
+      setIsSidebarCollapsed(false);
+  };
+
+  const handleSetModelStats = useCallback((modelId, stats) => {
+      setModelStatsMap(prev => ({ ...prev, [modelId]: stats }));
+  }, []);
+
+  const handleSetMaterialList = useCallback((modelId, list) => {
+      setModelMaterialLists(prev => ({ ...prev, [modelId]: list }));
+  }, []);
+
+  const combinedStats = useMemo(() => {
+      let vCount = 0; let pCount = 0; let mCount = 0;
+      Object.keys(modelStatsMap).forEach(key => {
+          const s = modelStatsMap[key];
+          if (s.vertexCount) vCount += parseInt(s.vertexCount.toString().replace(/,/g, '')) || 0;
+          if (s.polygonCount) pCount += parseInt(s.polygonCount.toString().replace(/,/g, '')) || 0;
+          if (s.materialCount) mCount += parseInt(s.materialCount) || 0;
+      });
+      return {
+          vertexCount: vCount.toLocaleString(),
+          polygonCount: pCount.toLocaleString(),
+          materialCount: mCount.toString(),
+          fileSize: modelStats?.fileSize || "0 MB",
+          dimensions: models.length > 1 ? "Multiple Models" : (modelStatsMap[models[0]?.id]?.dimensions || "0 X 0 X 0 unit")
+      };
+  }, [modelStatsMap, modelStats?.fileSize, models]);
+
+  const activeMaterialList = useMemo(() => {
+      const result = [];
+      models.forEach(model => {
+          const rawList = modelMaterialLists[model.id] || [];
+          let flatMats = [];
+          rawList.forEach(item => {
+              if (item.group) flatMats.push(...item.materials);
+              else flatMats.push(item);
+          });
+          flatMats = flatMats.filter(m => !deletedMaterials.has(m));
+          
+          if (flatMats.length > 0) {
+              result.push({
+                  group: model.name,
+                  materials: flatMats
+              });
+          }
+      });
+      return result;
+  }, [models, modelMaterialLists, deletedMaterials]);
+
+  const handleToggleVisibility = useCallback((matName, isVisible) => {
+      setHiddenMaterials(prev => {
+          const next = new Set(prev);
+          if (isVisible) next.delete(matName);
+          else next.add(matName);
+          return next;
+      });
+  }, []);
+
+  // Auto-expand sidebar when a specific material is selected
+  useEffect(() => {
+    if (selectedMaterial && selectedMaterial.name !== (modelName || "Model")) {
+        setIsSidebarCollapsed(false);
+    }
+  }, [selectedMaterial, modelName, setIsSidebarCollapsed]);
+
+  const handleDeleteMaterial = useCallback((matName) => {
+      if (modelRef.current && modelRef.current.deleteMaterial) {
+          modelRef.current.deleteMaterial(matName);
+      }
+      // Also update the UI list to hide it/remove it
+      setDeletedMaterials(prev => {
+          const next = new Set(prev);
+          next.add(matName);
+          return next;
+      });
+  }, []);
 
   const handleUndo = () => {
       const prevState = undo();
@@ -169,8 +283,6 @@ export default function ThreedEditor() {
     if (!file) return;
 
     const name = file.name.toLowerCase();
-    setModelName(file.name.replace(/\.[^/.]+$/, "")); // Set model name without extension
-
     const validExtensions = ['.glb', '.gltf', '.obj', '.fbx', '.stl', '.step', '.stp'];
     
     if (!validExtensions.some(ext => name.endsWith(ext))) {
@@ -181,24 +293,36 @@ export default function ThreedEditor() {
     setManualLoading(true);
 
     const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
-    setModelStats(prev => ({
-        ...prev,
-        fileSize: `${sizeInMB} MB`
-    }));
+    setModelStats({ fileSize: `${sizeInMB} MB` });
 
-    if (modelUrl) {
-        URL.revokeObjectURL(modelUrl);
+    if (models.length > 0) {
+        models.forEach(m => URL.revokeObjectURL(m.url));
     }
 
     const url = URL.createObjectURL(file);
-    setModelUrl(url);
-    setModelFile(file); // Set file to state
+    const ext = name.split('.').pop().toLowerCase();
+    
+    const newModel = {
+        id: Date.now().toString(),
+        url,
+        file,
+        type: ext === 'step' || ext === 'stp' ? 'step' : ext,
+        name: file.name.replace(/\.[^/.]+$/, "")
+    };
 
-    if (name.endsWith('.obj')) setModelType('obj');
-    else if (name.endsWith('.fbx')) setModelType('fbx');
-    else if (name.endsWith('.stl')) setModelType('stl');
-    else if (name.endsWith('.step') || name.endsWith('.stp')) setModelType('step');
-    else setModelType('glb');
+    setModels([newModel]);
+    
+    // Kept for backward compat
+    setModelUrl(url);
+    setModelFile(file);
+    setModelType(newModel.type);
+    setModelName(newModel.name);
+    
+    setModelMaterialLists({});
+    setModelStatsMap({});
+    setSelectedMaterial(null);
+    setHiddenMaterials(new Set());
+    setDeletedMaterials(new Set());
     
     setIsSidebarCollapsed(false); 
   };
@@ -218,15 +342,18 @@ export default function ThreedEditor() {
   };
 
   const handleClearModel = () => {
-    // Revoke URL
-    if (modelUrl) {
-         URL.revokeObjectURL(modelUrl);
-    }
+    // Revoke URLs
+    models.forEach(m => {
+         if (m.url) URL.revokeObjectURL(m.url);
+    });
 
+    setModels([]);
     setModelUrl(null);
-    setModelFile(null); // Clear file to prevent restoration
+    setModelFile(null); 
     setModelType('glb');
     setMaterialList([]);
+    setModelMaterialLists({});
+    setModelStatsMap({});
     setSelectedMaterial(null);
     setModelName("");
     setSelectedTexture(null);
@@ -245,6 +372,8 @@ export default function ThreedEditor() {
         scale: { x: 1, y: 1, z: 1 }
     };
     setTransformValues(defaultTransform);
+    setHiddenMaterials(new Set());
+    setDeletedMaterials(new Set());
     
     // Reset History
     resetHistory({
@@ -422,32 +551,26 @@ export default function ThreedEditor() {
           />
       )}
 
-      {isSidebarCollapsed && modelUrl && (
-          <button
-            onClick={() => setIsSidebarCollapsed(false)}
-            className="absolute left-[1.5vw] top-[1.5vw] z-30 p-[0.5vw] bg-white rounded-[0.75vw] shadow-lg border border-gray-100 text-gray-600 hover:text-[#3b4190] hover:border-blue-100 transition-all"
-          >
-            <Icon icon="ph:list-bold" width="1.04vw" />
-          </button>
-      )}
-
       <div className="flex flex-1 overflow-hidden relative">
 
         {/* CENTER EDITOR AREA */}
         <div className="flex-1 relative flex flex-col h-full overflow-hidden">
 
           {/* SIDEBARS & FLOATING PANELS */}
-          {modelUrl && (
+          {models.length > 0 && (
             <TopToolbar 
               isSidebarCollapsed={isSidebarCollapsed} 
               setIsSidebarCollapsed={setIsSidebarCollapsed}
               isTextureOpen={isTextureOpen}
               onReset={handleResetView}
               targetPosition={targetPosition}
-              materialList={materialList}
+              materialList={activeMaterialList}
               selectedMaterial={selectedMaterial}
+              hiddenMaterials={hiddenMaterials}
               onSelectMaterial={(name) => handleSelectMaterial(name)}
-              modelName={modelName} // Pass filename
+              modelName={models.length === 1 ? models[0].name : "Scene"} // Pass filename or generic
+              onToggleVisibility={handleToggleVisibility}
+              onDeleteMaterial={handleDeleteMaterial}
               onRename={handleRename}
               onUndo={handleUndo}
               onRedo={handleRedo}
@@ -458,10 +581,11 @@ export default function ThreedEditor() {
 
 
           <EditorToolbar 
-            hasModel={!!modelUrl}
+            hasModel={models.length > 0}
             settings={settings}
             setSettings={setSettings}
             onClear={handleClearModel}
+            onAddClick={() => setShowAddModelModal(true)}
             transformMode={transformMode}
             setTransformMode={(mode) => {
                 setTransformMode(mode);
@@ -472,7 +596,7 @@ export default function ThreedEditor() {
             }}
           />
 
-          {modelUrl && (
+          {models.length > 0 && (
             <TextureGalleryBar
               isOpen={isTextureOpen}
               setIsOpen={setIsTextureOpen}
@@ -480,18 +604,18 @@ export default function ThreedEditor() {
             />
           )}
 
-          {modelUrl && (
+          {models.length > 0 && (
             <div 
-              className={`absolute left-[1.5vw] z-20 p-[0.25vw] transition-all duration-500 ease-in-out overflow-hidden w-[10.4vw] pointer-events-none select-none
+              className={`absolute left-[1vw] z-20 p-[0.25vw] transition-all duration-500 ease-in-out overflow-hidden w-[13.5vw] pointer-events-none select-none
                 ${isTextureOpen ? "bottom-[11.45vw]" : "bottom-[4.16vw]"}
               `}
             > 
-                <EditorInfoBox stats={modelStats} />
+                <EditorInfoBox stats={combinedStats} />
             </div>
           )}
 
 
-          {!modelUrl && (
+          {models.length === 0 && (
             <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none select-none">
               <div className="flex flex-col items-center gap-[0.75vw] opacity-50">
                 <Icon icon="ph:cube-focus-thin" width="4.16vw" className="text-gray-50" />
@@ -529,20 +653,22 @@ export default function ThreedEditor() {
               />
 
               <Suspense fallback={null}>
-                  {modelUrl && (
+                  {models.map((model, index) => (
                     <RenderModel 
-                        ref={modelRef}
-                        type={modelType}  
-                        url={modelUrl}
+                        key={model.id}
+                        ref={index === 0 ? modelRef : undefined} // Keep ref on first model for now
+                        type={model.type}  
+                        url={model.url}
                         wireframe={settings.wireframe}
-                        setModelStats={setModelStats}
-                        setMaterialList={setMaterialList}
+                        setModelStats={(stats) => handleSetModelStats(model.id, stats)}
+                        setMaterialList={(list) => handleSetMaterialList(model.id, list)}
                         selectedMaterial={selectedMaterial}
                         onSelectMaterial={handleSelectMaterial}
-                        modelName={modelName}
+                        modelName={model.name}
                         transformMode={transformMode}
                         transformValues={transformValues}
                         materialSettings={materialSettings}
+                        hiddenMaterials={new Set([...hiddenMaterials, ...deletedMaterials])}
                         onUpdateMaterialSetting={handleMaterialSync}
                         selectedTexture={selectedTexture}
                         resetKey={resetKey}
@@ -553,7 +679,7 @@ export default function ThreedEditor() {
                         onTransformEnd={handleTransformEnd}
                         onTransformChange={handleTransformChange}
                     />
-                  )}
+                  ))}
               </Suspense>
               
               {/* Blender-style Grid: Darker lines on dark background. 
@@ -624,9 +750,9 @@ export default function ThreedEditor() {
               />
 
               {/* GIZMO HELPER */}
-              {modelUrl && <AnimatedGizmo isTextureOpen={isTextureOpen} />}
+              {models.length > 0 && <AnimatedGizmo isTextureOpen={isTextureOpen} />}
               
-              {modelUrl && (
+              {models.length > 0 && (
                   <ContactShadows 
                       position={[0, -0.01, 0]} 
                       opacity={(materialSettings.shadow ?? 50) / 100} 
@@ -651,7 +777,7 @@ export default function ThreedEditor() {
         <div className="w-[22vw] h-full border-l border-gray-100 bg-white z-40 relative flex flex-col shadow-[-10px_0_30px_-15px_rgba(0,0,0,0.05)]">
           <RightPanel
             onFileProcess={processFile}
-            hasModel={!!modelUrl}
+            hasModel={models.length > 0}
             onExport={() => setShowExportModal(true)}
             autoRotate={autoRotate}
             setAutoRotate={setAutoRotate}
@@ -691,6 +817,11 @@ export default function ThreedEditor() {
         </div>
       </div>
 
+          <AddModelModal 
+            isOpen={showAddModelModal}
+            onClose={() => setShowAddModelModal(false)}
+            onAdd={handleAddModel}
+          />
     </div>
   );
 }

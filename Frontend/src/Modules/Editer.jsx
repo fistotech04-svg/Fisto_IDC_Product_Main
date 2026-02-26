@@ -181,9 +181,20 @@ const Editor = () => {
                       restoredUrl = URL.createObjectURL(savedState.modelFile);
                   }
                   
+                  let restoredModels = savedState.models;
+                  if (restoredModels && Array.isArray(restoredModels)) {
+                      restoredModels = restoredModels.map(m => {
+                          if (m.file instanceof Blob) {
+                              return { ...m, url: URL.createObjectURL(m.file) };
+                          }
+                          return m;
+                      });
+                  }
+                  
                   setThreedState({
                       ...savedState,
-                      modelUrl: restoredUrl
+                      modelUrl: restoredUrl,
+                      models: restoredModels
                   });
               }
           } catch (e) {
@@ -206,6 +217,9 @@ const Editor = () => {
               ...threedState,
               modelUrl: null // Don't save the URL string
           };
+          if (stateToSave.models && Array.isArray(stateToSave.models)) {
+              stateToSave.models = stateToSave.models.map(m => ({ ...m, url: null }));
+          }
           saveToDB(STATE_KEY, stateToSave);
       }, 1000); // Debounce saves
 
@@ -217,6 +231,11 @@ const Editor = () => {
      return () => {
          if (threedState.modelUrl) {
              URL.revokeObjectURL(threedState.modelUrl);
+         }
+         if (threedState.models && Array.isArray(threedState.models)) {
+             threedState.models.forEach(m => {
+                 if (m.url) URL.revokeObjectURL(m.url);
+             });
          }
      };
   }, []); // Only on unmount of the Layout
