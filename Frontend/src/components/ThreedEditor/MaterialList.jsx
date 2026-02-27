@@ -1,10 +1,53 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { Icon } from "@iconify/react";
 
 // --- Sub-Components for Cleanliness ---
 
-const MaterialItem = ({ text, selected, onClick, isVisible = true, onToggleVisibility, onDelete }) => {
+const MaterialItem = ({ text, selected, onClick, isVisible = true, onToggleVisibility, onDelete, onRename }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [tempName, setTempName] = useState(text);
+    const btnRef = React.useRef(null);
+    const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+
+    const handleMenuClick = (e) => {
+        e.stopPropagation();
+        if (!isMenuOpen && btnRef.current) {
+            const rect = btnRef.current.getBoundingClientRect();
+            setMenuPos({
+                top: rect.top + rect.height / 2,
+                left: rect.right + 35
+            });
+        }
+        setIsMenuOpen(!isMenuOpen);
+    };
+
+    React.useEffect(() => {
+        if (!isMenuOpen) return;
+        const handleScroll = () => setIsMenuOpen(false);
+        window.addEventListener('scroll', handleScroll, true);
+        return () => window.removeEventListener('scroll', handleScroll, true);
+    }, [isMenuOpen]);
+
+    const handleRenameSubmit = () => {
+        if (tempName.trim() !== "" && tempName !== text) {
+            onRename && onRename(text, tempName);
+        }
+        setIsEditing(false);
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.stopPropagation();
+            handleRenameSubmit();
+        }
+        if (e.key === 'Escape') {
+            e.stopPropagation();
+            setTempName(text);
+            setIsEditing(false);
+        }
+    };
 
     return (
         <div
@@ -16,7 +59,20 @@ const MaterialItem = ({ text, selected, onClick, isVisible = true, onToggleVisib
                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 }`}
         >
-            <span className="truncate flex-1 pr-[0.5vw]">{text}</span>
+            {isEditing ? (
+                <input 
+                    autoFocus
+                    type="text"
+                    value={tempName}
+                    onChange={(e) => setTempName(e.target.value)}
+                    onBlur={handleRenameSubmit}
+                    onKeyDown={handleKeyDown}
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex-1 bg-transparent outline-none border-none p-0 text-[0.7vw] min-w-0 text-inherit font-semibold"
+                />
+            ) : (
+                <span className="truncate flex-1 pr-[0.5vw] min-w-0">{text}</span>
+            )}
             
             {/* Action Buttons */}
             <div className={`flex items-center gap-[0.2vw] ${(selected || !isVisible) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`} onClick={(e) => e.stopPropagation()}>
@@ -30,25 +86,37 @@ const MaterialItem = ({ text, selected, onClick, isVisible = true, onToggleVisib
                 
                 <div className="relative">
                     <button 
-                        onClick={(e) => { e.stopPropagation(); setIsMenuOpen(!isMenuOpen); }}
+                        ref={btnRef}
+                        onClick={handleMenuClick}
                         className={`p-[0.2vw] rounded-[0.2vw] transition-colors ${selected ? 'hover:bg-gray-700 text-gray-300 hover:text-white' : 'hover:bg-gray-200 text-gray-400 hover:text-gray-700'}`}
                     >
                         <Icon icon="ph:dots-three-bold" width="0.8vw" height="0.8vw" />
                     </button>
 
-                    {isMenuOpen && (
+                    {isMenuOpen && typeof document !== 'undefined' && createPortal(
                         <>
                             <div className="fixed inset-0 z-[990]" onClick={(e) => { e.stopPropagation(); setIsMenuOpen(false); }}></div>
-                            <div className="absolute right-0 bottom-full mb-[0.2vw] bg-white border border-gray-100 shadow-[0_-0.2vw_1vw_rgba(0,0,0,0.1)] rounded-[0.4vw] py-[0.2vw] z-[999] min-w-[5.5vw]">
+                            <div 
+                                style={{ top: menuPos.top, left: menuPos.left, transform: 'translateY(-50%)' }}
+                                className="fixed bg-white border border-gray-100 shadow-[0_0.2vw_1vw_rgba(0,0,0,0.15)] rounded-[0.4vw] py-[0.4vw] px-[0.8vw] z-[999]"
+                            >
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); setIsMenuOpen(false); setIsEditing(true); }}
+                                    className="w-full text-gray-700 hover:text-gray-900 flex items-center justify-start gap-[0.4vw] transition-colors whitespace-nowrap outline-none mb-[0.4vw]"
+                                >
+                                    <Icon icon="ph:pencil-simple" width="0.9vw" height="0.9vw" />
+                                    <span className="text-[0.75vw] font-medium leading-none">Rename</span>
+                                </button>
                                 <button 
                                     onClick={(e) => { e.stopPropagation(); setIsMenuOpen(false); onDelete && onDelete(text); }}
-                                    className="w-full text-left px-[0.6vw] py-[0.3vw] text-[0.6vw] text-red-600 hover:bg-red-50 flex items-center gap-[0.4vw] font-semibold transition-colors"
+                                    className="w-full text-red-500 hover:text-red-600 flex items-center justify-start gap-[0.4vw] transition-colors whitespace-nowrap outline-none font-semibold"
                                 >
-                                    <Icon icon="ph:trash-bold" width="0.7vw" height="0.7vw" />
-                                    Delete
+                                    <Icon icon="ph:trash" width="0.9vw" height="0.9vw" />
+                                    <span className="text-[0.75vw] font-medium leading-none">Delete</span>
                                 </button>
                             </div>
-                        </>
+                        </>,
+                        document.body
                     )}
                 </div>
             </div>
@@ -56,7 +124,7 @@ const MaterialItem = ({ text, selected, onClick, isVisible = true, onToggleVisib
     );
 };
 
-const MaterialGroup = ({ group, materials, selectedMaterial, onSelect, hiddenMaterials, onToggleVisibility, onDelete }) => {
+const MaterialGroup = ({ id, group, materials, selectedMaterial, onSelect, hiddenMaterials, onToggleVisibility, onDelete, onRename, onDeleteModel }) => {
     const [isOpen, setIsOpen] = useState(true);
 
     // Determine if this group is the active one
@@ -90,22 +158,32 @@ const MaterialGroup = ({ group, materials, selectedMaterial, onSelect, hiddenMat
                     ${isGroupSelected ? "bg-indigo-50 border border-indigo-100" : "hover:bg-gray-50/80 border border-transparent"}`}
                 title="Select Group"
             >
-                <div className="flex items-center gap-[0.42vw]">
+                <div className="flex items-center gap-[0.42vw] min-w-0 flex-1">
                      <Icon 
                         icon={isOpen ? "solar:folder-open-bold-duotone" : "solar:folder-bold-duotone"} 
                         width="0.73vw" height="0.73vw"
-                        className={`${isGroupSelected ? "text-indigo-500" : "text-gray-400 group-hover:text-[#5d5efc]"} transition-colors`} 
+                        className={`${isGroupSelected ? "text-indigo-500" : "text-gray-400 group-hover:text-[#5d5efc]"} transition-colors shrink-0`} 
                      />
-                     <span className={`${isGroupSelected ? "text-indigo-700" : "text-gray-500 group-hover:text-gray-700"} text-[0.57vw] font-bold uppercase tracking-wider transition-colors`}>
-                        {group} <span className={`${isGroupSelected ? "text-indigo-400" : "text-gray-300"} ml-[0.21vw] text-[0.47vw]`}>({materials.length})</span>
+                     <span className={`${isGroupSelected ? "text-indigo-700" : "text-gray-500 group-hover:text-gray-700"} text-[0.75vw] font-semibold transition-colors truncate min-w-0 flex-1`}>
+                        {group}
                      </span>
+                     <span className={`${isGroupSelected ? "text-indigo-400" : "text-gray-400"} text-[0.55vw] font-semibold shrink-0`}>( {materials.length} )</span>
                 </div>
-                <div onClick={toggleOpen} className="p-[0.21vw] hover:bg-gray-200 rounded-[0.21vw]">
-                    <Icon 
-                        icon="heroicons:chevron-down-20-solid" 
-                        width="0.73vw" height="0.73vw"
-                        className={`text-gray-400 transition-transform duration-200 ${isOpen ? "rotate-0" : "-rotate-90"}`}
-                    />
+                <div className="flex items-center gap-[0.2vw] opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); onDeleteModel && onDeleteModel(id); }}
+                        className="p-[0.21vw] hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-[0.21vw] transition-colors"
+                        title="Delete entire model"
+                    >
+                        <Icon icon="ph:trash-bold" width="0.75vw" height="0.75vw" />
+                    </button>
+                    <div onClick={toggleOpen} className="p-[0.21vw] hover:bg-gray-200 rounded-[0.21vw]">
+                        <Icon 
+                            icon="heroicons:chevron-down-20-solid" 
+                            width="0.73vw" height="0.73vw"
+                            className={`text-gray-400 transition-transform duration-200 ${isOpen ? "rotate-0" : "-rotate-90"}`}
+                        />
+                    </div>
                 </div>
             </div>
             
@@ -120,6 +198,7 @@ const MaterialGroup = ({ group, materials, selectedMaterial, onSelect, hiddenMat
                             isVisible={!hiddenMaterials?.has(mat)}
                             onToggleVisibility={onToggleVisibility}
                             onDelete={onDelete}
+                            onRename={(oldN, newN) => onRename && onRename(oldN, newN, group)}
                         />
                     ))}
                 </div>
@@ -130,7 +209,7 @@ const MaterialGroup = ({ group, materials, selectedMaterial, onSelect, hiddenMat
 
 // --- Main Component ---
 
-export default function MaterialList({ isCollapsed, setIsCollapsed, isTextureOpen, materials = [], selectedMaterial, onSelect, modelName, onToggleVisibility, onDeleteMaterial, hiddenMaterials = new Set() }) {
+export default function MaterialList({ isCollapsed, setIsCollapsed, isTextureOpen, materials = [], selectedMaterial, onSelect, modelName, onToggleVisibility, onDeleteMaterial, onRenameMaterial, onDeleteModel, hiddenMaterials = new Set() }) {
 
     const handleToggleVisibility = (matName) => {
         const isCurrentlyHidden = hiddenMaterials.has(matName);
@@ -214,9 +293,9 @@ export default function MaterialList({ isCollapsed, setIsCollapsed, isTextureOpe
                                     : "bg-gray-50 text-gray-800 hover:bg-gray-100 border-gray-100/50"
                                 }`}
                         >
-                             <Icon icon="ph:cube-duotone" width="1vw" height="1vw" className={(selectedMaterial === (modelName || "Model") || (selectedMaterial && selectedMaterial.name === (modelName || "Model"))) ? "text-indigo-500" : "text-gray-400"} />
-                             <span className="truncate flex-1">{modelName === "Scene" ? "Entire Scene" : (modelName || "Entire Model")}</span>
-                             {(selectedMaterial === (modelName || "Model") || (selectedMaterial && selectedMaterial.name === (modelName || "Model"))) && <Icon icon="heroicons:check-circle-20-solid" width="0.73vw" height="0.73vw" className="text-indigo-500" />}
+                             <Icon icon="ph:cube-duotone" width="1vw" height="1vw" className={`shrink-0 ${(selectedMaterial === (modelName || "Model") || (selectedMaterial && selectedMaterial.name === (modelName || "Model"))) ? "text-indigo-500" : "text-gray-400"}`} />
+                             <span className="truncate flex-1 min-w-0">{modelName === "Scene" ? "Entire Scene" : (modelName || "Entire Model")}</span>
+                             {(selectedMaterial === (modelName || "Model") || (selectedMaterial && selectedMaterial.name === (modelName || "Model"))) && <Icon icon="heroicons:check-circle-20-solid" width="0.73vw" height="0.73vw" className="text-indigo-500 shrink-0" />}
                         </div>
                         <div className="h-[0.05vw] bg-gray-100 mx-[0.2vw] mt-[0.42vw]"></div>
                     </div>
@@ -233,6 +312,7 @@ export default function MaterialList({ isCollapsed, setIsCollapsed, isTextureOpe
                                 return (
                                     <MaterialGroup 
                                         key={idx} 
+                                        id={item.id}
                                         group={item.group} 
                                         materials={item.materials} 
                                         selectedMaterial={selectedMaterial} 
@@ -240,6 +320,8 @@ export default function MaterialList({ isCollapsed, setIsCollapsed, isTextureOpe
                                         hiddenMaterials={hiddenMaterials}
                                         onToggleVisibility={handleToggleVisibility}
                                         onDelete={handleDelete}
+                                        onRename={onRenameMaterial}
+                                        onDeleteModel={onDeleteModel}
                                     />
                                 );
                             } else {
@@ -253,6 +335,7 @@ export default function MaterialList({ isCollapsed, setIsCollapsed, isTextureOpe
                                         isVisible={!hiddenMaterials.has(item)}
                                         onToggleVisibility={handleToggleVisibility}
                                         onDelete={handleDelete}
+                                        onRename={(oldN, newN) => onRenameMaterial && onRenameMaterial(oldN, newN, modelName)}
                                     />
                                 );
                             }

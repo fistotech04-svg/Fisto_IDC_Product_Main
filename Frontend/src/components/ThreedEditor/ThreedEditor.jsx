@@ -2,7 +2,7 @@ import React, { useState, Suspense, useEffect, useCallback, useRef, useMemo } fr
 import * as THREE from "three";
 import { Icon } from "@iconify/react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Environment, useProgress, ContactShadows } from "@react-three/drei";
+import { OrbitControls, Environment, useProgress, ContactShadows, TransformControls } from "@react-three/drei";
 import RightPanel from "./ThreedRightpanel";
 import EditorInfoBox from "./EditorInfoBox";
 import EditorToolbar from "./EditorToolbar";
@@ -14,6 +14,9 @@ import RenderModel from "./Components/ModelLoaders";
 import useModalHistory from "./hooks/useModalHistory";
 import ExportModal from "./Components/ExportModal";
 import AddModelModal from "./Components/AddModelModal";
+import { GLTFExporter } from "three-stdlib";
+import { OBJExporter } from "three-stdlib";
+import { STLExporter } from "three-stdlib";
 
 
 import { useOutletContext } from "react-router-dom";
@@ -54,11 +57,13 @@ export default function ThreedEditor() {
   
   const controlsRef = React.useRef(null);
   const modelRef = React.useRef(null);
+  const modelRefs = useRef(new Map());
   const lastUpdateRef = React.useRef(0);
 
   // Target Position State
   const [targetPosition, setTargetPosition] = useState({ x: 0, y: 0, z: 0 });
   const [modelMaterialLists, setModelMaterialLists] = useState({});
+  const sceneWrapperRef = useRef(null);
   const [materialList, setMaterialList] = useState(threedState.materialList || []);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [selectedTexture, setSelectedTexture] = useState(null);
@@ -145,8 +150,11 @@ export default function ThreedEditor() {
       setModels(prev => [...prev, newModel]);
       setManualLoading(true);
       
-      // Do NOT clear selectedMaterial or hiddenMaterials, just add to the list
-      // Ensure sidebar is open to show the new material list
+      // If this is the first model, set global name
+      if (models.length === 0) {
+          setModelName(newModel.name);
+      }
+      
       setIsSidebarCollapsed(false);
   };
 
@@ -157,6 +165,54 @@ export default function ThreedEditor() {
   const handleSetMaterialList = useCallback((modelId, list) => {
       setModelMaterialLists(prev => ({ ...prev, [modelId]: list }));
   }, []);
+
+  const handleExport = (format) => {
+    const scene = sceneWrapperRef.current;
+    if (!scene || models.length === 0) return;
+
+    // Use current modelName state for export, fallback to model array or generic
+    const name = modelName || (models.length > 0 ? models[0].name : "Scene");
+
+    const download = (blob, filename) => {
+        const link = document.createElement('a');
+        link.style.display = 'none';
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const saveString = (text, filename) => {
+        const blob = new Blob([text], { type: 'text/plain' });
+        download(blob, filename);
+    };
+
+    const saveArrayBuffer = (buffer, filename) => {
+        const blob = new Blob([buffer], { type: 'application/octet-stream' });
+        download(blob, filename);
+    };
+
+    if (format === 'glb') {
+        const exporter = new GLTFExporter();
+        exporter.parse(scene, (result) => {
+            if (result instanceof ArrayBuffer) {
+                saveArrayBuffer(result, `${name}.glb`);
+            } else {
+                const output = JSON.stringify(result, null, 2);
+                saveString(output, `${name}.gltf`);
+            }
+        }, (err) => console.error(err), { binary: true });
+    } else if (format === 'obj') {
+        const exporter = new OBJExporter();
+        const result = exporter.parse(scene);
+        saveString(result, `${name}.obj`);
+    } else if (format === 'stl') {
+        const exporter = new STLExporter();
+        const result = exporter.parse(scene);
+        saveString(result, `${name}.stl`);
+    }
+  };
 
   const combinedStats = useMemo(() => {
       let vCount = 0; let pCount = 0; let mCount = 0;
@@ -188,6 +244,7 @@ export default function ThreedEditor() {
           
           if (flatMats.length > 0) {
               result.push({
+                  id: model.id,
                   group: model.name,
                   materials: flatMats
               });
@@ -244,11 +301,71 @@ export default function ThreedEditor() {
 
   const handleRename = (newName) => {
       setModelName(newName);
+      // We do NOT update the models array here anymore. 
+      // This keeps the "Folder Name" in the Material List as the original name
+      // while allowing the Top Bar and Export to use the new "modelName".
+      
       pushHistory({
           ...stateRef.current,
           modelName: newName
       });
   };
+
+  const handleRenameMaterial = useCallback((oldName, newName, mName) => {
+      // Find the model with this name
+      const model = models.find(m => m.name === mName || m.originalName === mName);
+      if (model && modelRefs.current.get(model.id)) {
+          modelRefs.current.get(model.id).renameMaterial(oldName, newName);
+      } else if (modelRef.current) {
+          modelRef.current.renameMaterial(oldName, newName);
+      }
+
+      if (model) {
+          setModelMaterialLists(prev => {
+              const prevList = prev[model.id] || [];
+              const nextList = prevList.map(item => {
+                  if (typeof item === 'string') {
+                      return item === oldName ? newName : item;
+                  } else if (item.materials) {
+                       return {
+                           ...item,
+                           materials: item.materials.map(m => m === oldName ? newName : m)
+                       };
+                  }
+                  return item;
+              });
+              return { ...prev, [model.id]: nextList };
+          });
+      }
+
+      if (selectedMaterial && (selectedMaterial.name === oldName)) {
+           setSelectedMaterial(prev => {
+               if (!prev) return prev;
+               return { ...prev, name: newName };
+           });
+      }
+  }, [models, selectedMaterial]);
+
+  const handleDeleteModel = useCallback((modelId) => {
+      const modelToDelete = models.find(m => m.id === modelId);
+      if (modelToDelete && modelToDelete.url) URL.revokeObjectURL(modelToDelete.url);
+      
+      setModels(prev => prev.filter(m => m.id !== modelId));
+      setModelMaterialLists(prev => {
+          const next = { ...prev };
+          delete next[modelId];
+          return next;
+      });
+      setModelStatsMap(prev => {
+          const next = { ...prev };
+          delete next[modelId];
+          return next;
+      });
+
+      if (selectedMaterial && modelToDelete && selectedMaterial.parentGroup === modelToDelete.name) {
+          setSelectedMaterial(null);
+      }
+  }, [models, selectedMaterial]);
 
   const updateMaterialSetting = useCallback((key, val, fromSync = false) => {
     setMaterialSettings((prev) => {
@@ -323,6 +440,14 @@ export default function ThreedEditor() {
     setSelectedMaterial(null);
     setHiddenMaterials(new Set());
     setDeletedMaterials(new Set());
+    
+    // Reset material settings for the new model to prevent "collapsed" textures from previous model settings
+    setMaterialSettings({
+        alpha: 100, metallic: 0, roughness: 50, normal: 100, bump: 100, scale: 100, scaleY: 100, rotation: 0,
+        specular: 50, reflection: 50, shadow: 50, softness: 50, ao: 100, environment: 'city',
+        color: '#000000', useFactorColor: false, autoUnwrap: false, envRotation: 0, offset: { x: 0, y: 0 },
+        lightPosition: { x: 10, y: 10, z: 10 }
+    });
     
     setIsSidebarCollapsed(false); 
   };
@@ -542,12 +667,7 @@ export default function ThreedEditor() {
       {showExportModal && (
           <ExportModal 
               onClose={() => setShowExportModal(false)}
-              onExport={(format) => {
-                  if (modelRef.current) {
-                      modelRef.current.exportModel(format);
-                      setShowExportModal(false);
-                  }
-              }}
+              onExport={handleExport}
           />
       )}
 
@@ -568,10 +688,12 @@ export default function ThreedEditor() {
               selectedMaterial={selectedMaterial}
               hiddenMaterials={hiddenMaterials}
               onSelectMaterial={(name) => handleSelectMaterial(name)}
-              modelName={models.length === 1 ? models[0].name : "Scene"} // Pass filename or generic
+              modelName={modelName || "Scene"} 
               onToggleVisibility={handleToggleVisibility}
               onDeleteMaterial={handleDeleteMaterial}
+              onDeleteModel={handleDeleteModel}
               onRename={handleRename}
+              onRenameMaterial={handleRenameMaterial}
               onUndo={handleUndo}
               onRedo={handleRedo}
               canUndo={canUndo}
@@ -600,14 +722,24 @@ export default function ThreedEditor() {
             <TextureGalleryBar
               isOpen={isTextureOpen}
               setIsOpen={setIsTextureOpen}
-              onSelectTexture={(textureData) => setSelectedTexture({ ...textureData, ts: Date.now() })}
+              onSelectTexture={(textureData) => {
+                  setSelectedTexture({ ...textureData, ts: Date.now() });
+                  // Reset factors to 1.0 (100 in UI) so maps have full influence
+                  setMaterialSettings(prev => ({
+                      ...prev,
+                      metallic: 100,
+                      roughness: 100,
+                      color: "#ffffff",
+                      useFactorColor: true
+                  }));
+              }}
             />
           )}
 
           {models.length > 0 && (
             <div 
               className={`absolute left-[1vw] z-20 p-[0.25vw] transition-all duration-500 ease-in-out overflow-hidden w-[13.5vw] pointer-events-none select-none
-                ${isTextureOpen ? "bottom-[11.45vw]" : "bottom-[4.16vw]"}
+                ${isTextureOpen ? "bottom-[11vw]" : "bottom-[3.7vw]"}
               `}
             > 
                 <EditorInfoBox stats={combinedStats} />
@@ -626,37 +758,50 @@ export default function ThreedEditor() {
 
           {/* 3D CANVAS */}
           <div className="flex-1 h-full w-full">
-            <Canvas camera={{ position: [0, 1, 5] }} shadows dpr={[1, 2]} gl={{ preserveDrawingBuffer: true }}>
+            <Canvas 
+              camera={{ position: [0, 1, 5], fov: 45 }} 
+              shadows 
+              dpr={[1, 2]} 
+              gl={{ 
+                preserveDrawingBuffer: true,
+                antialias: true,
+                alpha: true,
+                logarithmicDepthBuffer: true
+              }}
+              onCreated={({ gl }) => {
+                gl.toneMapping = THREE.ACESFilmicToneMapping;
+                gl.outputColorSpace = THREE.SRGBColorSpace;
+              }}
+            >
               <color attach="background" args={[settings.backgroundColor]} />
               
-              <ambientLight intensity={0.6 * ((materialSettings.specular ?? 50) / 50)} />
+              <ambientLight intensity={1.2} />
               <spotLight 
-                position={[
-                  materialSettings.lightPosition.x, 
-                  materialSettings.lightPosition.y, 
-                  materialSettings.lightPosition.z
-                ]} 
+                position={[5, 10, 5]} 
                 angle={0.15} 
                 penumbra={1} 
-                intensity={1.5 * ((materialSettings.specular ?? 50) / 50)} 
+                intensity={2} 
                 castShadow 
-                shadow-bias={-0.0001}
+                shadow-bias={-0.005} // Increased bias to prevent triangle acne/banding
+                shadow-mapSize={[2048, 2048]}
               />
               <directionalLight 
-                position={[
-                  -materialSettings.lightPosition.x / 2, 
-                  materialSettings.lightPosition.y / 2, 
-                  materialSettings.lightPosition.z / 2
-                ]} 
-                intensity={0.5 * ((materialSettings.specular ?? 50) / 50)} 
+                position={[-5, 5, -5]} 
+                intensity={1} 
                 castShadow
+                shadow-bias={-0.005}
               />
 
               <Suspense fallback={null}>
+                <group ref={sceneWrapperRef}>
                   {models.map((model, index) => (
                     <RenderModel 
                         key={model.id}
-                        ref={index === 0 ? modelRef : undefined} // Keep ref on first model for now
+                        ref={(r) => {
+                            if (index === 0) modelRef.current = r;
+                            if (r) modelRefs.current.set(model.id, r);
+                            else modelRefs.current.delete(model.id);
+                        }}
                         type={model.type}  
                         url={model.url}
                         wireframe={settings.wireframe}
@@ -680,6 +825,25 @@ export default function ThreedEditor() {
                         onTransformChange={handleTransformChange}
                     />
                   ))}
+                </group>
+
+                {transformMode && (selectedMaterial?.name === "Scene") && (
+                    <TransformControls 
+                        object={sceneWrapperRef.current}
+                        mode={transformMode}
+                        size={0.8}
+                        onChange={() => {
+                            if (handleTransformChange && sceneWrapperRef.current) {
+                                handleTransformChange({
+                                    position: sceneWrapperRef.current.position,
+                                    rotation: sceneWrapperRef.current.rotation,
+                                    scale: sceneWrapperRef.current.scale
+                                });
+                            }
+                        }}
+                        onMouseUp={handleTransformEnd}
+                    />
+                )}
               </Suspense>
               
               {/* Blender-style Grid: Darker lines on dark background. 
