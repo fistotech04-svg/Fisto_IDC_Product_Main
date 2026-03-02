@@ -344,11 +344,15 @@ export default function SettingsPanel({ controls, updateControl, activePanel, se
                 <CustomSlider
                 label="Normal Map"
                 value={controls.normal}
+                min={0}
+                max={200}
                 onChange={(v) => updateControl("normal", v)}
                 />
                 <CustomSlider
                 label="Bump"
                 value={controls.bump}
+                min={0}
+                max={200}
                 onChange={(v) => updateControl("bump", v)}
                 />
             </div>

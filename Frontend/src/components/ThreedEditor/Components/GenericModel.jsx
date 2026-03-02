@@ -126,18 +126,20 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
                            if (newMaps.map && mat.color && typeof mat.color.set === 'function') {
                                mat.color.set(0xffffff);
                            }
-                       }
-                       
-                       
-                       // Save the Texture ID for later identification
-                       if (selectedTexture.id) {
-                           mat.userData.appliedTextureId = selectedTexture.id;
-                       } else {
-                           delete mat.userData.appliedTextureId;
-                       }
-                       
-                       mat.needsUpdate = true;
-                       appliedCount++;
+                        }
+                        
+                        
+                        // Save the full texture object for later identification
+                        if (selectedTexture.id) {
+                            mat.userData.appliedTexture = selectedTexture;
+                            mat.userData.appliedTextureId = selectedTexture.id;
+                        } else {
+                            delete mat.userData.appliedTexture;
+                            delete mat.userData.appliedTextureId;
+                        }
+                        
+                        mat.needsUpdate = true;
+                        appliedCount++;
                    }
               };
 
@@ -275,6 +277,11 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
               try { newGeom.computeTangents(); } catch(e) {}
           }
           if (newGeom.attributes.normal) newGeom.attributes.normal.needsUpdate = true;
+
+          // AUTO-UNWRAP: If model has no UVs, apply default Box Mapping immediately
+          if (!newGeom.attributes.uv) {
+              applyBoxUV(child);
+          }
 
           vertCount += newGeom.attributes.position.count;
           if (newGeom.index) {
@@ -581,9 +588,16 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
                safeUpdate('offset', { x: m.map.offset.x, y: m.map.offset.y });
            }
 
-           if (m.color && typeof m.color.getHexString === 'function') {
-               safeUpdate('color', '#' + m.color.getHexString());
-           }
+            if (m.color && typeof m.color.getHexString === 'function') {
+                safeUpdate('color', '#' + m.color.getHexString());
+            }
+
+            // Sync applied texture info if available
+            if (m.userData.appliedTexture) {
+                safeUpdate('appliedTexture', m.userData.appliedTexture);
+            } else {
+                safeUpdate('appliedTexture', null);
+            }
       }
       
       const sig = `${modelName || ''}_${selectedMaterial ? (selectedMaterial.uuid || selectedMaterial.name) : 'FULL'}`;
@@ -597,11 +611,17 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
   useEffect(() => {
     if (!scene || !materialSettings) return;
 
-    // Prevent applying default/stale settings if we haven't synced with the model yet
-    const currentSig = `${modelName || ''}_${selectedMaterial ? (selectedMaterial.uuid || selectedMaterial.name) : 'FULL'}`;
-    if (syncedSelectionSignature !== currentSig) {
-         return;
-    }
+    // Use a simpler guard to ensure we don't apply settings 
+    // to the "General" scene before a specific material is actually chosen.
+    const selMat = selectedMaterial; 
+    const targetMatName = selMat ? selMat.name : null;
+    
+    // Only apply global settings if "Scene" or the model itself is explicitly selected.
+    // This prevents wiping out the model's original material look immediately upon loading.
+    const isFullModel = (targetMatName === modelName || targetMatName === "Scene");
+    
+    // Still don't apply anything if there's no selection at all.
+    if (!targetMatName) return; 
 
 
     // Safety: ensure materialSettings properties exist before use
@@ -613,18 +633,10 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
     const bumpScale = (materialSettings.bump ?? 100) / 100;
     const color = materialSettings.color;
 
-    const selMat = selectedMaterial; 
-    const targetMatName = selMat ? selMat.name : null;
     const targetParentGroup = selMat ? selMat.parentGroup : null;
 
-    // CRITICAL: If no material is selected, do NOT apply settings.
-    // This prevents "collapsing" all materials to the first one's values on initial load.
-    if (!targetMatName) return;
-
     if (targetParentGroup && targetParentGroup !== modelName && targetParentGroup !== "Scene") return;
-    if (selMat && selMat.isGroup && targetMatName !== modelName && targetMatName !== "Scene") return;
-
-    const isFullModel = targetMatName === modelName || targetMatName === "Scene";
+    if (selMat && selMat.isGroup && targetMatName && targetMatName !== modelName && targetMatName !== "Scene") return;
 
     scene.traverse((child) => {
         if (child.isMesh && child.material) {
@@ -679,12 +691,40 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
                     // Detail Maps (Normal / Bump)
                     if (m.normalMap) {
                         m.normalScale.set(normalScale, normalScale);
+                        // Ensure geometry has tangents for normal mapping to work correctly
+                        const geom = child.geometry;
+                        if (geom && !geom.attributes.tangent && geom.computeTangents) {
+                            try { geom.computeTangents(); } catch(e) { console.warn("Tangent compute failed", e); }
+                        }
                     }
                     if (m.bumpMap) {
                         m.bumpScale = bumpScale;
                     }
                     
                     m.needsUpdate = true;
+
+                    // Handle Texture Removal (Undo/Redo support)
+                    // If the material has an applied texture from gallery but settings say it shouldn't
+                    const configTextureId = materialSettings.appliedTexture?.id || null;
+                    const matTextureId = m.userData.appliedTextureId || null;
+
+                    if (matTextureId && !configTextureId && (isMatch || isFullModel)) {
+                         // Configuration says no texture, but material has one. Strip it!
+                         m.map = null;
+                         m.normalMap = null;
+                         m.roughnessMap = null;
+                         m.metalnessMap = null;
+                         m.aoMap = null;
+                         m.bumpMap = null;
+                         delete m.userData.appliedTexture;
+                         delete m.userData.appliedTextureId;
+                         
+                         // Re-restore original if it exists
+                         if (m.userData.originalMap) {
+                             m.map = m.userData.originalMap;
+                         }
+                         m.needsUpdate = true;
+                    }
 
                     // Apply texture transformations (scale, offset, rotation).
                     // We allow this for specific materials, OR for the full model IF a texture was applied via the gallery.
@@ -929,6 +969,57 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
   }, [sceneResetTrigger, scene, modelGroup]);
 
   // 6. UV Unwrap Logic (Auto Default)
+  const applyBoxUV = (mesh) => {
+      if (!mesh.geometry) return;
+      
+      const geometry = mesh.geometry;
+      geometry.computeBoundingBox();
+      
+      const { min, max } = geometry.boundingBox;
+      const range = new THREE.Vector3().subVectors(max, min);
+      if(range.x === 0) range.x = 1;
+      if(range.y === 0) range.y = 1;
+      if(range.z === 0) range.z = 1;
+
+      const posAttribute = geometry.attributes.position;
+      if (!geometry.attributes.normal) geometry.computeVertexNormals();
+      const normalAttribute = geometry.attributes.normal;
+
+      const uvAttribute = geometry.attributes.uv || new THREE.BufferAttribute(new Float32Array(posAttribute.count * 2), 2);
+      
+      for (let i = 0; i < posAttribute.count; i++) {
+          const x = posAttribute.getX(i);
+          const y = posAttribute.getY(i);
+          const z = posAttribute.getZ(i);
+          
+          const nx = Math.abs(normalAttribute.getX(i));
+          const ny = Math.abs(normalAttribute.getY(i));
+          const nz = Math.abs(normalAttribute.getZ(i));
+          
+          let u = 0, v = 0;
+
+          if (nx >= ny && nx >= nz) {
+              u = (z - min.z) / range.z;
+              v = (y - min.y) / range.y;
+          } else if (ny >= nx && ny >= nz) {
+              u = (x - min.x) / range.x;
+              v = (z - min.z) / range.z;
+          } else {
+              u = (x - min.x) / range.x;
+              v = (y - min.y) / range.y;
+          }
+          
+          uvAttribute.setXY(i, u, v);
+      }
+      
+      geometry.setAttribute('uv', uvAttribute);
+      geometry.attributes.uv.needsUpdate = true;
+      
+      if (geometry.hasAttribute('tangent') && geometry.computeTangents) {
+           geometry.computeTangents();
+      }
+  };
+
   useEffect(() => {
     if (scene && uvUnwrapTrigger > 0) {
         const targetMatName = selectedMaterial ? selectedMaterial.name : null;
@@ -936,69 +1027,8 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
         const isGroup = selectedMaterial?.isGroup;
         const groupMats = selectedMaterial?.materials || [];
 
-        const applyBoxUV = (mesh) => {
-            if (!mesh.geometry) return;
-            
-            // Clone geometry to avoid messing up shared geometries if any (though usually unique per mesh in loader)
-            // But usually we want to modify the existing one so it persists.
-            const geometry = mesh.geometry;
-            geometry.computeBoundingBox();
-            
-            const { min, max } = geometry.boundingBox;
-            // Avoid zero-division
-            const range = new THREE.Vector3().subVectors(max, min);
-            if(range.x === 0) range.x = 1;
-            if(range.y === 0) range.y = 1;
-            if(range.z === 0) range.z = 1;
 
-            const posAttribute = geometry.attributes.position;
-            // Normals are needed for box mapping projection direction
-            if (!geometry.attributes.normal) geometry.computeVertexNormals();
-            const normalAttribute = geometry.attributes.normal;
-
-            const uvAttribute = geometry.attributes.uv || new THREE.BufferAttribute(new Float32Array(posAttribute.count * 2), 2);
-            
-            for (let i = 0; i < posAttribute.count; i++) {
-                const x = posAttribute.getX(i);
-                const y = posAttribute.getY(i);
-                const z = posAttribute.getZ(i);
-                
-                const nx = Math.abs(normalAttribute.getX(i));
-                const ny = Math.abs(normalAttribute.getY(i));
-                const nz = Math.abs(normalAttribute.getZ(i));
-                
-                let u = 0, v = 0;
-
-                // Aspect-correct Box Mapping Logic
-                if (nx >= ny && nx >= nz) {
-                    // X-axis dominant (Side) -> map Z/Y
-                    u = z;
-                    v = y;
-                } else if (ny >= nx && ny >= nz) {
-                    // Y-axis dominant (Top/Bottom) -> map X/Z
-                    u = x;
-                    v = z;
-                } else {
-                    // Z-axis dominant (Front/Back) -> map X/Y
-                    u = x;
-                    v = y;
-                }
-                
-                uvAttribute.setXY(i, u, v);
-            }
-            
-            geometry.setAttribute('uv', uvAttribute);
-            geometry.attributes.uv.needsUpdate = true;
-            
-            // Re-calc tangents if needed (for normal maps)
-            // Only if geometry has tangent attribute or we added one. 
-            // computeTangents() might crash if no index, so usage depends on geometry type.
-            // Safe to skip for now unless requested, as simple box mapping usually implies diffuse fix.
-            if (geometry.hasAttribute('tangent') && geometry.computeTangents) {
-                 geometry.computeTangents();
-            }
-        };
-
+        let modifiedAny = false;
         scene.traverse((child) => {
             if (child.isMesh && child.material) {
                 let shouldApply = false;
@@ -1017,11 +1047,23 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
                 
                 if (shouldApply) {
                     applyBoxUV(child);
+                    modifiedAny = true;
                 }
             }
         });
+
+        if (modifiedAny) {
+            // Since UV unwrapping changes geometry attributes (permanent till reload), 
+            // we treat it as a state change for the history.
+            // We'll push a snapshot of current settings.
+            if (onUpdateMaterialSetting) {
+                // Trigger a dummy update to force a history push if needed, 
+                // but since this is geometry, we just want a checkpoint.
+                onUpdateMaterialSetting('uvUnwrap', Date.now(), false);
+            }
+        }
     }
-  }, [uvUnwrapTrigger, scene, selectedMaterial, modelName]);
+  }, [uvUnwrapTrigger, scene, selectedMaterial, modelName, onUpdateMaterialSetting]);
 
 
   return (

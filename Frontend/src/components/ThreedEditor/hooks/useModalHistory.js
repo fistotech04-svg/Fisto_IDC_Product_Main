@@ -40,9 +40,19 @@ export default function useModalHistory(initialState) {
         setIndex(0);
     }, []);
 
+    // Update current state in history (useful for async updates like model loading)
+    const update = useCallback((newState) => {
+        setHistory((prev) => {
+            const next = [...prev];
+            next[index] = newState;
+            return next;
+        });
+    }, [index]);
+
     return {
         state: currentState,
         set: setState,
+        update,
         undo,
         redo,
         canUndo,

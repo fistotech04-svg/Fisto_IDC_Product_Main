@@ -68,6 +68,7 @@ const TopToolbar = ({
                     <button 
                         onClick={onUndo} 
                         disabled={!canUndo}
+                        title="Undo (Ctrl+Z)"
                         className={`w-[2.2vw] h-[2vw] flex items-center justify-center rounded-[0.42vw] hover:bg-gray-50 transition-all text-gray-700 ${!canUndo ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
                         <Icon icon="lucide:undo-dot" width="1.1vw" height="1.1vw" />
@@ -75,6 +76,7 @@ const TopToolbar = ({
                     <button 
                         onClick={onRedo} 
                         disabled={!canRedo}
+                        title="Redo (Ctrl+Y)"
                         className={`w-[2.2vw] h-[2vw] flex items-center justify-center rounded-[0.42vw] hover:bg-gray-50 transition-all text-gray-700 ${!canRedo ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
                         <Icon icon="lucide:redo-dot" width="1.1vw" height="1.1vw" />

@@ -93,6 +93,14 @@ export default function ThreedEditor() {
 
   const [resetKey, setResetKey] = useState(0);
   
+  const [hiddenMaterials, setHiddenMaterials] = useState(new Set(threedState.hiddenMaterials || []));
+  const [deletedMaterials, setDeletedMaterials] = useState(new Set(threedState.deletedMaterials || []));
+
+  // Screenshot State
+  const [isScreenshotOpen, setIsScreenshotOpen] = useState(false);
+  const [screenshotPreview, setScreenshotPreview] = useState(null);
+  const [isCapturing, setIsCapturing] = useState(false);
+
   const { 
     state: historyState, 
     set: pushHistory, 
@@ -100,21 +108,41 @@ export default function ThreedEditor() {
     redo, 
     canUndo, 
     canRedo,
-    resetHistory
+    resetHistory,
+    update: updateHistory
   } = useModalHistory({
-      transformValues: threedState.transformValues,
-      materialSettings: threedState.materialSettings,
-      modelName: threedState.modelName
+      hiddenMaterials: Array.from(hiddenMaterials),
+      deletedMaterials: Array.from(deletedMaterials),
+      modelMaterialLists,
+      selectedMaterial,
+      selectedTexture
   });
 
-  // Keep a ref of current state components for constructing history entries
-  const stateRef = useRef({ transformValues, materialSettings, modelName });
-  useEffect(() => {
-      stateRef.current = { transformValues, materialSettings, modelName };
-  }, [transformValues, materialSettings, modelName]);
+  const stateRef = useRef({ 
+      models, 
+      transformValues, 
+      materialSettings, 
+      modelName, 
+      hiddenMaterials, 
+      deletedMaterials, 
+      modelMaterialLists,
+      selectedMaterial,
+      selectedTexture
+  });
 
-  const [hiddenMaterials, setHiddenMaterials] = useState(new Set(threedState.hiddenMaterials || []));
-  const [deletedMaterials, setDeletedMaterials] = useState(new Set(threedState.deletedMaterials || []));
+  useEffect(() => {
+      stateRef.current = { 
+          models, 
+          transformValues, 
+          materialSettings, 
+          modelName, 
+          hiddenMaterials, 
+          deletedMaterials, 
+          modelMaterialLists,
+          selectedMaterial,
+          selectedTexture
+      };
+  }, [models, transformValues, materialSettings, modelName, hiddenMaterials, deletedMaterials, modelMaterialLists, selectedMaterial, selectedTexture]);
 
   // Sync State changes to Context (Debounced or on change)
   useEffect(() => {
@@ -147,13 +175,23 @@ export default function ThreedEditor() {
           name: file.name.replace(/\.[^/.]+$/, "")
       };
       
-      setModels(prev => [...prev, newModel]);
+      const nextModels = [...models, newModel];
+      setModels(nextModels);
       setManualLoading(true);
       
+      let nextModelName = modelName;
       // If this is the first model, set global name
       if (models.length === 0) {
-          setModelName(newModel.name);
+          nextModelName = newModel.name;
+          setModelName(nextModelName);
       }
+      
+      pushHistory({
+          ...stateRef.current,
+          models: nextModels,
+          modelName: nextModelName,
+          selectedMaterial: null // Reset selection on new model to be safe
+      });
       
       setIsSidebarCollapsed(false);
   };
@@ -163,8 +201,16 @@ export default function ThreedEditor() {
   }, []);
 
   const handleSetMaterialList = useCallback((modelId, list) => {
-      setModelMaterialLists(prev => ({ ...prev, [modelId]: list }));
-  }, []);
+      setModelMaterialLists(prev => {
+          const next = { ...prev, [modelId]: list };
+          // Update the current history entry so that UNDOing back to this point has the materials
+          updateHistory({
+              ...stateRef.current,
+              modelMaterialLists: next
+          });
+          return next;
+      });
+  }, [updateHistory]);
 
   const handleExport = (format) => {
     const scene = sceneWrapperRef.current;
@@ -254,13 +300,18 @@ export default function ThreedEditor() {
   }, [models, modelMaterialLists, deletedMaterials]);
 
   const handleToggleVisibility = useCallback((matName, isVisible) => {
-      setHiddenMaterials(prev => {
-          const next = new Set(prev);
-          if (isVisible) next.delete(matName);
-          else next.add(matName);
-          return next;
+      const next = new Set(hiddenMaterials);
+      if (isVisible) next.delete(matName);
+      else next.add(matName);
+      setHiddenMaterials(next);
+
+      pushHistory({
+          ...stateRef.current,
+          hiddenMaterials: Array.from(next),
+          // Ensure we capture the absolute latest settings for this snapshot
+          materialSettings: materialSettings 
       });
-  }, []);
+  }, [hiddenMaterials, materialSettings, pushHistory]);
 
   // Auto-expand sidebar when a specific material is selected
   useEffect(() => {
@@ -270,34 +321,88 @@ export default function ThreedEditor() {
   }, [selectedMaterial, modelName, setIsSidebarCollapsed]);
 
   const handleDeleteMaterial = useCallback((matName) => {
-      if (modelRef.current && modelRef.current.deleteMaterial) {
-          modelRef.current.deleteMaterial(matName);
-      }
-      // Also update the UI list to hide it/remove it
-      setDeletedMaterials(prev => {
-          const next = new Set(prev);
-          next.add(matName);
-          return next;
-      });
-  }, []);
+      // Soft-delete by adding to state only. This allows undo/redo to work reliably
+      // without physically removing objects from the 3D scene graph.
+      const next = new Set(deletedMaterials);
+      next.add(matName);
+      setDeletedMaterials(next);
 
-  const handleUndo = () => {
+      pushHistory({
+          ...stateRef.current,
+          deletedMaterials: Array.from(next),
+          materialSettings: materialSettings
+      });
+  }, [deletedMaterials, materialSettings, pushHistory]);
+
+  const handleUndo = useCallback(() => {
       const prevState = undo();
       if (prevState) {
-          setTransformValues(prevState.transformValues);
-          setMaterialSettings(prevState.materialSettings);
-          setModelName(prevState.modelName);
+          if (prevState.models !== undefined) setModels(prevState.models);
+          if (prevState.transformValues !== undefined) setTransformValues(prevState.transformValues);
+          if (prevState.materialSettings !== undefined) setMaterialSettings(prevState.materialSettings);
+          if (prevState.modelName !== undefined) setModelName(prevState.modelName);
+          if (prevState.hiddenMaterials !== undefined) setHiddenMaterials(new Set(prevState.hiddenMaterials));
+          if (prevState.deletedMaterials !== undefined) setDeletedMaterials(new Set(prevState.deletedMaterials));
+          if (prevState.modelMaterialLists !== undefined) setModelMaterialLists(prevState.modelMaterialLists);
+          if (prevState.selectedMaterial !== undefined) setSelectedMaterial(prevState.selectedMaterial);
+          if (prevState.selectedTexture !== undefined) setSelectedTexture(prevState.selectedTexture);
       }
-  };
+  }, [undo]);
 
-  const handleRedo = () => {
+  const handleRedo = useCallback(() => {
       const nextState = redo();
       if (nextState) {
-          setTransformValues(nextState.transformValues);
-          setMaterialSettings(nextState.materialSettings);
-          setModelName(nextState.modelName);
+          if (nextState.models !== undefined) setModels(nextState.models);
+          if (nextState.transformValues !== undefined) setTransformValues(nextState.transformValues);
+          if (nextState.materialSettings !== undefined) setMaterialSettings(nextState.materialSettings);
+          if (nextState.modelName !== undefined) setModelName(nextState.modelName);
+          if (nextState.hiddenMaterials !== undefined) setHiddenMaterials(new Set(nextState.hiddenMaterials));
+          if (nextState.deletedMaterials !== undefined) setDeletedMaterials(new Set(nextState.deletedMaterials));
+          if (nextState.modelMaterialLists !== undefined) setModelMaterialLists(nextState.modelMaterialLists);
+          if (nextState.selectedMaterial !== undefined) setSelectedMaterial(nextState.selectedMaterial);
+          if (nextState.selectedTexture !== undefined) setSelectedTexture(nextState.selectedTexture);
       }
-  };
+  }, [redo]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Don't trigger if user is typing in an input or textarea
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          handleRedo();
+        } else {
+          handleUndo();
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        handleRedo();
+      } else if (e.key.toLowerCase() === 'h') {
+        if (selectedMaterial && selectedMaterial.name) {
+          e.preventDefault();
+          const matName = selectedMaterial.name;
+          const isCurrentlyHidden = hiddenMaterials.has(matName);
+          handleToggleVisibility(matName, isCurrentlyHidden);
+        }
+      } else if (e.key.toLowerCase() === 'd') {
+        if (selectedMaterial && selectedMaterial.name && !selectedMaterial.isGroup) {
+          // Identify if it's a full model or just a material. 
+          // If it's a material, delete it.
+          const matName = selectedMaterial.name;
+          if (matName !== modelName && matName !== "Scene") {
+              e.preventDefault();
+              handleDeleteMaterial(matName);
+              setSelectedMaterial(null);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleUndo, handleRedo, selectedMaterial, hiddenMaterials, handleToggleVisibility, handleDeleteMaterial, modelName]);
 
   const handleRename = (newName) => {
       setModelName(newName);
@@ -320,21 +425,26 @@ export default function ThreedEditor() {
           modelRef.current.renameMaterial(oldName, newName);
       }
 
+      let nextMaterialLists = modelMaterialLists;
       if (model) {
-          setModelMaterialLists(prev => {
-              const prevList = prev[model.id] || [];
-              const nextList = prevList.map(item => {
-                  if (typeof item === 'string') {
-                      return item === oldName ? newName : item;
-                  } else if (item.materials) {
-                       return {
-                           ...item,
-                           materials: item.materials.map(m => m === oldName ? newName : m)
-                       };
-                  }
-                  return item;
-              });
-              return { ...prev, [model.id]: nextList };
+          const prevList = modelMaterialLists[model.id] || [];
+          const nextList = prevList.map(item => {
+              if (typeof item === 'string') {
+                  return item === oldName ? newName : item;
+              } else if (item.materials) {
+                   return {
+                       ...item,
+                       materials: item.materials.map(m => m === oldName ? newName : m)
+                   };
+              }
+              return item;
+          });
+          nextMaterialLists = { ...modelMaterialLists, [model.id]: nextList };
+          setModelMaterialLists(nextMaterialLists);
+          
+          pushHistory({
+              ...stateRef.current,
+              modelMaterialLists: nextMaterialLists
           });
       }
 
@@ -344,57 +454,104 @@ export default function ThreedEditor() {
                return { ...prev, name: newName };
            });
       }
-  }, [models, selectedMaterial]);
+  }, [models, selectedMaterial, modelMaterialLists, pushHistory]);
 
   const handleDeleteModel = useCallback((modelId) => {
       const modelToDelete = models.find(m => m.id === modelId);
-      if (modelToDelete && modelToDelete.url) URL.revokeObjectURL(modelToDelete.url);
+      // We don't revoke URL immediately here to allow UNDOing the deletion
+      // if (modelToDelete && modelToDelete.url) URL.revokeObjectURL(modelToDelete.url);
       
-      setModels(prev => prev.filter(m => m.id !== modelId));
-      setModelMaterialLists(prev => {
-          const next = { ...prev };
-          delete next[modelId];
-          return next;
-      });
-      setModelStatsMap(prev => {
-          const next = { ...prev };
-          delete next[modelId];
-          return next;
-      });
+      const nextModels = models.filter(m => m.id !== modelId);
+      setModels(nextModels);
+      
+      const nextMaterialLists = { ...modelMaterialLists };
+      delete nextMaterialLists[modelId];
+      setModelMaterialLists(nextMaterialLists);
+
+      const nextStatsMap = { ...modelStatsMap };
+      delete nextStatsMap[modelId];
+      setModelStatsMap(nextStatsMap);
 
       if (selectedMaterial && modelToDelete && selectedMaterial.parentGroup === modelToDelete.name) {
           setSelectedMaterial(null);
       }
-  }, [models, selectedMaterial]);
+
+      pushHistory({
+          ...stateRef.current,
+          models: nextModels,
+          modelMaterialLists: nextMaterialLists
+      });
+  }, [models, selectedMaterial, modelMaterialLists, modelStatsMap, pushHistory]);
+
+  const lastPushTimeRef = useRef(0);
+  const pushHistoryThrottled = useCallback((nextState) => {
+      const now = Date.now();
+      // Throttle rapid updates (like sliders) to 800ms between history entries
+      if (now - lastPushTimeRef.current > 800) {
+          pushHistory(nextState);
+          lastPushTimeRef.current = now;
+      } else {
+          // If we are within the throttle window, we just update the 'current' entry 
+          // via a new 'update' function in useModalHistory (similar to how we handle model loading)
+          updateHistory(nextState);
+      }
+  }, [pushHistory, updateHistory]);
 
   const updateMaterialSetting = useCallback((key, val, fromSync = false) => {
     setMaterialSettings((prev) => {
-      // optimization: prevent update if value is same
       if (prev[key] === val) return prev;
       
       const next = { ...prev, [key]: val };
       
       if (!fromSync) {
-          pushHistory({
-              transformValues: stateRef.current.transformValues,
-              modelName: stateRef.current.modelName,
+          pushHistoryThrottled({
+              ...stateRef.current,
               materialSettings: next
           });
       }
       
       return next;
     });
-  }, [pushHistory]); // Depends on pushHistory (stable)
+  }, [pushHistoryThrottled]);
 
   // Memoized handler for syncing from model (GenericModel) to avoid loop
   const handleMaterialSync = useCallback((key, val) => {
       updateMaterialSetting(key, val, true);
   }, [updateMaterialSetting]);
 
-  // Memoized handler for UI updates (RightPanel)
   const handleMaterialUIUpdate = useCallback((key, val) => {
       updateMaterialSetting(key, val, false);
   }, [updateMaterialSetting]);
+
+  const handleScreenshotClick = useCallback(() => {
+    // 1. Enter Capture Mode (hides UI elements like grid, base, etc.)
+    setIsCapturing(true);
+    
+    // 2. Wait for a short duration to ensure Three.js has rendered at least one frame 
+    // without the hidden elements.
+    setTimeout(() => {
+        const canvas = document.querySelector('canvas');
+        if (canvas) {
+            // Note: gl.preserveDrawingBuffer is true, so this works.
+            // Using PNG to maintain transparency support.
+            const dataUrl = canvas.toDataURL('image/png');
+            setScreenshotPreview(dataUrl);
+            setIsScreenshotOpen(true);
+        }
+        // 3. Exit Capture Mode
+        setIsCapturing(false);
+    }, 150); 
+  }, []);
+
+  const handleDownloadScreenshot = () => {
+    if (screenshotPreview) {
+        const link = document.createElement('a');
+        link.href = screenshotPreview;
+        link.download = `3d-model-snapshot-${Date.now()}.png`;
+        link.click();
+        setIsScreenshotOpen(false);
+    }
+  };
 
   const processFile = (file) => {
     if (!file) return;
@@ -427,13 +584,15 @@ export default function ThreedEditor() {
         name: file.name.replace(/\.[^/.]+$/, "")
     };
 
-    setModels([newModel]);
+    const nextModels = [newModel];
+    setModels(nextModels);
     
     // Kept for backward compat
     setModelUrl(url);
     setModelFile(file);
     setModelType(newModel.type);
-    setModelName(newModel.name);
+    const nextModelName = newModel.name;
+    setModelName(nextModelName);
     
     setModelMaterialLists({});
     setModelStatsMap({});
@@ -441,14 +600,26 @@ export default function ThreedEditor() {
     setHiddenMaterials(new Set());
     setDeletedMaterials(new Set());
     
-    // Reset material settings for the new model to prevent "collapsed" textures from previous model settings
-    setMaterialSettings({
+    const nextMaterialSettings = {
         alpha: 100, metallic: 0, roughness: 50, normal: 100, bump: 100, scale: 100, scaleY: 100, rotation: 0,
         specular: 50, reflection: 50, shadow: 50, softness: 50, ao: 100, environment: 'city',
         color: '#000000', useFactorColor: false, autoUnwrap: false, envRotation: 0, offset: { x: 0, y: 0 },
+        appliedTexture: null,
         lightPosition: { x: 10, y: 10, z: 10 }
-    });
+    };
+    // Reset material settings for the new model
+    setMaterialSettings(nextMaterialSettings);
     
+    pushHistory({
+        ...stateRef.current,
+        models: nextModels,
+        modelName: nextModelName,
+        materialSettings: nextMaterialSettings,
+        hiddenMaterials: [],
+        deletedMaterials: [],
+        modelMaterialLists: {}
+    });
+
     setIsSidebarCollapsed(false); 
   };
 
@@ -608,7 +779,9 @@ export default function ThreedEditor() {
   }, []);
 
   const handleTextureApplied = useCallback(() => {
-      setSelectedTexture(null);
+      // We no longer clear selectedTexture here because we want it to stay
+      // in the state until it's actually changed or cleared by user
+      // setSelectedTexture(null);
   }, []);
 
   const handleSelectMaterial = useCallback((val) => {
@@ -624,14 +797,25 @@ export default function ThreedEditor() {
       if (t.original) {
           originalTransformRef.current = t.original;
       } else {
-          originalTransformRef.current = null; // Clear if not provided (e.g. wrapper)
+          originalTransformRef.current = null;
       }
-      setTransformValues({
+      
+      const nextTransform = {
           position: { x: t.position.x, y: t.position.y, z: t.position.z },
           rotation: { x: t.rotation.x, y: t.rotation.y, z: t.rotation.z },
           scale: { x: t.scale.x, y: t.scale.y, z: t.scale.z }
-      });
+      };
+
+      setTransformValues(nextTransform);
   }, []);
+
+  const onTransformEnd = useCallback(() => {
+     // Push to history only when user releases the gizmo handle
+     pushHistory({
+         ...stateRef.current,
+         transformValues: transformValues
+     });
+  }, [transformValues, pushHistory]);
 
   return (
     <div 
@@ -708,6 +892,8 @@ export default function ThreedEditor() {
             setSettings={setSettings}
             onClear={handleClearModel}
             onAddClick={() => setShowAddModelModal(true)}
+            onScreenshotClick={handleScreenshotClick}
+            isScreenshotOpen={isScreenshotOpen}
             transformMode={transformMode}
             setTransformMode={(mode) => {
                 setTransformMode(mode);
@@ -718,20 +904,40 @@ export default function ThreedEditor() {
             }}
           />
 
+          {isScreenshotOpen && (
+              <ScreenshotPopover 
+                  preview={screenshotPreview} 
+                  onDownload={handleDownloadScreenshot}
+                  onClose={() => setIsScreenshotOpen(false)}
+              />
+          )}
+
           {models.length > 0 && (
             <TextureGalleryBar
               isOpen={isTextureOpen}
               setIsOpen={setIsTextureOpen}
               onSelectTexture={(textureData) => {
-                  setSelectedTexture({ ...textureData, ts: Date.now() });
+                  const newTexture = { ...textureData, ts: Date.now() };
+                  setSelectedTexture(newTexture);
                   // Reset factors to 1.0 (100 in UI) so maps have full influence
-                  setMaterialSettings(prev => ({
-                      ...prev,
-                      metallic: 100,
-                      roughness: 100,
-                      color: "#ffffff",
-                      useFactorColor: true
-                  }));
+                  setMaterialSettings(prev => {
+                      const next = {
+                          ...prev,
+                          metallic: 100,
+                          roughness: 100,
+                          color: "#ffffff",
+                          useFactorColor: true,
+                          appliedTexture: newTexture
+                      };
+                      
+                      pushHistory({
+                          ...stateRef.current,
+                          selectedTexture: newTexture,
+                          materialSettings: next
+                      });
+                      
+                      return next;
+                  });
               }}
             />
           )}
@@ -773,7 +979,8 @@ export default function ThreedEditor() {
                 gl.outputColorSpace = THREE.SRGBColorSpace;
               }}
             >
-              <color attach="background" args={[settings.backgroundColor]} />
+              {/* Only show background color if NOT capturing for a clean model-only shot */}
+              {!isCapturing && <color attach="background" args={[settings.backgroundColor]} />}
               
               <ambientLight intensity={1.2} />
               <spotLight 
@@ -844,16 +1051,17 @@ export default function ThreedEditor() {
                         onMouseUp={handleTransformEnd}
                     />
                 )}
+
               </Suspense>
               
               {/* Blender-style Grid: Darker lines on dark background. 
                   Color 1 (Center): Transparent/Same as grid since we draw custom axes. 
                   Color 2 (Grid): #222222 or similar dark grey. 
               */}
-              {settings.grid && <gridHelper args={[30, 30, 0x222222, 0x222222]} position={[0, -0.01, 0]} />}
+              {settings.grid && !isCapturing && <gridHelper args={[30, 30, 0x222222, 0x222222]} position={[0, -0.01, 0]} />}
               
               {/* Custom Center Lines: Red for X-axis, Green for Z-axis (User requested Red & Green) */}
-              {settings.grid && (
+              {settings.grid && !isCapturing && (
                 <group position={[0, 0.01, 0]}>
                     {/* X Axis - Red */}
                     <line>
@@ -883,7 +1091,7 @@ export default function ThreedEditor() {
                 </group>
               )}
               
-              {settings.base && (
+              {settings.base && !isCapturing && (
                  <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.015, 0]} receiveShadow>
                     <planeGeometry args={[30, 30]} />
                     <meshStandardMaterial color={settings.baseColor} />
@@ -913,8 +1121,8 @@ export default function ThreedEditor() {
                 }}
               />
 
-              {/* GIZMO HELPER */}
-              {models.length > 0 && <AnimatedGizmo isTextureOpen={isTextureOpen} />}
+              {/* GIZMO HELPER - Also hide during capture */}
+              {models.length > 0 && !isCapturing && <AnimatedGizmo isTextureOpen={isTextureOpen} />}
               
               {models.length > 0 && (
                   <ContactShadows 
@@ -928,11 +1136,13 @@ export default function ThreedEditor() {
                   />
               )}
               
-              <Environment 
-                  preset={materialSettings.environment} 
-                  rotation={[0, (materialSettings.envRotation || 0) * (Math.PI / 180), 0]}
-                  environmentIntensity={(materialSettings.reflection ?? 50) / 50}
-              />
+               <Environment 
+                   preset={materialSettings.environment || 'city'} 
+                   background={false} 
+                   blur={0.5} 
+                   environmentIntensity={(materialSettings.reflection ?? 50) / 50}
+                   rotation={[0, (materialSettings.envRotation || 0) * (Math.PI / 180), 0]}
+               />
             </Canvas>
           </div>
         </div>
@@ -986,6 +1196,49 @@ export default function ThreedEditor() {
             onClose={() => setShowAddModelModal(false)}
             onAdd={handleAddModel}
           />
+    </div>
+  );
+}
+
+// Internal Screenshot Popover Component
+function ScreenshotPopover({ preview, onDownload, onClose }) {
+  return (
+    <div className="absolute right-[4.5vw] top-[5.5vw] z-50 animate-in fade-in slide-in-from-right-4 duration-300">
+        <div className="bg-white rounded-[1.25vw] shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-gray-100 p-[1vw] w-[13.5vw] flex flex-col items-center gap-[0.75vw]">
+            <div className="w-full flex items-center justify-between">
+                <span className="text-[0.7vw] font-semibold text-gray-700">Take a shot of 3D Model</span>
+                <button onClick={onClose} className="p-[0.3vw] rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-all cursor-pointer">
+                    <Icon icon="heroicons:x-mark" width="0.85vw" />
+                </button>
+            </div>
+            
+            {/* PREVIEW IMAGE with Checkerboard */}
+            <div className="w-full aspect-square rounded-[0.75vw] overflow-hidden border border-gray-100 bg-[#f8f9fa] relative group">
+                {/* Checkerboard Background */}
+                <div 
+                    className="absolute inset-0 opacity-10" 
+                    style={{ 
+                        backgroundImage: 'linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000), linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000)',
+                        backgroundPosition: '0 0, 8px 8px',
+                        backgroundSize: '16px 16px'
+                    }}
+                ></div>
+                
+                {preview ? (
+                    <img src={preview} className="w-full h-full object-contain relative z-10" alt="Preview" />
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-[0.65vw]">Generating snapshot...</div>
+                )}
+            </div>
+
+            {/* ACTION BUTTON */}
+            <button 
+                onClick={onDownload}
+                className="w-[2.75vw] h-[2.75vw] rounded-full flex items-center justify-center bg-white border border-gray-200 shadow-lg hover:shadow-xl hover:scale-110 active:scale-95 transition-all text-[#5d5efc] group cursor-pointer"
+            >
+                <Icon icon="solar:camera-outline" width="1.35vw" className="group-hover:rotate-12 transition-transform" />
+            </button>
+        </div>
     </div>
   );
 }
