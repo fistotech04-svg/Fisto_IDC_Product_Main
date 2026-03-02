@@ -7,6 +7,7 @@ import usersettingRoutes from './routes/User_Details/usersetting.js';
 
 import authRoutes from './routes/User_Details/login.js';
 import flipbookRoutes from './routes/Flipbook/flipbook.js';
+import threedModelRoutes from './routes/User_Details/threed_models.js';
 
 // Load env vars
 dotenv.config();
@@ -22,13 +23,8 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Serve Static Uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Middleware
 // Middleware
 app.use(cors({
-    // origin: [process.env.FRONTEND_URL, 'http://localhost:5173', 'http://localhost:5174', 'https://bf221rfk-5173.inc1.devtunnels.ms','*'].filter(Boolean),
     origin: true, // Allow all origins dynamically
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -36,6 +32,9 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '100mb' }));
 app.use(bodyParser.urlencoded({ limit: '100mb', extended: true }));
+
+// Serve Static Uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Basic Route
 app.get('/', (req, res) => {
@@ -46,6 +45,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/flipbook', flipbookRoutes);
 app.use('/api/usersetting', usersettingRoutes);
+app.use('/api/3d-models', threedModelRoutes);
 
 const PORT = process.env.PORT || 5000;
 

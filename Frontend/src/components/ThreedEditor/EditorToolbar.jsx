@@ -11,6 +11,7 @@ export default function EditorToolbar({
     transformMode, 
     setTransformMode, 
     onAddClick,
+    onGalleryClick,
     onScreenshotClick,
     isScreenshotOpen
 }) {
@@ -161,7 +162,7 @@ export default function EditorToolbar({
             {/* MAIN TOOLBAR */}
             <div className="w-[3vw] bg-white rounded-[0.75vw] border-2 border-gray-300 py-[0.25vw] flex flex-col items-center gap-[0.5vw] shadow-sm">
                 <ToolbarButton icon="material-symbols:add-rounded" enabled onClick={onAddClick} />
-                <ToolbarButton icon="solar:gallery-wide-outline" enabled />
+                <ToolbarButton icon="solar:gallery-wide-outline" enabled onClick={onGalleryClick} />
                 <ToolbarButton 
                     icon="solar:camera-outline" 
                     enabled={hasModel} 

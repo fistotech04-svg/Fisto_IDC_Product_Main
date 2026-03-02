@@ -187,13 +187,14 @@ const Editor = () => {
                           if (m.file instanceof Blob) {
                               return { ...m, url: URL.createObjectURL(m.file) };
                           }
+                          // If it's not a blob, keep the URL that was saved (likely a remote backend URL)
                           return m;
                       });
                   }
                   
                   setThreedState({
                       ...savedState,
-                      modelUrl: restoredUrl,
+                      modelUrl: restoredUrl || savedState.modelUrl, // Use saved URL as fallback
                       models: restoredModels
                   });
               }
@@ -212,13 +213,16 @@ const Editor = () => {
       if (isRestoring) return; // Don't save while restoring
 
       const saveTimer = setTimeout(() => {
-          // Prepare state for saving (exclude URL, transient)
+          // Prepare state for saving (exclude transient blob URLs)
           const stateToSave = {
               ...threedState,
-              modelUrl: null // Don't save the URL string
+              modelUrl: threedState.modelUrl?.startsWith('blob:') ? null : threedState.modelUrl
           };
           if (stateToSave.models && Array.isArray(stateToSave.models)) {
-              stateToSave.models = stateToSave.models.map(m => ({ ...m, url: null }));
+              stateToSave.models = stateToSave.models.map(m => ({ 
+                  ...m, 
+                  url: m.url?.startsWith('blob:') ? null : m.url 
+              }));
           }
           saveToDB(STATE_KEY, stateToSave);
       }, 1000); // Debounce saves

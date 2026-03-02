@@ -178,13 +178,15 @@ export const StepModel = React.forwardRef(({ url, ...props }, ref) => {
 });
 
 // Helper component to choose the right model component
-const RenderModel = React.forwardRef(({ type, ...props }, ref) => {
+const RenderModel = React.forwardRef(({ type, url, ...props }, ref) => {
+    if (!url) return null;
+    
     switch(type) {
-        case 'obj': return <OBJModel ref={ref} {...props} />;
-        case 'fbx': return <FBXModel ref={ref} {...props} />;
-        case 'stl': return <STLModel ref={ref} {...props} />;
-        case 'step': return <StepModel ref={ref} {...props} />;
-        default: return <GLBModel ref={ref} {...props} />;
+        case 'obj': return <OBJModel ref={ref} url={url} {...props} />;
+        case 'fbx': return <FBXModel ref={ref} url={url} {...props} />;
+        case 'stl': return <STLModel ref={ref} url={url} {...props} />;
+        case 'step': return <StepModel ref={ref} url={url} {...props} />;
+        default: return <GLBModel ref={ref} url={url} {...props} />;
     }
 });
 

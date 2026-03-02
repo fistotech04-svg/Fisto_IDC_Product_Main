@@ -14,12 +14,13 @@ import RenderModel from "./Components/ModelLoaders";
 import useModalHistory from "./hooks/useModalHistory";
 import ExportModal from "./Components/ExportModal";
 import AddModelModal from "./Components/AddModelModal";
+import ModelGalleryModal from "./Components/ModelGalleryModal";
 import { GLTFExporter } from "three-stdlib";
 import { OBJExporter } from "three-stdlib";
 import { STLExporter } from "three-stdlib";
-
-
+import CameraModal from "./Components/CameraModal";
 import { useOutletContext } from "react-router-dom";
+
 
 export default function ThreedEditor() {
   const { threedState, setThreedState } = useOutletContext();
@@ -76,6 +77,7 @@ export default function ThreedEditor() {
   const [showWarning, setShowWarning] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showAddModelModal, setShowAddModelModal] = useState(false);
+  const [showModelGalleryModal, setShowModelGalleryModal] = useState(false);
 
   // Right Panel & Sidebar State
   const [activeRightTab, setActiveRightTab] = useState("pre"); // "pre" | "custom"
@@ -524,24 +526,9 @@ export default function ThreedEditor() {
   }, [updateMaterialSetting]);
 
   const handleScreenshotClick = useCallback(() => {
-    // 1. Enter Capture Mode (hides UI elements like grid, base, etc.)
-    setIsCapturing(true);
-    
-    // 2. Wait for a short duration to ensure Three.js has rendered at least one frame 
-    // without the hidden elements.
-    setTimeout(() => {
-        const canvas = document.querySelector('canvas');
-        if (canvas) {
-            // Note: gl.preserveDrawingBuffer is true, so this works.
-            // Using PNG to maintain transparency support.
-            const dataUrl = canvas.toDataURL('image/png');
-            setScreenshotPreview(dataUrl);
-            setIsScreenshotOpen(true);
-        }
-        // 3. Exit Capture Mode
-        setIsCapturing(false);
-    }, 150); 
+    setIsScreenshotOpen(true);
   }, []);
+
 
   const handleDownloadScreenshot = () => {
     if (screenshotPreview) {
@@ -621,6 +608,66 @@ export default function ThreedEditor() {
     });
 
     setIsSidebarCollapsed(false); 
+  };
+
+  const handleSelectGalleryModel = async (model) => {
+    if (!model) return;
+
+    setManualLoading(true);
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+    const fullUrl = `${backendUrl}${model.url}`;
+
+    // Clear existing models if we are 'replacing'
+    if (models.length > 0) {
+        models.forEach(m => {
+            if (m.url && m.url.startsWith('blob:')) URL.revokeObjectURL(m.url);
+        });
+    }
+
+    const newModel = {
+        id: Date.now().toString(),
+        url: fullUrl,
+        file: null, // No local file object
+        type: model.type,
+        name: model.name.replace(/\.[^/.]+$/, "")
+    };
+
+    const nextModels = [newModel];
+    setModels(nextModels);
+    
+    setModelUrl(fullUrl);
+    setModelFile(null);
+    setModelType(newModel.type);
+    const nextModelName = newModel.name;
+    setModelName(nextModelName);
+    
+    setModelMaterialLists({});
+    setModelStatsMap({});
+    setSelectedMaterial(null);
+    setHiddenMaterials(new Set());
+    setDeletedMaterials(new Set());
+    setModelStats({ fileSize: model.size || "0 MB" });
+
+    const nextMaterialSettings = {
+        alpha: 100, metallic: 0, roughness: 50, normal: 100, bump: 100, scale: 100, scaleY: 100, rotation: 0,
+        specular: 50, reflection: 50, shadow: 50, softness: 50, ao: 100, environment: 'city',
+        color: '#000000', useFactorColor: false, autoUnwrap: false, envRotation: 0, offset: { x: 0, y: 0 },
+        appliedTexture: null,
+        lightPosition: { x: 10, y: 10, z: 10 }
+    };
+    setMaterialSettings(nextMaterialSettings);
+    
+    pushHistory({
+        ...stateRef.current,
+        models: nextModels,
+        modelName: nextModelName,
+        materialSettings: nextMaterialSettings,
+        hiddenMaterials: [],
+        deletedMaterials: [],
+        modelMaterialLists: {}
+    });
+
+    setIsSidebarCollapsed(false);
   };
 
 
@@ -886,12 +933,13 @@ export default function ThreedEditor() {
           )}
 
 
-          <EditorToolbar 
+          <EditorToolbar
             hasModel={models.length > 0}
             settings={settings}
             setSettings={setSettings}
             onClear={handleClearModel}
             onAddClick={() => setShowAddModelModal(true)}
+            onGalleryClick={() => setShowModelGalleryModal(true)}
             onScreenshotClick={handleScreenshotClick}
             isScreenshotOpen={isScreenshotOpen}
             transformMode={transformMode}
@@ -905,12 +953,18 @@ export default function ThreedEditor() {
           />
 
           {isScreenshotOpen && (
-              <ScreenshotPopover 
-                  preview={screenshotPreview} 
-                  onDownload={handleDownloadScreenshot}
+              <CameraModal
+                  isOpen={isScreenshotOpen}
                   onClose={() => setIsScreenshotOpen(false)}
+                  models={models}
+                  settings={settings}
+                  materialSettings={materialSettings}
+                  transformValues={transformValues}
+                  hiddenMaterials={hiddenMaterials}
+                  deletedMaterials={deletedMaterials}
               />
           )}
+
 
           {models.length > 0 && (
             <TextureGalleryBar
@@ -929,13 +983,13 @@ export default function ThreedEditor() {
                           useFactorColor: true,
                           appliedTexture: newTexture
                       };
-                      
+
                       pushHistory({
                           ...stateRef.current,
                           selectedTexture: newTexture,
                           materialSettings: next
                       });
-                      
+
                       return next;
                   });
               }}
@@ -943,11 +997,11 @@ export default function ThreedEditor() {
           )}
 
           {models.length > 0 && (
-            <div 
+            <div
               className={`absolute left-[1vw] z-20 p-[0.25vw] transition-all duration-500 ease-in-out overflow-hidden w-[13.5vw] pointer-events-none select-none
                 ${isTextureOpen ? "bottom-[11vw]" : "bottom-[3.7vw]"}
               `}
-            > 
+            >
                 <EditorInfoBox stats={combinedStats} />
             </div>
           )}
@@ -964,11 +1018,11 @@ export default function ThreedEditor() {
 
           {/* 3D CANVAS */}
           <div className="flex-1 h-full w-full">
-            <Canvas 
-              camera={{ position: [0, 1, 5], fov: 45 }} 
-              shadows 
-              dpr={[1, 2]} 
-              gl={{ 
+            <Canvas
+              camera={{ position: [0, 1, 5], fov: 45 }}
+              shadows
+              dpr={[1, 2]}
+              gl={{
                 preserveDrawingBuffer: true,
                 antialias: true,
                 alpha: true,
@@ -981,20 +1035,20 @@ export default function ThreedEditor() {
             >
               {/* Only show background color if NOT capturing for a clean model-only shot */}
               {!isCapturing && <color attach="background" args={[settings.backgroundColor]} />}
-              
+
               <ambientLight intensity={1.2} />
-              <spotLight 
-                position={[5, 10, 5]} 
-                angle={0.15} 
-                penumbra={1} 
-                intensity={2} 
-                castShadow 
+              <spotLight
+                position={[5, 10, 5]}
+                angle={0.15}
+                penumbra={1}
+                intensity={2}
+                castShadow
                 shadow-bias={-0.005} // Increased bias to prevent triangle acne/banding
                 shadow-mapSize={[2048, 2048]}
               />
-              <directionalLight 
-                position={[-5, 5, -5]} 
-                intensity={1} 
+              <directionalLight
+                position={[-5, 5, -5]}
+                intensity={1}
                 castShadow
                 shadow-bias={-0.005}
               />
@@ -1002,14 +1056,14 @@ export default function ThreedEditor() {
               <Suspense fallback={null}>
                 <group ref={sceneWrapperRef}>
                   {models.map((model, index) => (
-                    <RenderModel 
+                    <RenderModel
                         key={model.id}
                         ref={(r) => {
                             if (index === 0) modelRef.current = r;
                             if (r) modelRefs.current.set(model.id, r);
                             else modelRefs.current.delete(model.id);
                         }}
-                        type={model.type}  
+                        type={model.type}
                         url={model.url}
                         wireframe={settings.wireframe}
                         setModelStats={(stats) => handleSetModelStats(model.id, stats)}
@@ -1035,7 +1089,7 @@ export default function ThreedEditor() {
                 </group>
 
                 {transformMode && (selectedMaterial?.name === "Scene") && (
-                    <TransformControls 
+                    <TransformControls
                         object={sceneWrapperRef.current}
                         mode={transformMode}
                         size={0.8}
@@ -1053,13 +1107,13 @@ export default function ThreedEditor() {
                 )}
 
               </Suspense>
-              
-              {/* Blender-style Grid: Darker lines on dark background. 
-                  Color 1 (Center): Transparent/Same as grid since we draw custom axes. 
-                  Color 2 (Grid): #222222 or similar dark grey. 
+
+              {/* Blender-style Grid: Darker lines on dark background.
+                  Color 1 (Center): Transparent/Same as grid since we draw custom axes.
+                  Color 2 (Grid): #222222 or similar dark grey.
               */}
               {settings.grid && !isCapturing && <gridHelper args={[30, 30, 0x222222, 0x222222]} position={[0, -0.01, 0]} />}
-              
+
               {/* Custom Center Lines: Red for X-axis, Green for Z-axis (User requested Red & Green) */}
               {settings.grid && !isCapturing && (
                 <group position={[0, 0.01, 0]}>
@@ -1069,20 +1123,20 @@ export default function ThreedEditor() {
                             <bufferAttribute
                                 attach="attributes-position"
                                 count={2}
-                                array={new Float32Array([-15, 0, 0, 15, 0, 0])} 
+                                array={new Float32Array([-15, 0, 0, 15, 0, 0])}
                                 itemSize={3}
                             />
                         </bufferGeometry>
                         <lineBasicMaterial attach="material" color="red" linewidth={2} />
                     </line>
-                    
+
                     {/* Z Axis - Green (User asked for green center line) */}
                     <line>
                         <bufferGeometry attach="geometry">
                              <bufferAttribute
                                 attach="attributes-position"
                                 count={2}
-                                array={new Float32Array([0, 0, -15, 0, 0, 15])} 
+                                array={new Float32Array([0, 0, -15, 0, 0, 15])}
                                 itemSize={3}
                             />
                         </bufferGeometry>
@@ -1090,7 +1144,7 @@ export default function ThreedEditor() {
                     </line>
                 </group>
               )}
-              
+
               {settings.base && !isCapturing && (
                  <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.015, 0]} receiveShadow>
                     <planeGeometry args={[30, 30]} />
@@ -1098,10 +1152,10 @@ export default function ThreedEditor() {
                  </mesh>
               )}
 
-              <OrbitControls 
-                ref={controlsRef} 
-                autoRotate={autoRotate} 
-                makeDefault 
+              <OrbitControls
+                ref={controlsRef}
+                autoRotate={autoRotate}
+                makeDefault
                 enableDamping={true}
                 dampingFactor={0.05}
                 onChange={(e) => {
@@ -1110,10 +1164,10 @@ export default function ThreedEditor() {
                   if (now - lastUpdateRef.current > 60) {
                      if (e?.target?.target) {
                         const { x, y, z } = e.target.target;
-                        setTargetPosition({ 
-                          x: parseFloat(x.toFixed(2)), 
-                          y: parseFloat(y.toFixed(2)), 
-                          z: parseFloat(z.toFixed(2)) 
+                        setTargetPosition({
+                          x: parseFloat(x.toFixed(2)),
+                          y: parseFloat(y.toFixed(2)),
+                          z: parseFloat(z.toFixed(2))
                         });
                      }
                      lastUpdateRef.current = now;
@@ -1123,23 +1177,23 @@ export default function ThreedEditor() {
 
               {/* GIZMO HELPER - Also hide during capture */}
               {models.length > 0 && !isCapturing && <AnimatedGizmo isTextureOpen={isTextureOpen} />}
-              
+
               {models.length > 0 && (
-                  <ContactShadows 
-                      position={[0, -0.01, 0]} 
-                      opacity={(materialSettings.shadow ?? 50) / 100} 
-                      scale={50} 
-                      blur={2} 
-                      far={5} 
-                      resolution={512} 
-                      color="#000000" 
+                  <ContactShadows
+                      position={[0, -0.01, 0]}
+                      opacity={(materialSettings.shadow ?? 50) / 100}
+                      scale={50}
+                      blur={2}
+                      far={5}
+                      resolution={512}
+                      color="#000000"
                   />
               )}
-              
-               <Environment 
-                   preset={materialSettings.environment || 'city'} 
-                   background={false} 
-                   blur={0.5} 
+
+               <Environment
+                   preset={materialSettings.environment || 'city'}
+                   background={false}
+                   blur={0.5}
                    environmentIntensity={(materialSettings.reflection ?? 50) / 50}
                    rotation={[0, (materialSettings.envRotation || 0) * (Math.PI / 180), 0]}
                />
@@ -1191,54 +1245,24 @@ export default function ThreedEditor() {
         </div>
       </div>
 
-          <AddModelModal 
-            isOpen={showAddModelModal}
-            onClose={() => setShowAddModelModal(false)}
-            onAdd={handleAddModel}
-          />
+          {showAddModelModal && (
+              <AddModelModal
+                  isOpen={showAddModelModal}
+                  onClose={() => setShowAddModelModal(false)}
+                  onAdd={handleAddModel}
+              />
+          )}
+
+          {showModelGalleryModal && (
+              <ModelGalleryModal
+                  isOpen={showModelGalleryModal}
+                  onClose={() => setShowModelGalleryModal(false)}
+                  onSelectModel={handleSelectGalleryModel}
+              />
+          )}
     </div>
   );
 }
 
-// Internal Screenshot Popover Component
-function ScreenshotPopover({ preview, onDownload, onClose }) {
-  return (
-    <div className="absolute right-[4.5vw] top-[5.5vw] z-50 animate-in fade-in slide-in-from-right-4 duration-300">
-        <div className="bg-white rounded-[1.25vw] shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-gray-100 p-[1vw] w-[13.5vw] flex flex-col items-center gap-[0.75vw]">
-            <div className="w-full flex items-center justify-between">
-                <span className="text-[0.7vw] font-semibold text-gray-700">Take a shot of 3D Model</span>
-                <button onClick={onClose} className="p-[0.3vw] rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-all cursor-pointer">
-                    <Icon icon="heroicons:x-mark" width="0.85vw" />
-                </button>
-            </div>
-            
-            {/* PREVIEW IMAGE with Checkerboard */}
-            <div className="w-full aspect-square rounded-[0.75vw] overflow-hidden border border-gray-100 bg-[#f8f9fa] relative group">
-                {/* Checkerboard Background */}
-                <div 
-                    className="absolute inset-0 opacity-10" 
-                    style={{ 
-                        backgroundImage: 'linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000), linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000)',
-                        backgroundPosition: '0 0, 8px 8px',
-                        backgroundSize: '16px 16px'
-                    }}
-                ></div>
-                
-                {preview ? (
-                    <img src={preview} className="w-full h-full object-contain relative z-10" alt="Preview" />
-                ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-[0.65vw]">Generating snapshot...</div>
-                )}
-            </div>
 
-            {/* ACTION BUTTON */}
-            <button 
-                onClick={onDownload}
-                className="w-[2.75vw] h-[2.75vw] rounded-full flex items-center justify-center bg-white border border-gray-200 shadow-lg hover:shadow-xl hover:scale-110 active:scale-95 transition-all text-[#5d5efc] group cursor-pointer"
-            >
-                <Icon icon="solar:camera-outline" width="1.35vw" className="group-hover:rotate-12 transition-transform" />
-            </button>
-        </div>
-    </div>
-  );
-}
+

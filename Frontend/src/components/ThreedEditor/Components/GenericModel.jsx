@@ -152,14 +152,17 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
      });
      
      // Update the UI immediately to reflect the new texture as "Active" for this material
-     if (onTextureIdentified && selectedTexture.id) {
+     if (typeof onTextureIdentified === 'function' && selectedTexture.id) {
          onTextureIdentified(selectedTexture.id);
      }
+
      
      // Notify parent that texture has been processed so we can reset state
-     if (onTextureApplied) {
+     if (typeof onTextureApplied === 'function') {
          onTextureApplied();
      }
+
+
      
   }, [selectedTexture, scene, selectedMaterial, onTextureApplied, onTextureIdentified]);
 
@@ -213,10 +216,11 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
       });
 
       if (foundMat && foundMat.userData && foundMat.userData.appliedTextureId) {
-          onTextureIdentified(foundMat.userData.appliedTextureId);
+          if (typeof onTextureIdentified === 'function') onTextureIdentified(foundMat.userData.appliedTextureId);
       } else {
-          onTextureIdentified(null);
+          if (typeof onTextureIdentified === 'function') onTextureIdentified(null);
       }
+
 
   }, [selectedMaterial, scene, onTextureIdentified, modelName]);
   
@@ -385,7 +389,7 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
     }
     
     if (structuredList.length === 0) {
-         setMaterialList(Array.from(ungroupedMats).sort());
+         if (typeof setMaterialList === 'function') setMaterialList(Array.from(ungroupedMats).sort());
     } else {
          if (ungroupedMats.size > 0 && !structuredList.find(x => x.group === "Ungrouped")) {
              structuredList.push({
@@ -393,15 +397,19 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
                  materials: Array.from(ungroupedMats).sort()
              });
          }
-         setMaterialList(structuredList);
+         if (typeof setMaterialList === 'function') setMaterialList(structuredList);
     }
 
-    setModelStats({
-        vertexCount: vertCount.toLocaleString(),
-        polygonCount: Math.round(polyCount).toLocaleString(),
-        materialCount: processedMaterials.size,
-        dimensions: `${Math.round(size.x * 100) / 100} X ${Math.round(size.y * 100) / 100} X ${Math.round(size.z * 100) / 100} unit`
-    });
+
+    if (typeof setModelStats === 'function') {
+        setModelStats({
+            vertexCount: vertCount.toLocaleString(),
+            polygonCount: Math.round(polyCount).toLocaleString(),
+            materialCount: processedMaterials.size,
+            dimensions: `${Math.round(size.x * 100) / 100} X ${Math.round(size.y * 100) / 100} X ${Math.round(size.z * 100) / 100} unit`
+        });
+    }
+
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scene]);
@@ -852,7 +860,7 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
             setTransformTarget(modelGroup);
             
             // Ensure UI stays in sync with Full Model transform
-            if (onTransformChange) {
+            if (typeof onTransformChange === 'function') {
                  if (!modelGroup.userData.originalTransform) {
                        modelGroup.userData.originalTransform = {
                             position: modelGroup.position.clone(),
@@ -920,7 +928,7 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
     setTransformTarget(foundMesh || modelGroup);
     
     // Update transform values initially
-    if (onTransformChange) {
+    if (typeof onTransformChange === 'function') {
         const target = foundMesh || modelGroup;
         if (target) {
              // Store original transform if not present (for both ModelGroup and Meshes)
@@ -1056,7 +1064,7 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
             // Since UV unwrapping changes geometry attributes (permanent till reload), 
             // we treat it as a state change for the history.
             // We'll push a snapshot of current settings.
-            if (onUpdateMaterialSetting) {
+            if (typeof onUpdateMaterialSetting === 'function') {
                 // Trigger a dummy update to force a history push if needed, 
                 // but since this is geometry, we just want a checkpoint.
                 onUpdateMaterialSetting('uvUnwrap', Date.now(), false);
@@ -1076,7 +1084,7 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
                  size={0.8} 
                  space="local" 
                  onChange={() => {
-                     if (onTransformChange && transformTarget) {
+                     if (typeof onTransformChange === 'function' && transformTarget) {
                          onTransformChange({
                              position: transformTarget.position,
                              rotation: transformTarget.rotation,
@@ -1084,7 +1092,7 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
                          });
                      }
                  }}
-                 onMouseUp={onTransformEnd}
+                 onMouseUp={typeof onTransformEnd === 'function' ? onTransformEnd : undefined}
               />
          )}
         <group ref={setModelGroup}>
@@ -1094,7 +1102,7 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
                 position={position} 
                 onClick={(e) => {
                     e.stopPropagation();
-                    if (onSelectMaterial && e.object.material) {
+                    if (typeof onSelectMaterial === 'function' && e.object.material) {
                         let mat = e.object.material;
                         if (Array.isArray(mat)) {
                             if (e.face && e.face.materialIndex !== undefined) {
@@ -1108,6 +1116,7 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
                         }
                     }
                 }}
+
             />
         </group>
     </>
