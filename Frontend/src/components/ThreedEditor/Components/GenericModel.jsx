@@ -6,7 +6,7 @@ import { OBJExporter } from "three-stdlib";
 import { STLExporter } from "three-stdlib";
 import * as BufferGeometryUtils from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
-const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelStats, setMaterialList, selectedMaterial, onSelectMaterial, modelName, transformMode, materialSettings, hiddenMaterials, onTransformChange, onTransformEnd, transformValues, selectedTexture, onTextureApplied, onTextureIdentified, onUpdateMaterialSetting, resetKey, sceneResetTrigger, uvUnwrapTrigger }, ref) => {
+const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelStats, setMaterialList, selectedMaterial, onSelectMaterial, modelName, transformMode, materialSettings, hiddenMaterials, onTransformChange, onTransformEnd, transformValues, selectedTexture, onTextureApplied, onTextureIdentified, onUpdateMaterialSetting, resetKey, sceneResetTrigger, uvUnwrapTrigger, isSelectionDisabled }, ref) => {
   const [position, setPosition] = useState([0, 0, 0]);
   const [scale, setScale] = useState(1);
   const groupRef = React.useRef(null);
@@ -1102,19 +1102,19 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
                 position={position} 
                 onClick={(e) => {
                     e.stopPropagation();
-                    if (typeof onSelectMaterial === 'function' && e.object.material) {
-                        let mat = e.object.material;
-                        if (Array.isArray(mat)) {
-                            if (e.face && e.face.materialIndex !== undefined) {
-                                 mat = mat[e.face.materialIndex];
-                            } else {
-                                 mat = mat[0];
+                        if (!isSelectionDisabled && typeof onSelectMaterial === 'function' && e.object.material) {
+                            let mat = e.object.material;
+                            if (Array.isArray(mat)) {
+                                if (e.face && e.face.materialIndex !== undefined) {
+                                     mat = mat[e.face.materialIndex];
+                                } else {
+                                     mat = mat[0];
+                                }
+                            }
+                            if (mat && mat.name) {
+                                onSelectMaterial({ name: mat.name, uuid: e.object.uuid, parentGroup: modelName });
                             }
                         }
-                        if (mat && mat.name) {
-                            onSelectMaterial({ name: mat.name, uuid: e.object.uuid, parentGroup: modelName });
-                        }
-                    }
                 }}
 
             />

@@ -11,29 +11,28 @@ import GenericModel from "./GenericModel";
 import { LoadingSpinner } from "./GlobalLoader";
 
 // GLB Loader Component
-// GLB Loader Component
-export const GLBModel = React.forwardRef(({ url, ...props }, ref) => {
+export const GLBModel = React.forwardRef(({ url, shouldClone, ...props }, ref) => {
   const { scene } = useGLTF(url);
-  return <GenericModel ref={ref} scene={scene} {...props} />;
+  const displayScene = useMemo(() => shouldClone ? scene.clone() : scene, [scene, shouldClone]);
+  return <GenericModel ref={ref} scene={displayScene} {...props} />;
 });
 
 // OBJ Loader Component
-// OBJ Loader Component
-export const OBJModel = React.forwardRef(({ url, ...props }, ref) => {
+export const OBJModel = React.forwardRef(({ url, shouldClone, ...props }, ref) => {
   const scene = useLoader(OBJLoader, url);
-  return <GenericModel ref={ref} scene={scene} {...props} />;
+  const displayScene = useMemo(() => shouldClone ? scene.clone() : scene, [scene, shouldClone]);
+  return <GenericModel ref={ref} scene={displayScene} {...props} />;
 });
 
 // FBX Loader Component
-// FBX Loader Component
-export const FBXModel = React.forwardRef(({ url, ...props }, ref) => {
+export const FBXModel = React.forwardRef(({ url, shouldClone, ...props }, ref) => {
   const scene = useLoader(FBXLoader, url);
-  return <GenericModel ref={ref} scene={scene} {...props} />;
+  const displayScene = useMemo(() => shouldClone ? scene.clone() : scene, [scene, shouldClone]);
+  return <GenericModel ref={ref} scene={displayScene} {...props} />;
 });
 
 // STL Loader Component
-// STL Loader Component
-export const STLModel = React.forwardRef(({ url, ...props }, ref) => {
+export const STLModel = React.forwardRef(({ url, shouldClone, ...props }, ref) => {
   const geom = useLoader(STLLoader, url);
   
   const scene = useMemo(() => {
@@ -47,7 +46,9 @@ export const STLModel = React.forwardRef(({ url, ...props }, ref) => {
       return group;
   }, [geom]);
 
-  return <GenericModel ref={ref} scene={scene} {...props} />;
+  const displayScene = useMemo(() => shouldClone ? scene.clone() : scene, [scene, shouldClone]);
+
+  return <GenericModel ref={ref} scene={displayScene} {...props} />;
 });
 
 // STEP Loader Component
