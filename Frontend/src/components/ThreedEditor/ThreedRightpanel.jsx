@@ -20,7 +20,8 @@ export default function RightPanel({
     onManualTransformChange,
     onResetTransform,
     onResetFactorSettings,
-    onUvUnwrap
+    onUvUnwrap,
+    onMapUpload
 }) {
   const fileRef = useRef(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -219,7 +220,17 @@ export default function RightPanel({
                     : "opacity-0 translate-x-4 pointer-events-none"
                 }`}
               >
-                <Customized />
+                <Customized 
+                    controls={materialSettings} 
+                    updateControl={onUpdateMaterialSetting}
+                    activePanel={activeAccordion}
+                    setActivePanel={setActiveAccordion}
+                    transformValues={transformValues}
+                    onManualTransformChange={onManualTransformChange}
+                    onResetTransform={onResetTransform}
+                    onResetFactor={onResetFactorSettings}
+                    onMapUpload={onMapUpload}
+                />
               </div>
             </div>
           </div>

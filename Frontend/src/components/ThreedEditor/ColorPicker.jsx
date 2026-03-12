@@ -197,10 +197,27 @@ export default function ColorPicker({ color, onChange, opacity, onOpacityChange,
                   type="text" 
                   value={color.replace("#", "").toLowerCase()}
                   onChange={(e) => onChange(`#${e.target.value}`)}
-                  className="w-full text-[0.7vw] font-semibold text-gray-700 outline-none lowercase font-mono"
+                  className="w-full text-[0.7vw] font-semibold text-gray-700 outline-none lowercase"
                   maxLength={6}
                 />
-                <Icon icon="heroicons:pencil" width="0.85vw" className="text-gray-500" />
+                <Icon 
+                  icon="mingcute:color-picker-fill" 
+                  width="1.1vw" 
+                  className="text-gray-500 cursor-pointer hover:text-[#5d5efc] transition-colors" 
+                  onClick={async () => {
+                    if (!window.EyeDropper) {
+                      alert("Your browser does not support the EyeDropper API");
+                      return;
+                    }
+                    const eyeDropper = new window.EyeDropper();
+                    try {
+                      const result = await eyeDropper.open();
+                      onChange(result.sRGBHex);
+                    } catch (e) {
+                      console.log("EyeDropper cancelled or failed");
+                    }
+                  }}
+                />
              </div>
           </div>
 

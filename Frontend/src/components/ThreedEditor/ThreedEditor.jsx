@@ -525,6 +525,31 @@ export default function ThreedEditor() {
       updateMaterialSetting(key, val, false);
   }, [updateMaterialSetting]);
 
+  const handleMapUpload = useCallback((mapType, file) => {
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    
+    setMaterialSettings(prev => {
+        const nextMaps = { ...(prev.maps || {}), [mapType]: url };
+        let next = { ...prev, maps: nextMaps };
+        
+        // Auto-set factors to 100% for maps that are multipliers (Standard Material behavior)
+        if (mapType === 'map') next.color = '#ffffff';
+        if (mapType === 'metalnessMap') next.metallic = 100;
+        if (mapType === 'roughnessMap') next.roughness = 100;
+        if (mapType === 'normalMap') next.normal = 100;
+        if (mapType === 'bumpMap') next.bump = 100;
+        if (mapType === 'aoMap') next.ao = 100;
+
+        pushHistory({
+            ...stateRef.current,
+            materialSettings: next
+        });
+        
+        return next;
+    });
+  }, [pushHistory]);
+
   const handleScreenshotClick = useCallback(() => {
     setIsScreenshotOpen(true);
   }, []);
@@ -592,6 +617,7 @@ export default function ThreedEditor() {
         specular: 50, reflection: 50, shadow: 50, softness: 50, ao: 100, environment: 'city',
         color: '#000000', useFactorColor: false, autoUnwrap: false, envRotation: 0, offset: { x: 0, y: 0 },
         appliedTexture: null,
+        maps: { map: null, normalMap: null, roughnessMap: null, metalnessMap: null, bumpMap: null, aoMap: null },
         lightPosition: { x: 10, y: 10, z: 10 }
     };
     // Reset material settings for the new model
@@ -1233,7 +1259,8 @@ export default function ThreedEditor() {
                         rotation: 0,
                         offset: { x: 0, y: 0 },
                         color: '#000000',
-                        useFactorColor: false
+                        useFactorColor: false,
+                        maps: { map: null, normalMap: null, roughnessMap: null, metalnessMap: null, bumpMap: null, aoMap: null }
                     };
                     pushHistory({ ...stateRef.current, materialSettings: next });
                     return next;
@@ -1241,6 +1268,7 @@ export default function ThreedEditor() {
                 setResetKey(prev => prev + 1);
             }}
             onUvUnwrap={() => setUvUnwrapTrigger(prev => prev + 1)}
+            onMapUpload={handleMapUpload}
           />
         </div>
       </div>

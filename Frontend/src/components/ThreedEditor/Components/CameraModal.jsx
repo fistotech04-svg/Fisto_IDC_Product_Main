@@ -1,9 +1,12 @@
 import React, { Suspense, useRef, useState } from "react";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, Environment, ContactShadows } from "@react-three/drei";
 import { Icon } from "@iconify/react";
 import * as THREE from "three";
+import { jsPDF } from "jspdf";
 import RenderModel from "./ModelLoaders";
+import ColorPicker from "../ColorPicker";
+import axios from "axios";
 
 export default function CameraModal({ 
     isOpen, 
@@ -19,14 +22,29 @@ export default function CameraModal({
     const [showTakenShot, setShowTakenShot] = useState(null);
     const [bgColor, setBgColor] = useState('transparent');
     const [customColor, setCustomColor] = useState('#D7D8E8');
+
+    // Helper component to manage camera zoom from state
+    const ZoomManager = ({ zoom }) => {
+        const { camera } = useThree();
+        React.useEffect(() => {
+            if (camera) {
+                camera.zoom = zoom / 100;
+                camera.updateProjectionMatrix();
+            }
+        }, [zoom, camera]);
+        return null;
+    };
     const [opacity, setOpacity] = useState(100);
     const [selectedFrame, setSelectedFrame] = useState('free');
-    const [zoom, setZoom] = useState(50);
+    const [zoom, setZoom] = useState(100); // Default to 100%
+    const [showColorPicker, setShowColorPicker] = useState(false);
 
     // Export panel state
     const [imageName, setImageName] = useState('');
     const [selectedResolution, setSelectedResolution] = useState('medium');
     const [exportFormat, setExportFormat] = useState('jpg');
+    const [isExporting, setIsExporting] = useState(false);
+    const [isSavingToGallery, setIsSavingToGallery] = useState(false);
 
     const canvasRef = useRef();
     const glRef    = useRef(null);
@@ -59,7 +77,41 @@ export default function CameraModal({
                 gl.setSize(capW, capH, false);
                 gl.render(scene, camera);
 
-                const dataUrl = domCanvas.toDataURL('image/png');
+                // ─── BACKGROUND COMPOSITING ───
+                const compositeCanvas = document.createElement('canvas');
+                compositeCanvas.width = capW;
+                compositeCanvas.height = capH;
+                const ctx = compositeCanvas.getContext('2d');
+
+                const currentBg = bgColor === 'custom' ? customColor : bgPresets.find(p => p.id === bgColor);
+                const currentOpacity = bgColor === 'custom' ? opacity / 100 : 1;
+
+                if (bgColor === 'transparent') {
+                    // Stay transparent (ctx is empty)
+                } else if (bgColor === 'custom' || (currentBg && currentBg.type === 'color')) {
+                    const colorValue = bgColor === 'custom' ? customColor : currentBg.value;
+                    ctx.globalAlpha = currentOpacity;
+                    ctx.fillStyle = colorValue;
+                    ctx.fillRect(0, 0, capW, capH);
+                    ctx.globalAlpha = 1.0;
+                } else if (currentBg && currentBg.type === 'gradient') {
+                    const grd = ctx.createLinearGradient(0, 0, capW, capH);
+                    if (currentBg.id === 'gradient1') {
+                        grd.addColorStop(0, '#a5b4fc');
+                        grd.addColorStop(1, '#818cf8');
+                    } else if (currentBg.id === 'gradient2') {
+                        grd.addColorStop(0, '#60a5fa');
+                        grd.addColorStop(0.5, '#f472b6');
+                        grd.addColorStop(1, '#fbbf24');
+                    }
+                    ctx.fillStyle = grd;
+                    ctx.fillRect(0, 0, capW, capH);
+                }
+
+                // 2. Draw 3D Model Layer
+                ctx.drawImage(domCanvas, 0, 0);
+
+                const dataUrl = compositeCanvas.toDataURL('image/png');
 
                 // Restore original size
                 gl.setPixelRatio(dpr);
@@ -68,7 +120,6 @@ export default function CameraModal({
 
                 setShowTakenShot(dataUrl);
             } else {
-                // Fallback: grab whatever canvas is on screen
                 const canvas = document.querySelector('.camera-modal-canvas canvas');
                 if (canvas) setShowTakenShot(canvas.toDataURL('image/png'));
             }
@@ -84,11 +135,12 @@ export default function CameraModal({
         png:  { mime: 'image/png',  ext: 'png'  },
         jpg:  { mime: 'image/jpeg', ext: 'jpg'  },
         webp: { mime: 'image/webp', ext: 'webp' },
-        pdf:  { mime: 'image/png',  ext: 'png'  }, // PDF not natively downloadable; export as PNG
+        pdf:  { mime: 'image/jpeg', ext: 'pdf'  }, // Export as JPG inside PDF for better compatibility
     };
 
     const handleExport = () => {
-        if (!showTakenShot) return;
+        if (!showTakenShot || isExporting) return;
+        setIsExporting(true);
 
         const targetPx  = resolutionPxMap[selectedResolution] || 1024;
         const { mime, ext } = formatMeta[exportFormat] || formatMeta.jpg;
@@ -96,33 +148,104 @@ export default function CameraModal({
 
         const img = new Image();
         img.onload = () => {
-            // Preserve aspect ratio — longest side = targetPx
-            const ratio = img.width / img.height;
-            let w, h;
-            if (ratio >= 1) {
-                w = targetPx;
-                h = Math.round(targetPx / ratio);
-            } else {
-                h = targetPx;
-                w = Math.round(targetPx * ratio);
+            try {
+                // Preserve aspect ratio — longest side = targetPx
+                const ratio = img.width / img.height;
+                let w, h;
+                if (ratio >= 1) {
+                    w = targetPx;
+                    h = Math.round(targetPx / ratio);
+                } else {
+                    h = targetPx;
+                    w = Math.round(targetPx * ratio);
+                }
+
+                const offscreen = document.createElement('canvas');
+                offscreen.width  = w;
+                offscreen.height = h;
+                const ctx = offscreen.getContext('2d');
+                
+                // If exporting as JPG/PDF, fill transparent background with white
+                if (ext === 'jpg' || ext === 'pdf') {
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(0, 0, w, h);
+                }
+
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                ctx.drawImage(img, 0, 0, w, h);
+
+                const dataUrl = offscreen.toDataURL(mime, 0.95);
+                
+                if (exportFormat === 'pdf') {
+                    const pdf = new jsPDF({
+                        orientation: w > h ? 'l' : 'p',
+                        unit: 'px',
+                        format: [w, h]
+                    });
+                    pdf.addImage(dataUrl, 'JPEG', 0, 0, w, h);
+                    pdf.save(`${name}.pdf`);
+                } else {
+                    const link = document.createElement('a');
+                    link.href     = dataUrl;
+                    link.download = `${name}.${ext}`;
+                    link.click();
+                }
+            } catch (err) {
+                console.error("Export failed:", err);
+            } finally {
+                setIsExporting(false);
             }
-
-            const offscreen = document.createElement('canvas');
-            offscreen.width  = w;
-            offscreen.height = h;
-            const ctx = offscreen.getContext('2d');
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-            ctx.drawImage(img, 0, 0, w, h);
-
-            const dataUrl = offscreen.toDataURL(mime, 0.95);
-            const link = document.createElement('a');
-            link.href     = dataUrl;
-            link.download = `${name}.${ext}`;
-            link.click();
-            // Modal stays open after export
         };
+        img.onerror = () => setIsExporting(false);
         img.src = showTakenShot;
+    };
+
+    const dataURLtoBlob = (dataurl) => {
+        let arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+            bstr = atob(arr[arr.length - 1]), n = bstr.length, u8arr = new Uint8Array(n);
+        while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new Blob([u8arr], { type: mime });
+    };
+
+    const handleAddToGallery = async () => {
+        if (!showTakenShot || isSavingToGallery) return;
+        
+        const storedUser = localStorage.getItem('user');
+        if (!storedUser) {
+            alert("Please login to save images to gallery.");
+            return;
+        }
+        
+        const user = JSON.parse(storedUser);
+        const emailId = user.emailId;
+        
+        setIsSavingToGallery(true);
+        
+        try {
+            const blob = dataURLtoBlob(showTakenShot);
+            const file = new File([blob], `gallery-${Date.now()}.png`, { type: "image/png" });
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('emailId', emailId);
+            formData.append('type', 'image');
+            formData.append('isGallery', 'true');
+            
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+            await axios.post(`${backendUrl}/api/flipbook/upload-asset`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            
+            alert("Image added to gallery successfully!");
+        } catch (err) {
+            console.error("Gallery upload failed:", err);
+            alert("Failed to add image to gallery. Please try again.");
+        } finally {
+            setIsSavingToGallery(false);
+        }
     };
 
     const bgPresets = [
@@ -135,9 +258,37 @@ export default function CameraModal({
     ];
 
     const frames = [
-        { id: 'free', label: 'Free size', icon: 'heroicons:square-3-stack-3d' },
-        { id: 'instagram', label: 'Instagram', icon: 'ri:instagram-line' },
-        { id: 'instagram2', label: 'Instagram', icon: 'ri:instagram-line' },
+        // General
+        { platform: 'General', id: 'free', label: 'Free size', w: 0, h: 0, ratio: 'Auto', icon: 'heroicons:square-3-stack-3d' },
+
+        // Facebook
+        { platform: 'Facebook', id: 'fb-profile',   label: 'Profile Photo', w: 180,  h: 180,  ratio: '1:1',   icon: 'ri:facebook-fill' },
+        { platform: 'Facebook', id: 'fb-cover',     label: 'Cover Photo',   w: 820,  h: 312,  ratio: '2.6:1', icon: 'ri:facebook-fill' },
+        { platform: 'Facebook', id: 'fb-post',      label: 'Post Image',    w: 1200, h: 630,  ratio: '1.9:1', icon: 'ri:facebook-fill' },
+        { platform: 'Facebook', id: 'fb-story',     label: 'Story',         w: 1080, h: 1920, ratio: '9:16',  icon: 'ri:facebook-fill' },
+
+        // Instagram
+        { platform: 'Instagram', id: 'ig-profile',   label: 'Profile Photo', w: 320,  h: 320,  ratio: '1:1',   icon: 'ri:instagram-line' },
+        { platform: 'Instagram', id: 'ig-square',    label: 'Square Post',   w: 1080, h: 1080, ratio: '1:1',   icon: 'ri:instagram-line' },
+        { platform: 'Instagram', id: 'ig-portrait',  label: 'Portrait Post', w: 1080, h: 1350, ratio: '4:5',   icon: 'ri:instagram-line' },
+        { platform: 'Instagram', id: 'ig-landscape', label: 'Landscape Post',w: 1080, h: 566,  ratio: '1.9:1', icon: 'ri:instagram-line' },
+        { platform: 'Instagram', id: 'ig-story',     label: 'Story / Reel',  w: 1080, h: 1920, ratio: '9:16',  icon: 'ri:instagram-line' },
+
+        // X (Twitter)
+        { platform: 'X / Twitter', id: 'x-profile',   label: 'Profile Photo', w: 400,  h: 400,  ratio: '1:1',   icon: 'ri:twitter-x-fill' },
+        { platform: 'X / Twitter', id: 'x-header',    label: 'Header / Cover',w: 1500, h: 500,  ratio: '3:1',   icon: 'ri:twitter-x-fill' },
+        { platform: 'X / Twitter', id: 'x-post',      label: 'Post Image',    w: 1600, h: 900,  ratio: '16:9',  icon: 'ri:twitter-x-fill' },
+
+        // LinkedIn
+        { platform: 'LinkedIn', id: 'li-profile',   label: 'Profile Photo', w: 400,  h: 400,  ratio: '1:1',   icon: 'ri:linkedin-fill' },
+        { platform: 'LinkedIn', id: 'li-cover',     label: 'Cover Photo',   w: 1584, h: 396,  ratio: '4:1',   icon: 'ri:linkedin-fill' },
+        { platform: 'LinkedIn', id: 'li-post',      label: 'Post Image',    w: 1200, h: 627,  ratio: '1.9:1', icon: 'ri:linkedin-fill' },
+
+        // YouTube
+        { platform: 'YouTube', id: 'yt-profile',   label: 'Channel Profile',w: 800,  h: 800,  ratio: '1:1',   icon: 'ri:youtube-fill' },
+        { platform: 'YouTube', id: 'yt-cover',     label: 'Channel Cover',  w: 2560, h: 1440, ratio: '16:9',  icon: 'ri:youtube-fill' },
+        { platform: 'YouTube', id: 'yt-thumb',     label: 'Thumbnail',      w: 1280, h: 720,  ratio: '16:9',  icon: 'ri:youtube-fill' },
+        { platform: 'YouTube', id: 'yt-shorts',    label: 'Shorts',         w: 1080, h: 1920, ratio: '9:16',  icon: 'ri:youtube-fill' },
     ];
 
     const resolutions = [
@@ -150,14 +301,7 @@ export default function CameraModal({
     const formats = ['PNG', 'JPG', 'WEBP', 'PDF'];
 
     const getBgStyles = () => {
-        if (bgColor === 'transparent') {
-            return {
-                backgroundImage: 'linear-gradient(45deg, #e5e7eb 25%, transparent 25%, transparent 75%, #e5e7eb 75%, #e5e7eb), linear-gradient(45deg, #e5e7eb 25%, transparent 25%, transparent 75%, #e5e7eb 75%, #e5e7eb)',
-                backgroundPosition: '0 0, 10px 10px',
-                backgroundSize: '20px 20px',
-                backgroundColor: '#ffffff'
-            };
-        }
+        if (bgColor === 'transparent') return { backgroundColor: 'transparent' };
         if (bgColor === 'custom') {
             return { backgroundColor: customColor, opacity: opacity / 100 };
         }
@@ -169,10 +313,19 @@ export default function CameraModal({
     };
 
     const getFrameStyles = () => {
-        switch (selectedFrame) {
-            case 'instagram': return 'aspect-square mx-auto';
-            case 'instagram2': return 'aspect-square mx-auto';
-            default: return 'w-full aspect-[4/3]';
+        const frame = frames.find(f => f.id === selectedFrame);
+        if (!frame || frame.id === 'free') return 'w-full h-full';
+        
+        const ratio = frame.w / frame.h;
+        if (ratio >= 1.2) {
+            // Very wide: fit width, center vertically
+            return `w-full my-auto`;
+        } else if (ratio <= 0.8) {
+            // Very tall: fit height, center horizontally
+            return `h-full mx-auto`;
+        } else {
+            // Closer to square: try height first
+            return `h-full mx-auto`;
         }
     };
 
@@ -238,7 +391,7 @@ export default function CameraModal({
                             {/* Image Name */}
                             <div className="space-y-[0.7vw]">
                                 <div className="flex items-center gap-[0.8vw]">
-                                    <span className="text-[0.9vw] font-bold text-gray-800 whitespace-nowrap">Background Color</span>
+                                    <span className="text-[0.9vw] font-bold text-gray-800 whitespace-nowrap">Image Name</span>
                                     <div className="flex-1 h-[0.1vw] rounded-full bg-gray-300"></div>
                                 </div>
                                 <div className="flex items-center gap-[0.5vw] border border-gray-200 rounded-[0.6vw] px-[0.8vw] h-[2.6vw] bg-white focus-within:border-[#5d5efc] transition-all shadow-sm">
@@ -313,17 +466,46 @@ export default function CameraModal({
                             {/* Action Buttons */}
                             <div className="flex flex-col gap-[0.6vw] pt-[3vw]">
                                 <button
+                                    disabled={isExporting}
                                     onClick={handleExport}
-                                    className="w-full py-[0.8vw] bg-black hover:bg-zinc-800 text-white rounded-[0.7vw] font-semibold text-[0.85vw] flex items-center justify-center gap-[0.6vw] transition-all cursor-pointer shadow-lg hover:translate-y-[-2px] active:translate-y-0"
+                                    className={`w-full py-[0.8vw] text-white rounded-[0.7vw] font-semibold text-[0.85vw] flex items-center justify-center gap-[0.6vw] transition-all shadow-lg active:translate-y-0 ${
+                                        isExporting 
+                                        ? 'bg-zinc-600 cursor-not-allowed' 
+                                        : 'bg-black hover:bg-zinc-800 cursor-pointer hover:translate-y-[-2px]'
+                                    }`}
                                 >
-                                    <Icon icon="solar:download-outline" width="1.1vw" />
-                                    Export as {exportFormat.toUpperCase()}
+                                    {isExporting ? (
+                                        <>
+                                            <Icon icon="line-md:loading-twotone-loop" width="1.1vw" />
+                                            Exporting...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Icon icon="solar:download-outline" width="1.1vw" />
+                                            Export as {exportFormat.toUpperCase()}
+                                        </>
+                                    )}
                                 </button>
                                 <button
-                                    className="w-full py-[0.8vw] bg-white border border-gray-200 hover:bg-gray-50 text-gray-800 rounded-[0.7vw] font-semibold text-[0.85vw] flex items-center justify-center gap-[0.6vw] transition-all cursor-pointer shadow-sm hover:translate-y-[-2px] active:translate-y-0"
+                                    disabled={isSavingToGallery}
+                                    onClick={handleAddToGallery}
+                                    className={`w-full py-[0.8vw] border rounded-[0.7vw] font-semibold text-[0.85vw] flex items-center justify-center gap-[0.6vw] transition-all shadow-sm active:translate-y-0 ${
+                                        isSavingToGallery
+                                            ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                                            : 'bg-white border-gray-200 hover:bg-gray-50 text-gray-800 cursor-pointer hover:translate-y-[-2px]'
+                                    }`}
                                 >
-                                    <Icon icon="solar:gallery-outline" width="1.1vw" />
-                                    Add to Image Gallery
+                                    {isSavingToGallery ? (
+                                        <>
+                                            <Icon icon="line-md:loading-twotone-loop" width="1.1vw" />
+                                            Saving...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Icon icon="solar:gallery-outline" width="1.1vw" />
+                                            Add to Image Gallery
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </div>
@@ -360,24 +542,42 @@ export default function CameraModal({
                 <div className="flex flex-1 px-[1.5vw] pb-[1.5vw] gap-[1.5vw] overflow-hidden">
                     {/* Left Column - Canvas */}
                     <div className="flex-[1.8] flex flex-col gap-[1vw]">
-                        <div className={`relative flex-1 rounded-[0.75vw] border border-gray-300 overflow-hidden camera-modal-canvas shadow-inner ${isCapturing ? 'brightness-110' : ''}`} style={getBgStyles()}>
-                            <div className={`relative w-full h-full flex items-center justify-center ${getFrameStyles()}`}>
-                                <Suspense fallback={null}>
-                                    <Canvas
-                                        shadows
-                                        gl={{ preserveDrawingBuffer: true, antialias: true, alpha: true }}
-                                        camera={{ position: [0, 1, 5], fov: 40 }}
-                                        onCreated={({ gl, scene, camera }) => {
-                                            glRef.current    = gl;
-                                            sceneRef.current = scene;
-                                            camRef.current   = camera;
-                                            gl.toneMapping = THREE.ACESFilmicToneMapping;
-                                            gl.outputColorSpace = THREE.SRGBColorSpace;
-                                        }}
-                                    >
-                                        {bgColor !== 'transparent' && bgColor !== 'gradient1' && bgColor !== 'gradient2' && (
-                                            <color attach="background" args={[bgColor === 'custom' ? customColor : bgPresets.find(p => p.id === bgColor)?.value || '#ffffff']} />
-                                        )}
+                        <div className={`relative flex-1 rounded-[0.75vw] border border-gray-300 overflow-hidden camera-modal-canvas shadow-inner ${isCapturing ? 'brightness-110' : ''}`}>
+                            {/* Checkerboard Base (Seen when background is semi-transparent) */}
+                            <div className="absolute inset-0" style={{
+                                backgroundImage: 'linear-gradient(45deg, #f3f4f6 25%, transparent 25%, transparent 75%, #f3f4f6 75%, #f3f4f6), linear-gradient(45deg, #f3f4f6 25%, transparent 25%, transparent 75%, #f3f4f6 75%, #f3f4f6)',
+                                backgroundPosition: '0 0, 10px 10px',
+                                backgroundSize: '20px 20px',
+                                backgroundColor: '#ffffff'
+                            }} />
+
+                            {/* Color/Gradient Overlay */}
+                            <div className="absolute inset-0" style={getBgStyles()} />
+
+                            <div className={`relative z-10 w-full h-full flex items-center justify-center p-[2vw]`}>
+                                <div 
+                                    className={`${getFrameStyles()} transition-all duration-700 ease-in-out bg-white/5 overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.2)] relative`}
+                                    style={{
+                                        aspectRatio: frames.find(f => f.id === selectedFrame)?.w 
+                                            ? `${frames.find(f => f.id === selectedFrame).w} / ${frames.find(f => f.id === selectedFrame).h}`
+                                            : 'auto'
+                                    }}
+                                >
+
+                                    {/* Masking effect for outer area (handled via parent ring/shadow if needed, but here we'll use a cleaner approach) */}
+                                    <Suspense fallback={null}>
+                                        <Canvas
+                                            shadows
+                                            gl={{ preserveDrawingBuffer: true, antialias: true, alpha: true }}
+                                            camera={{ position: [0, 1, 5], fov: 40 }}
+                                            onCreated={({ gl, scene, camera }) => {
+                                                glRef.current    = gl;
+                                                sceneRef.current = scene;
+                                                camRef.current   = camera;
+                                                gl.toneMapping = THREE.ACESFilmicToneMapping;
+                                                gl.outputColorSpace = THREE.SRGBColorSpace;
+                                            }}
+                                        >
                                         
                                         <ambientLight intensity={1.5} />
                                         <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1.5} castShadow />
@@ -404,20 +604,27 @@ export default function CameraModal({
                                         <ContactShadows position={[0, -0.01, 0]} opacity={0.4} scale={20} blur={2} far={4.5} />
                                         <Environment preset={materialSettings.environment || 'city'} />
                                         <OrbitControls enableDamping={true} dampingFactor={0.05} />
+                                        <ZoomManager zoom={zoom} />
                                     </Canvas>
                                 </Suspense>
+                                </div>
 
                                 {/* Zoom Controls Overlay */}
-                                <div className="absolute bottom-[1vw] right-[1vw] bg-white/90 backdrop-blur-md rounded-[0.8vw] shadow-lg border border-gray-100 flex items-center p-[0.3vw] gap-[0.3vw]">
-                                    <button className="p-[0.4vw] hover:bg-gray-100 rounded-[0.5vw] text-gray-500 transition-colors">
-                                        <Icon icon="heroicons:magnifying-glass" width="1vw" strokeWidth={2.5} />
+                                <div className="absolute bottom-[1vw] right-[1vw] bg-white/90 backdrop-blur-md rounded-[0.8vw] shadow-lg border border-gray-100 flex items-center p-[0.3vw] gap-[0.3vw] z-30">
+                                    <button 
+                                        onClick={() => setZoom(prev => Math.max(10, prev - 5))}
+                                        className="p-[0.4vw] hover:bg-gray-100 rounded-[0.5vw] text-gray-500 transition-colors cursor-pointer"
+                                    >
+                                        <Icon icon="heroicons:minus" width="1vw" strokeWidth={3} />
                                     </button>
                                     <div className="flex items-center gap-[0.3vw] px-[0.4vw] border-l border-gray-100">
-                                        <span className="text-[0.7vw] font-black text-gray-700 w-[2.2vw] text-center">{zoom}%</span>
-                                        <Icon icon="heroicons:chevron-down" width="0.7vw" className="text-gray-400" />
+                                        <span className="text-[0.7vw] font-semibold text-gray-700 w-[2.2vw] text-center">{zoom}%</span>
                                     </div>
-                                    <button className="p-[0.4vw] hover:bg-gray-100 rounded-[0.5vw] text-gray-500 transition-colors">
-                                        <Icon icon="heroicons:magnifying-glass" width="1vw" strokeWidth={2.5} />
+                                    <button 
+                                        onClick={() => setZoom(prev => Math.min(300, prev + 5))}
+                                        className="p-[0.4vw] hover:bg-gray-100 rounded-[0.5vw] text-gray-500 transition-colors cursor-pointer"
+                                    >
+                                        <Icon icon="heroicons:plus" width="1vw" strokeWidth={3} />
                                     </button>
                                 </div>
                             </div>
@@ -439,8 +646,8 @@ export default function CameraModal({
                                     <button
                                         key={preset.id}
                                         onClick={() => setBgColor(preset.id)}
-                                        className={`aspect-square rounded-[0.6vw] border-[0.15vw] transition-all hover:scale-105 active:scale-95 ${
-                                            bgColor === preset.id ? 'border-[#5d5efc] scale-110 shadow-md ring-4 ring-[#5d5efc]/10' : 'border-gray-200 shadow-sm'
+                                        className={`aspect-square rounded-[0.6vw] border-[0.15vw] transition-all cursor-pointer active:scale-95 ${
+                                            bgColor === preset.id ? 'border-[#5d5efc] shadow-md ring-4 ring-[#5d5efc]/10' : 'border-gray-200 shadow-sm'
                                         }`}
                                         style={preset.id === 'transparent' ? {
                                             backgroundImage: 'linear-gradient(45deg, #e5e7eb 25%, transparent 25%, transparent 75%, #e5e7eb 75%, #e5e7eb), linear-gradient(45deg, #e5e7eb 25%, transparent 25%, transparent 75%, #e5e7eb 75%, #e5e7eb)',
@@ -456,13 +663,24 @@ export default function CameraModal({
                                 ))}
                             </div>
 
-                            <div className="flex items-center gap-[1vw] pt-[0.2vw]">
-                                <span className="text-[0.85vw] text-gray-500 font-bold whitespace-nowrap">Custom :</span>
+                            <div className="flex items-center gap-[1vw] pt-[0.2vw] relative">
+                                <span 
+                                    className="text-[0.85vw] text-gray-500 font-bold whitespace-nowrap cursor-pointer hover:text-gray-700"
+                                    onClick={() => {
+                                        setBgColor('custom');
+                                        setShowColorPicker(!showColorPicker);
+                                    }}
+                                >
+                                    Custom :
+                                </span>
                                 <div className="flex-1 flex items-center gap-[0.6vw]">
                                     <div 
                                         className={`w-[2.5vw] h-[2.5vw] rounded-[0.6vw] border-2 cursor-pointer shadow-sm transition-all ${bgColor === 'custom' ? 'border-[#5d5efc] ring-4 ring-[#5d5efc]/10' : 'border-gray-200 hover:border-gray-300'}`}
                                         style={{ backgroundColor: customColor }}
-                                        onClick={() => setBgColor('custom')}
+                                        onClick={() => {
+                                            setBgColor('custom');
+                                            setShowColorPicker(!showColorPicker);
+                                        }}
                                     />
                                     <div className="flex-1 flex items-center h-[2.5vw] gap-[0.6vw] border border-gray-200 rounded-[0.6vw] px-[0.8vw] bg-gray-50/50 focus-within:bg-white focus-within:border-[#5d5efc] transition-all">
                                         <input 
@@ -478,46 +696,83 @@ export default function CameraModal({
                                         <span className="text-[0.75vw] font-semibold text-gray-400 border-l border-gray-200 pl-[0.6vw] flex items-center h-full">{opacity}%</span>
                                     </div>
                                 </div>
+
+                                {showColorPicker && (
+                                    <div className="absolute top-full right-0 mt-[1vw] z-50">
+                                        <ColorPicker 
+                                            color={customColor}
+                                            onChange={(color) => {
+                                                setCustomColor(color);
+                                                setBgColor('custom');
+                                            }}
+                                            opacity={opacity}
+                                            onOpacityChange={setOpacity}
+                                            onClose={() => setShowColorPicker(false)}
+                                        />
+                                    </div>
+                                )}
                             </div>
                         </div>
 
                         {/* Frames Section */}
-                        <div className="flex-1 flex flex-col gap-[1vw]">
-                            <div className="flex items-center gap-[0.8vw]">
-                                <span className="text-[0.9vw] font-bold text-gray-800 whitespace-nowrap">Frames</span>
-                                <div className="flex-1 h-[0.1vw] rounded-full bg-gray-300"></div>
+                        <div className="flex-1 flex flex-col min-h-0">
+                            <div className="mb-[1vw]">
+                                <h3 className="text-[1vw] font-bold text-gray-800 pb-[0.5vw] border-b border-gray-200">Frames</h3>
                             </div>
 
-                            <div className="flex-1 border border-gray-300 rounded-[0.75vw] bg-gray-50/20 p-[0.75vw] grid grid-cols-3 gap-[0.75vw]">
-                                {frames.map((frame) => (
-                                    <button
-                                        key={frame.id}
-                                        onClick={() => setSelectedFrame(frame.id)}
-                                        className={`flex flex-col items-center justify-center gap-[0.8vw] p-[0.8vw] rounded-[0.75vw] border-[0.15vw] transition-all group relative ${
-                                            selectedFrame === frame.id 
-                                            ? 'bg-white border-[#5d5efc] shadow-lg -translate-y-[2px]' 
-                                            : 'bg-white/60 border-transparent hover:bg-white hover:border-gray-200'
-                                        }`}
-                                    >
-                                        <div className={`w-[3vw] h-[3vw] rounded-[0.8vw] border-[0.1vw] border-dashed flex items-center justify-center ${
-                                            selectedFrame === frame.id ? 'border-[#5d5efc] bg-[#5d5efc]/5 text-[#5d5efc]' : 'border-gray-300 bg-gray-50 text-gray-400 group-hover:bg-gray-100'
-                                        }`}>
-                                            {frame.id.includes('instagram') ? (
-                                                <Icon icon="ri:instagram-line" width="1.4vw" />
-                                            ) : (
-                                                <div className="w-[1.2vw] h-[0.8vw] border border-current rounded-[0.1vw]" />
-                                            )}
-                                        </div>
-                                        <span className={`text-[0.7vw] font-semibold tracking-tight ${selectedFrame === frame.id ? 'text-[#5d5efc]' : 'text-gray-500'}`}>
-                                            {frame.label}
-                                        </span>
-                                    </button>
-                                ))}
-                                {/* Decorative empty spots */}
-                                {[1,2,3].map(i => (
-                                    <div key={i} className="aspect-square rounded-[1.2vw] bg-gray-100/40 border border-dashed border-gray-200" />
-                                ))}
+                            <div className="flex-1 overflow-y-auto custom-scrollbar pr-[0.4vw]">
+                                <div className="grid grid-cols-3 gap-[0.8vw]">
+                                    {frames.map((frame) => (
+                                        <button
+                                            key={frame.id}
+                                            onClick={() => setSelectedFrame(frame.id)}
+                                            className={`flex flex-col items-center gap-[0.6vw] p-[0.8vw] rounded-[0.6vw] border-[0.15vw] transition-all group cursor-pointer ${
+                                                selectedFrame === frame.id 
+                                                ? 'bg-white border-[#5d5efc] shadow-lg' 
+                                                : 'bg-[#E5E7EB] border-transparent hover:bg-gray-300'
+                                            }`}
+                                        >
+                                            {/* Preview Box with Dashed Border */}
+                                            <div className={`w-full aspect-square bg-white rounded-[0.4vw] border-[0.1vw] border-dashed flex items-center justify-center relative ${
+                                                selectedFrame === frame.id ? 'border-[#5d5efc]' : 'border-gray-400'
+                                            }`}>
+                                                {/* Simulated Aspect Ratio Outline */}
+                                                <div 
+                                                    className={`absolute border-[0.1vw] border-current opacity-20 pointer-events-none rounded-[0.1vw] ${
+                                                        selectedFrame === frame.id ? 'text-[#5d5efc]' : 'text-gray-400'
+                                                    }`}
+                                                    style={{
+                                                        width: frame.w > frame.h ? '80%' : `${(frame.w / frame.h) * 80}%`,
+                                                        height: frame.h > frame.w ? '80%' : `${(frame.h / frame.w) * 80}%`,
+                                                    }}
+                                                />
+                                                <Icon 
+                                                    icon={frame.icon} 
+                                                    width="1.3vw" 
+                                                    className={selectedFrame === frame.id ? 'text-[#5d5efc] z-10' : 'text-gray-500 z-10'} 
+                                                />
+                                            </div>
+
+                                            {/* Label Area */}
+                                            <div className="flex flex-col items-center text-center">
+                                                <span className={`text-[0.7vw] font-semibold leading-tight ${selectedFrame === frame.id ? 'text-[#5d5efc]' : 'text-gray-600'}`}>
+                                                    {frame.label.split(' ')[0]}
+                                                </span>
+                                                <span className="text-[0.5vw] text-gray-400 font-medium whitespace-nowrap">
+                                                    {frame.platform} [{frame.ratio}]
+                                                </span>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
+
+                            <style dangerouslySetInnerHTML={{ __html: `
+                                .custom-scrollbar::-webkit-scrollbar { width: 0.3vw; }
+                                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+                                .custom-scrollbar::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 1vw; }
+                                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+                            `}} />
                         </div>
 
                         {/* Capture Button */}

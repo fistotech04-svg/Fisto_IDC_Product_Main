@@ -166,6 +166,91 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
      
   }, [selectedTexture, scene, selectedMaterial, onTextureApplied, onTextureIdentified]);
 
+  // 0.2. Apply Manual Map Uploads
+  useEffect(() => {
+    if (!materialSettings?.maps || !scene) return;
+    
+    // We only apply to the selected material (scoping is handled by the component that updates maps)
+    const selMat = selectedMaterial;
+    const targetMatName = selMat ? selMat.name : null;
+    
+    // If "Scene" or model group is selected, we could potentially apply to all, 
+    // but typically manual map uploads are for specific materials.
+    const isFullModel = !selMat || targetMatName === modelName || targetMatName === "Scene";
+    if (!targetMatName && !isFullModel) return;
+
+    const textureManager = new THREE.LoadingManager();
+    const loader = new THREE.TextureLoader(textureManager);
+    
+    const loadMap = (url, isColor = false) => {
+         if (!url) return null;
+         return loader.load(url, (tex) => {
+             tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+             tex.flipY = false; 
+             tex.colorSpace = isColor ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+             tex.anisotropy = 16;
+             tex.needsUpdate = true;
+         });
+    }
+
+    const newMapsList = materialSettings.maps;
+    const loadedMaps = {};
+    
+    // Only load maps that are actually present (Blob URLs)
+    if (newMapsList.map) loadedMaps.map = loadMap(newMapsList.map, true);
+    if (newMapsList.normalMap) loadedMaps.normalMap = loadMap(newMapsList.normalMap, false);
+    if (newMapsList.roughnessMap) loadedMaps.roughnessMap = loadMap(newMapsList.roughnessMap, false);
+    if (newMapsList.metalnessMap) loadedMaps.metalnessMap = loadMap(newMapsList.metalnessMap, false);
+    if (newMapsList.bumpMap) loadedMaps.bumpMap = loadMap(newMapsList.bumpMap, false);
+    if (newMapsList.aoMap) loadedMaps.aoMap = loadMap(newMapsList.aoMap, false);
+
+    scene.traverse((child) => {
+         if (child.isMesh && child.material) {
+             const apply = (mat) => {
+                  let isMatch = false;
+                  if (!isFullModel) {
+                      isMatch = mat.name === targetMatName;
+                  } else {
+                      isMatch = true; 
+                  }
+                  
+                  if (isMatch) {
+                      if (loadedMaps.map) mat.map = loadedMaps.map;
+                      if (loadedMaps.normalMap) {
+                          mat.normalMap = loadedMaps.normalMap;
+                          if (!mat.normalScale) mat.normalScale = new THREE.Vector2(1, 1);
+                      }
+                      if (loadedMaps.roughnessMap) {
+                          mat.roughnessMap = loadedMaps.roughnessMap;
+                          mat.roughness = 1.0;
+                      }
+                      if (loadedMaps.metalnessMap) {
+                          mat.metalnessMap = loadedMaps.metalnessMap;
+                          mat.metalness = 1.0;
+                      }
+                      if (loadedMaps.bumpMap) {
+                          mat.bumpMap = loadedMaps.bumpMap;
+                          if (mat.bumpScale === undefined) mat.bumpScale = 1;
+                      }
+                      if (loadedMaps.aoMap) {
+                          mat.aoMap = loadedMaps.aoMap;
+                          if (mat.aoMapIntensity === undefined) mat.aoMapIntensity = 1;
+                      }
+                      
+                      mat.needsUpdate = true;
+                  }
+             };
+
+             if (Array.isArray(child.material)) {
+                 child.material.forEach(apply);
+             } else {
+                 apply(child.material);
+             }
+         }
+    });
+
+  }, [materialSettings?.maps, scene, selectedMaterial, modelName]);
+
   // 0.6. Sync UI with Selected Material (Fetch existing values)
 
 
@@ -805,7 +890,7 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
 
   // Sync transformValues (from UI) to Object
   useEffect(() => {
-      if (!transformTarget || !transformValues) return;
+      if (!transformTarget || !transformValues || !transformValues.position || !transformValues.rotation || !transformValues.scale) return;
       
       // Apply position
       transformTarget.position.set(
@@ -828,9 +913,10 @@ const GenericModel = React.memo(React.forwardRef(({ scene, wireframe, setModelSt
           transformValues.scale.z
       );
       
-  }, [transformTarget, transformValues.position.x, transformValues.position.y, transformValues.position.z, 
-      transformValues.rotation.x, transformValues.rotation.y, transformValues.rotation.z,
-      transformValues.scale.x, transformValues.scale.y, transformValues.scale.z]);
+  }, [transformTarget, 
+      transformValues?.position?.x, transformValues?.position?.y, transformValues?.position?.z, 
+      transformValues?.rotation?.x, transformValues?.rotation?.y, transformValues?.rotation?.z,
+      transformValues?.scale?.x, transformValues?.scale?.y, transformValues?.scale?.z]);
 
   useEffect(() => {
     if (!scene) return;
